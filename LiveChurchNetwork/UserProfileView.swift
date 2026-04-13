@@ -1,14 +1,5 @@
 import SwiftUI
 
-// MARK: - Tabs
-
-private enum UserProfileTab: String, CaseIterable {
-    case posts    = "Posts"
-    case about    = "About"
-    case churches = "Churches"
-    case activity = "Activity"
-}
-
 // MARK: - User Profile View (loading shell)
 //
 // Accepts a userId, resolves full user data from MockDataProvider or Supabase,
@@ -108,10 +99,6 @@ private struct UserProfileContentView: View {
     let user: DiscoverableUser
     let viewerFollows: Bool
     @EnvironmentObject var appState: AppState
-    @State private var selectedTab: UserProfileTab = .posts
-    @State private var userPosts: [Post] = []
-    @State private var isLoadingPosts = false
-
     // Follow list state
     @State private var followerEntries:  [FollowEntry] = []
     @State private var followingEntries: [FollowEntry] = []
@@ -129,23 +116,6 @@ private struct UserProfileContentView: View {
         isOwnProfile || privacy == .public
     }
 
-    /// Activity feed built from loaded data.
-    private var activityItems: [ActivityEntry] {
-        var items: [ActivityEntry] = []
-        items.append(ActivityEntry(icon: "person.badge.plus", color: .lcNavy,
-                                   text: "Joined Live Church Network", sub: nil))
-        for church in profileChurches {
-            items.append(ActivityEntry(icon: "building.2.fill", color: .lcGold,
-                                       text: "Followed \(church.name)",
-                                       sub: church.denomination.isEmpty ? nil : church.denomination))
-        }
-        if !followingEntries.isEmpty {
-            let n = followingEntries.count
-            items.append(ActivityEntry(icon: "person.fill.badge.plus", color: .lcTeal,
-                                       text: "Following \(n) worshipper\(n == 1 ? "" : "s")", sub: nil))
-        }
-        return items
-    }
 
     // MARK: - Body
 
@@ -154,14 +124,11 @@ private struct UserProfileContentView: View {
             VStack(spacing: 0) {
                 headerSection
                 statsStrip
-                tabBar.background(Color.white)
-                Rectangle().fill(Color.lcBorder).frame(height: 1)
-                tabContent.padding(.bottom, 48)
+                inlineDetails.padding(.bottom, 48)
             }
         }
         .background(Color.lcCream)
         .task {
-            await loadPosts()
             await loadFollowData()
         }
         .sheet(isPresented: $showFollowersSheet) {
@@ -231,25 +198,6 @@ private struct UserProfileContentView: View {
         return FollowEntry(id: id, displayName: "LCN Member", photoUrl: nil, subtitle: nil)
     }
 
-    private func loadPosts() async {
-        print("[UserProfileContentView] Loading posts for userId: \(user.id) (\(user.name))")
-        isLoadingPosts = true
-
-        // Seed posts first — no network needed
-        let seedPosts = MockDataProvider.posts(forUser: user.id)
-        if !seedPosts.isEmpty {
-            print("[UserProfileContentView] Found \(seedPosts.count) seed posts")
-            userPosts = seedPosts
-            isLoadingPosts = false
-            return
-        }
-
-        // Supabase fallback
-        print("[UserProfileContentView] No seed posts — fetching from Supabase by name: \(user.name)")
-        userPosts = (try? await SupabaseService.shared.getPostsByAuthor(authorName: user.name)) ?? []
-        print("[UserProfileContentView] Fetched \(userPosts.count) posts from Supabase")
-        isLoadingPosts = false
-    }
 
     // MARK: - Header
 
@@ -409,155 +357,46 @@ private struct UserProfileContentView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Tab Bar
+    // MARK: - Inline Details
 
-    private var tabBar: some View {
-        HStack(spacing: 0) {
-            ForEach(UserProfileTab.allCases, id: \.self) { tab in
-                Button {
-                    withAnimation(.easeInOut(duration: 0.16)) { selectedTab = tab }
-                } label: {
-                    VStack(spacing: 0) {
-                        Text(tab.rawValue)
-                            .font(.system(size: 14, weight: selectedTab == tab ? .bold : .regular))
-                            .foregroundColor(selectedTab == tab ? .lcNavy : .lcText3)
-                            .padding(.vertical, 13)
-                        Rectangle()
-                            .fill(selectedTab == tab ? Color.lcNavy : Color.clear)
-                            .frame(height: 2)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-            }
-        }
-    }
-
-    // MARK: - Tab Content
-
-    @ViewBuilder
-    private var tabContent: some View {
-        switch selectedTab {
-        case .posts:    postsTab
-        case .about:    aboutTab
-        case .churches: churchesTab
-        case .activity: activityTab
-        }
-    }
-
-    // MARK: - Posts Tab
-
-    private var postsTab: some View {
+    private var inlineDetails: some View {
         VStack(spacing: 12) {
-            if isLoadingPosts {
-                ProgressView().tint(.lcNavy).padding(.top, 32)
-            } else if userPosts.isEmpty {
-                emptyState(
-                    icon: "text.bubble",
-                    title: "No posts yet",
-                    subtitle: isOwnProfile
-                        ? "Use the Posts tab to share with the community."
-                        : "\(user.name.components(separatedBy: " ").first ?? "This user") hasn't posted yet."
-                )
-            } else {
-                ForEach(userPosts) { post in
-                    userPostCard(post)
+            // Bio card
+            if let bio = user.bio, !bio.isEmpty {
+                infoCard(icon: "text.alignleft", title: "Bio") {
+                    Text(bio)
+                        .font(.system(size: 14))
+                        .foregroundColor(.lcText2)
+                        .lineSpacing(3)
                 }
             }
-        }
-        .padding(16)
-    }
 
-    private func userPostCard(_ post: Post) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if let content = post.content, !content.isEmpty {
-                Text(content)
-                    .font(.system(size: 14))
-                    .foregroundColor(.lcText)
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            if let urlStr = post.photoUrl, let url = URL(string: urlStr) {
-                AsyncImage(url: url) { phase in
-                    if case .success(let img) = phase {
-                        img.resizable().scaledToFit()
-                            .frame(maxWidth: .infinity)
-                            .cornerRadius(10)
+            // Churches section
+            if canView(user.churchesPrivacy) {
+                if !profileChurches.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("CHURCHES")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.lcText3)
+                            .textCase(.uppercase)
+                            .tracking(0.4)
+                            .padding(.horizontal, 16)
+
+                        ForEach(profileChurches) { church in
+                            NavigationLink(destination: ChurchDetailView(church: church)) {
+                                churchFollowCard(church)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
+                    .padding(.horizontal, 0)
                 }
-            }
-            HStack {
-                Text(postTimeAgo(post.createdAt))
-                    .font(.system(size: 11))
-                    .foregroundColor(.lcText3)
-                Spacer()
-                HStack(spacing: 4) {
-                    Image(systemName: "heart")
-                        .font(.system(size: 12))
-                        .foregroundColor(.lcText3)
-                    Text("\(post.likeCount)")
-                        .font(.system(size: 12))
-                        .foregroundColor(.lcText3)
-                }
-            }
-        }
-        .padding(14)
-        .background(Color.white)
-        .cornerRadius(14)
-        .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
-    }
-
-    private func postTimeAgo(_ date: Date) -> String {
-        let diff = Date().timeIntervalSince(date)
-        switch diff {
-        case ..<3600:   return "\(Int(diff / 60))m ago"
-        case ..<86400:  return "\(Int(diff / 3600))h ago"
-        default:        return "\(Int(diff / 86400))d ago"
-        }
-    }
-
-    // MARK: - About Tab
-
-    private var aboutTab: some View {
-        VStack(spacing: 10) {
-            aboutCard(icon: "text.alignleft", title: "Bio") {
-                let bio = user.bio ?? ""
-                Text(bio.isEmpty ? "No bio added yet." : bio)
-                    .font(bio.isEmpty ? .system(size: 14).italic() : .system(size: 14))
-                    .foregroundColor(bio.isEmpty ? .lcText3 : .lcText2)
-                    .lineSpacing(4)
-            }
-
-            aboutCard(icon: "building.columns.fill", title: "Denomination") {
-                let denom = user.denomination ?? ""
-                Text(denom.isEmpty ? "—" : denom)
-                    .font(denom.isEmpty ? .system(size: 14).italic() : .system(size: 14))
-                    .foregroundColor(denom.isEmpty ? .lcText3 : .lcText2)
-            }
-
-            aboutCard(icon: "mappin.circle.fill", title: "Location") {
-                let city = user.city ?? ""
-                Text(city.isEmpty ? "—" : city)
-                    .font(city.isEmpty ? .system(size: 14).italic() : .system(size: 14))
-                    .foregroundColor(city.isEmpty ? .lcText3 : .lcText2)
-            }
-
-            aboutCard(icon: "house.fill", title: "Home Church") {
-                let name = profileChurches.first?.name ?? ""
-                Text(name.isEmpty ? "Not set" : name)
-                    .font(name.isEmpty ? .system(size: 14).italic() : .system(size: 14, weight: .medium))
-                    .foregroundColor(name.isEmpty ? .lcText3 : .lcText2)
-            }
-
-            aboutCard(icon: "calendar", title: "Member Since") {
-                Text("—")
-                    .font(.system(size: 14).italic())
-                    .foregroundColor(.lcText3)
             }
         }
         .padding(16)
     }
 
-    private func aboutCard<Content: View>(
+    private func infoCard<Content: View>(
         icon: String,
         title: String,
         @ViewBuilder content: () -> Content
@@ -587,29 +426,9 @@ private struct UserProfileContentView: View {
         .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
     }
 
-    // MARK: - Churches Tab
 
-    private var churchesTab: some View {
-        VStack(spacing: 12) {
-            if !canView(user.churchesPrivacy) {
-                privacyLockedState(ownerFirstName: user.name.components(separatedBy: " ").first ?? "This user")
-            } else if profileChurches.isEmpty {
-                emptyState(
-                    icon: "building.2",
-                    title: "No churches followed yet",
-                    subtitle: "This person hasn't followed any churches yet."
-                )
-            } else {
-                ForEach(profileChurches) { church in
-                    NavigationLink(destination: ChurchDetailView(church: church)) {
-                        churchFollowCard(church)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-        .padding(16)
-    }
+
+
 
     private func churchFollowCard(_ church: Church) -> some View {
         HStack(spacing: 14) {
@@ -666,113 +485,9 @@ private struct UserProfileContentView: View {
         .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
     }
 
-    // MARK: - Activity Tab
 
-    private var activityTab: some View {
-        VStack(spacing: 0) {
-            if !canView(user.activityPrivacy) {
-                privacyLockedState(ownerFirstName: user.name.components(separatedBy: " ").first ?? "This user")
-            } else if activityItems.isEmpty {
-                emptyState(
-                    icon: "clock.arrow.circlepath",
-                    title: "No activity yet",
-                    subtitle: "Activity will appear here as they engage."
-                )
-            } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(activityItems.enumerated()), id: \.offset) { idx, item in
-                        if idx > 0 { Divider().padding(.leading, 56) }
-                        activityRow(item)
-                    }
-                }
-                .background(Color.white)
-                .cornerRadius(14)
-                .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
-            }
-        }
-        .padding(16)
-    }
-
-    private func activityRow(_ item: ActivityEntry) -> some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(item.color.opacity(0.12))
-                    .frame(width: 36, height: 36)
-                Image(systemName: item.icon)
-                    .font(.system(size: 14))
-                    .foregroundColor(item.color)
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(item.text)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.lcText)
-                if let sub = item.sub, !sub.isEmpty {
-                    Text(sub)
-                        .font(.system(size: 12))
-                        .foregroundColor(.lcText3)
-                }
-            }
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 13)
-    }
-
-    // MARK: - Helpers
-
-    private func emptyState(icon: String, title: String, subtitle: String) -> some View {
-        VStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 38))
-                .foregroundColor(.lcText3)
-                .padding(.top, 52)
-            Text(title)
-                .font(.system(size: 15, weight: .bold))
-                .foregroundColor(.lcText)
-            Text(subtitle)
-                .font(.system(size: 13))
-                .foregroundColor(.lcText3)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.bottom, 40)
-    }
-
-    private func privacyLockedState(ownerFirstName: String) -> some View {
-        VStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(Color.lcNavy.opacity(0.07))
-                    .frame(width: 70, height: 70)
-                Image(systemName: "lock.fill")
-                    .font(.system(size: 26))
-                    .foregroundColor(.lcNavy.opacity(0.4))
-            }
-            .padding(.top, 52)
-            Text("This is private")
-                .font(.system(size: 15, weight: .bold))
-                .foregroundColor(.lcText)
-            Text("\(ownerFirstName) has set this to private.")
-                .font(.system(size: 13))
-                .foregroundColor(.lcText3)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.bottom, 40)
-    }
 }
 
-// MARK: - Activity Entry model (local to this file)
-
-private struct ActivityEntry {
-    let icon:  String
-    let color: Color
-    let text:  String
-    let sub:   String?
-}
 
 // MARK: - Church List Sheet
 
