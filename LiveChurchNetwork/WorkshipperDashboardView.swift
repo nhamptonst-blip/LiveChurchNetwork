@@ -1,21 +1,11 @@
 import SwiftUI
 import PhotosUI
 
-// MARK: - Tab enum
-
-private enum UserProfileTab: String, CaseIterable {
-    case posts    = "Posts"
-    case about    = "About"
-    case churches = "Churches"
-    case activity = "Activity"
-}
-
 // MARK: - Worshipper Dashboard
 
 struct WorkshipperDashboardView: View {
     @EnvironmentObject var appState: AppState
 
-    @State private var selectedTab: UserProfileTab = .about
     @State private var followedChurches: [Church] = []
     @State private var allFollows: [Follow] = []
     @State private var followerCount = 0
@@ -26,6 +16,7 @@ struct WorkshipperDashboardView: View {
     @State private var showPrivacySettings = false
     @State private var showFollowersSheet = false
     @State private var showFollowingSheet = false
+    @State private var showChurchesSheet = false
     @State private var followerEntries: [FollowEntry] = []
     @State private var followingEntries: [FollowEntry] = []
 
@@ -35,11 +26,6 @@ struct WorkshipperDashboardView: View {
     @State private var isUploadingPhoto = false
     @State private var isUploadingCover = false
     @State private var uploadError: String?
-
-    // Posts
-    @State private var userPosts: [Post] = []
-    @State private var isLoadingPosts = false
-    @State private var showCreatePost = false
 
     private var profile: Profile? { self.appState.profile }
 
@@ -124,14 +110,12 @@ struct WorkshipperDashboardView: View {
             VStack(spacing: 0) {
                 headerSection
                 statsStrip
-                tabBar
-                    .background(Color.white)
-                Rectangle()
-                    .fill(Color.lcBorder)
-                    .frame(height: 1)
-                tabContent
+                inlineDetails
                     .padding(.bottom, 48)
             }
+        }
+        .sheet(isPresented: $showChurchesSheet) {
+            ChurchListSheet(churches: followedChurches)
         }
     }
 
@@ -370,7 +354,7 @@ struct WorkshipperDashboardView: View {
                 }
                 Divider().frame(height: 32)
                 statButton(value: followedChurches.count, label: "Churches") {
-                    withAnimation(.easeInOut(duration: 0.16)) { selectedTab = .churches }
+                    showChurchesSheet = true
                 }
             }
             .padding(.vertical, 14)
@@ -400,85 +384,53 @@ struct WorkshipperDashboardView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Tab Bar
+    // MARK: - Inline Details
 
-    private var tabBar: some View {
-        HStack(spacing: 0) {
-            ForEach(UserProfileTab.allCases, id: \.self) { tab in
-                Button {
-                    withAnimation(.easeInOut(duration: 0.16)) { selectedTab = tab }
-                } label: {
-                    VStack(spacing: 0) {
-                        Text(tab.rawValue)
-                            .font(.system(size: 14, weight: selectedTab == tab ? .bold : .regular))
-                            .foregroundColor(selectedTab == tab ? .lcNavy : .lcText3)
-                            .padding(.vertical, 13)
-                        Rectangle()
-                            .fill(selectedTab == tab ? Color.lcNavy : Color.clear)
-                            .frame(height: 2)
+    private var inlineDetails: some View {
+        VStack(spacing: 12) {
+            // Bio
+            if let bio = profile?.bio, !bio.isEmpty {
+                infoCard(icon: "text.alignleft", title: "Bio") {
+                    Text(bio)
+                        .font(.system(size: 14))
+                        .foregroundColor(.lcText2)
+                        .lineSpacing(4)
+                }
+            }
+
+            // Languages
+            if let languages = profile?.languages, !languages.isEmpty {
+                infoCard(icon: "globe", title: "Languages") {
+                    Text(languages)
+                        .font(.system(size: 14))
+                        .foregroundColor(.lcText2)
+                }
+            }
+
+            // Followed churches list
+            if !followedChurches.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("CHURCHES")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.lcText3)
+                        .tracking(0.6)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+
+                    ForEach(followedChurches) { church in
+                        NavigationLink(destination: ChurchDetailView(church: church)) {
+                            churchFollowCard(church)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
-                .frame(maxWidth: .infinity)
-            }
-        }
-    }
-
-    // MARK: - Tab Content
-
-    @ViewBuilder
-    private var tabContent: some View {
-        switch selectedTab {
-        case .posts:    postsTab
-        case .about:    aboutTab
-        case .churches: churchesTab
-        case .activity: activityTab
-        }
-    }
-
-    // MARK: - About Tab
-
-    private var aboutTab: some View {
-        VStack(spacing: 10) {
-            aboutCard(icon: "text.alignleft", title: "Bio") {
-                let bio = profile?.bio ?? ""
-                Text(bio.isEmpty ? "No bio added yet." : bio)
-                    .font(bio.isEmpty ? .system(size: 14).italic() : .system(size: 14))
-                    .foregroundColor(bio.isEmpty ? .lcText3 : .lcText2)
-                    .lineSpacing(4)
-            }
-
-            aboutCard(icon: "building.columns.fill", title: "Denomination") {
-                let denom = profile?.denomination ?? ""
-                Text(denom.isEmpty ? "—" : denom)
-                    .font(denom.isEmpty ? .system(size: 14).italic() : .system(size: 14))
-                    .foregroundColor(denom.isEmpty ? .lcText3 : .lcText2)
-            }
-
-            aboutCard(icon: "mappin.circle.fill", title: "Location") {
-                let city = profile?.city ?? ""
-                Text(city.isEmpty ? "—" : city)
-                    .font(city.isEmpty ? .system(size: 14).italic() : .system(size: 14))
-                    .foregroundColor(city.isEmpty ? .lcText3 : .lcText2)
-            }
-
-            aboutCard(icon: "house.fill", title: "Home Church") {
-                let name = followedChurches.first?.name ?? ""
-                Text(name.isEmpty ? "Not set" : name)
-                    .font(name.isEmpty ? .system(size: 14).italic() : .system(size: 14, weight: .medium))
-                    .foregroundColor(name.isEmpty ? .lcText3 : .lcText2)
-            }
-
-            aboutCard(icon: "calendar", title: "Member Since") {
-                Text("—")
-                    .font(.system(size: 14).italic())
-                    .foregroundColor(.lcText3)
             }
         }
         .padding(16)
     }
 
-    private func aboutCard<Content: View>(icon: String, title: String,
-                                          @ViewBuilder content: () -> Content) -> some View {
+    private func infoCard<Content: View>(icon: String, title: String,
+                                         @ViewBuilder content: () -> Content) -> some View {
         HStack(alignment: .top, spacing: 14) {
             ZStack {
                 Circle()
@@ -502,26 +454,6 @@ struct WorkshipperDashboardView: View {
         .background(Color.white)
         .cornerRadius(14)
         .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
-    }
-
-    // MARK: - Churches Tab
-
-    private var churchesTab: some View {
-        VStack(spacing: 12) {
-            if followedChurches.isEmpty {
-                emptyState(icon: "building.2",
-                           title: "No churches followed yet",
-                           subtitle: "Explore the Discover tab to find churches near you.")
-            } else {
-                ForEach(followedChurches) { church in
-                    NavigationLink(destination: ChurchDetailView(church: church)) {
-                        churchFollowCard(church)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-        .padding(16)
     }
 
     private func churchFollowCard(_ church: Church) -> some View {
@@ -582,91 +514,7 @@ struct WorkshipperDashboardView: View {
         .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
     }
 
-    // MARK: - Activity Tab
-
-    private var activityTab: some View {
-        VStack(spacing: 0) {
-            if followedChurches.isEmpty && allFollows.isEmpty {
-                emptyState(icon: "clock.arrow.circlepath",
-                           title: "No activity yet",
-                           subtitle: "Activity will appear here as you engage.")
-            } else {
-                VStack(spacing: 0) {
-                    activityRow(icon: "person.badge.plus",
-                                color: .lcNavy,
-                                text: "Joined Live Church Network",
-                                sub: nil)
-
-                    ForEach(Array(followedChurches.prefix(10)), id: \.id) { church in
-                        Divider().padding(.leading, 56)
-                        activityRow(icon: "building.2.fill",
-                                    color: .lcGold,
-                                    text: "Followed \(church.name)",
-                                    sub: church.denomination.isEmpty ? nil : church.denomination)
-                    }
-
-                    ForEach(Array(allFollows.filter { $0.followingType == "worshipper" }.prefix(5))) { _ in
-                        Divider().padding(.leading, 56)
-                        activityRow(icon: "person.fill.badge.plus",
-                                    color: .lcTeal,
-                                    text: "Followed a worshipper",
-                                    sub: nil)
-                    }
-                }
-                .background(Color.white)
-                .cornerRadius(14)
-                .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
-                .padding(16)
-            }
-        }
-    }
-
-    private func activityRow(icon: String, color: Color, text: String, sub: String?) -> some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(color.opacity(0.12))
-                    .frame(width: 36, height: 36)
-                Image(systemName: icon)
-                    .font(.system(size: 14))
-                    .foregroundColor(color)
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(text)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.lcText)
-                if let sub, !sub.isEmpty {
-                    Text(sub)
-                        .font(.system(size: 12))
-                        .foregroundColor(.lcText3)
-                }
-            }
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 13)
-    }
-
     // MARK: - Shared helpers
-
-    private func emptyState(icon: String, title: String, subtitle: String) -> some View {
-        VStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 38))
-                .foregroundColor(.lcText3)
-                .padding(.top, 52)
-            Text(title)
-                .font(.system(size: 15, weight: .bold))
-                .foregroundColor(.lcText)
-            Text(subtitle)
-                .font(.system(size: 13))
-                .foregroundColor(.lcText3)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.bottom, 40)
-    }
 
     private var avatarNavButton: some View {
         ZStack {
@@ -688,99 +536,6 @@ struct WorkshipperDashboardView: View {
                     .font(.system(size: 11, weight: .black))
                     .foregroundColor(.lcGold)
             }
-        }
-    }
-
-    // MARK: - Posts Tab
-
-    private var postsTab: some View {
-        VStack(spacing: 12) {
-            // Compose prompt
-            Button { showCreatePost = true } label: {
-                HStack(spacing: 12) {
-                    initialsCircle
-                        .frame(width: 38, height: 38)
-                        .clipShape(Circle())
-                    Text("Share something with the community…")
-                        .font(.system(size: 14))
-                        .foregroundColor(.lcText3)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Image(systemName: "square.and.pencil")
-                        .font(.system(size: 18))
-                        .foregroundColor(.lcNavy)
-                }
-                .padding(14)
-                .background(Color.white)
-                .cornerRadius(14)
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.lcBorder, lineWidth: 1))
-            }
-            .buttonStyle(.plain)
-            .sheet(isPresented: $showCreatePost) {
-                CreatePostView { Task { await loadPosts() } }
-            }
-
-            if isLoadingPosts {
-                ProgressView().tint(.lcNavy).padding(.top, 24)
-            } else if userPosts.isEmpty {
-                emptyState(
-                    icon: "text.bubble",
-                    title: "No posts yet",
-                    subtitle: "Share your faith journey, thoughts, or prayer requests with the community."
-                )
-            } else {
-                ForEach(userPosts) { post in
-                    profilePostCard(post)
-                }
-            }
-        }
-        .padding(16)
-    }
-
-    private func profilePostCard(_ post: Post) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if let content = post.content, !content.isEmpty {
-                Text(content)
-                    .font(.system(size: 14))
-                    .foregroundColor(.lcText)
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            if let urlStr = post.photoUrl, let url = URL(string: urlStr) {
-                AsyncImage(url: url) { phase in
-                    if case .success(let img) = phase {
-                        img.resizable().scaledToFit()
-                            .frame(maxWidth: .infinity)
-                            .cornerRadius(10)
-                    }
-                }
-            }
-            HStack {
-                Text(timeAgo(post.createdAt))
-                    .font(.system(size: 11))
-                    .foregroundColor(.lcText3)
-                Spacer()
-                HStack(spacing: 4) {
-                    Image(systemName: "heart")
-                        .font(.system(size: 12))
-                        .foregroundColor(.lcText3)
-                    Text("\(post.likeCount)")
-                        .font(.system(size: 12))
-                        .foregroundColor(.lcText3)
-                }
-            }
-        }
-        .padding(14)
-        .background(Color.white)
-        .cornerRadius(14)
-        .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
-    }
-
-    private func timeAgo(_ date: Date) -> String {
-        let diff = Date().timeIntervalSince(date)
-        switch diff {
-        case ..<3600:   return "\(Int(diff / 60))m ago"
-        case ..<86400:  return "\(Int(diff / 3600))h ago"
-        default:        return "\(Int(diff / 86400))d ago"
         }
     }
 
@@ -890,16 +645,6 @@ struct WorkshipperDashboardView: View {
         followingEntries = computedFollowingEntries
 
         isLoading = false
-
-        await loadPosts()
-    }
-
-    private func loadPosts() async {
-        let state = self.appState
-        guard let name = state.profile?.fullName, !name.isEmpty else { return }
-        isLoadingPosts = true
-        userPosts = (try? await SupabaseService.shared.getPostsByAuthor(authorName: name)) ?? []
-        isLoadingPosts = false
     }
 
     // MARK: - Photo upload handlers
