@@ -407,6 +407,15 @@ struct WorkshipperDashboardView: View {
                 }
             }
 
+            // Home Church
+            if let homeChurch = profile?.homeChurchName, !homeChurch.isEmpty {
+                infoCard(icon: "house.fill", title: "Church I Attend") {
+                    Text(homeChurch)
+                        .font(.system(size: 14))
+                        .foregroundColor(.lcText2)
+                }
+            }
+
             // Followed churches list
             if !followedChurches.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {

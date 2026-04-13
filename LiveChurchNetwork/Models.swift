@@ -122,6 +122,7 @@ let denominationOptions: [String] = [
       let city: String?
       let photoUrl: String?
       var coverImageUrl: String? = nil
+      var homeChurchName: String? = nil
       var followerCount: Int = 0
       var followingCount: Int = 0
       var churchSlugs: [String] = []

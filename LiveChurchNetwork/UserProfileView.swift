@@ -67,7 +67,8 @@ struct UserProfileView: View {
                     denomination: profile.denomination,
                     city: profile.city,
                     photoUrl: profile.photoUrl,
-                    coverImageUrl: profile.coverUrl
+                    coverImageUrl: profile.coverUrl,
+                    homeChurchName: profile.homeChurchName
                 )
                 // Map privacy settings from the fetched profile.
                 user.activityPrivacy  = profile.activityPrivacy
@@ -368,6 +369,15 @@ private struct UserProfileContentView: View {
                         .font(.system(size: 14))
                         .foregroundColor(.lcText2)
                         .lineSpacing(3)
+                }
+            }
+
+            // Home Church card
+            if let homeChurch = user.homeChurchName, !homeChurch.isEmpty {
+                infoCard(icon: "house.fill", title: "Church I Attend") {
+                    Text(homeChurch)
+                        .font(.system(size: 14))
+                        .foregroundColor(.lcText2)
                 }
             }
 
