@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 // MARK: - Profile Onboarding
 //
@@ -19,6 +20,12 @@ struct ProfileOnboardingView: View {
     @State private var homeChurchName: String? = nil
     @State private var showHomeChurchPicker    = false
     @State private var isSaving                = false
+
+    // Photo uploads
+    @State private var selectedAvatarItem: PhotosPickerItem?
+    @State private var selectedCoverItem: PhotosPickerItem?
+    @State private var avatarImage: UIImage?
+    @State private var coverImage: UIImage?
 
     // Step 1 — church follows
     @State private var followedSlugs: Set<String> = []
@@ -102,6 +109,39 @@ struct ProfileOnboardingView: View {
                     title: "Set Up Your Profile",
                     subtitle: "Tell churches and other members a little about yourself."
                 )
+
+                // Photos (optional)
+                VStack(alignment: .leading, spacing: 12) {
+                    fieldLabel("PHOTOS (Optional)")
+
+                    // Cover photo
+                    photoPicker(
+                        label: "📷 Cover Photo",
+                        selectedItem: $selectedCoverItem,
+                        image: coverImage
+                    )
+
+                    // Avatar photo
+                    photoPicker(
+                        label: "📷 Profile Photo",
+                        selectedItem: $selectedAvatarItem,
+                        image: avatarImage
+                    )
+                }
+                .onChange(of: selectedAvatarItem) { _ in
+                    Task {
+                        if let data = try? await selectedAvatarItem?.loadTransferable(type: Data.self) {
+                            avatarImage = UIImage(data: data)
+                        }
+                    }
+                }
+                .onChange(of: selectedCoverItem) { _ in
+                    Task {
+                        if let data = try? await selectedCoverItem?.loadTransferable(type: Data.self) {
+                            coverImage = UIImage(data: data)
+                        }
+                    }
+                }
 
                 // Bio
                 fieldLabel("BIO")
@@ -533,6 +573,21 @@ struct ProfileOnboardingView: View {
         guard let userId = appState.currentUserId else { advance(); return }
         isSaving = true
         let name = appState.profile?.fullName ?? ""
+
+        // Upload photos if selected
+        var photoUrl: String? = nil
+        var coverUrl: String? = nil
+
+        if let avatarImage = avatarImage, let data = avatarImage.jpegData(compressionQuality: 0.75) {
+            photoUrl = try? await SupabaseService.shared.uploadProfileImage(
+                userId: userId, data: data, bucket: "avatars")
+        }
+
+        if let coverImage = coverImage, let data = coverImage.jpegData(compressionQuality: 0.75) {
+            coverUrl = try? await SupabaseService.shared.uploadProfileImage(
+                userId: userId, data: data, bucket: "covers")
+        }
+
         try? await SupabaseService.shared.updateProfile(
             userId:         userId,
             fullName:       name,
@@ -540,7 +595,9 @@ struct ProfileOnboardingView: View {
             denomination:   denomination,
             bio:            bio.trimmingCharacters(in: .whitespaces),
             homeChurchSlug: homeChurchSlug,
-            homeChurchName: homeChurchName
+            homeChurchName: homeChurchName,
+            photoUrl:       photoUrl,
+            coverUrl:       coverUrl
         )
         // Auto-follow the home church so its posts appear in feed.
         // Only directory churches have a slug to follow — custom-name churches
@@ -579,6 +636,35 @@ struct ProfileOnboardingView: View {
             followedUserIds.insert(user.id)
             try? await SupabaseService.shared.follow(
                 followerId: userId, followingId: user.id.uuidString, followingType: "worshipper")
+        }
+    }
+
+    private func photoPicker(
+        label: String,
+        selectedItem: Binding<PhotosPickerItem?>,
+        image: UIImage?
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            PhotosPicker(selection: selectedItem, matching: .images) {
+                if let image = image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: label.contains("Cover") ? 100 : 80)
+                        .clipped()
+                        .cornerRadius(10)
+                } else {
+                    VStack(spacing: 8) {
+                        Text(label)
+                            .font(.system(size: 14))
+                            .foregroundColor(.lcText3)
+                    }
+                    .frame(height: label.contains("Cover") ? 100 : 80)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.lcBorder.opacity(0.3))
+                    .cornerRadius(10)
+                }
+            }
         }
     }
 }
