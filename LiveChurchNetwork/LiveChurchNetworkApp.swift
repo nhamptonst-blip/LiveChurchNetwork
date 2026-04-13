@@ -1,17 +1,13 @@
-//
-//  LiveChurchNetworkApp.swift
-//  LiveChurchNetwork
-//
-//  Created by Mike Deckman on 4/5/26.
-//
-
 import SwiftUI
 
 @main
 struct LiveChurchNetworkApp: App {
+    @StateObject private var appState = AppState()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(appState)
         }
     }
 }
