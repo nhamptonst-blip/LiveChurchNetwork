@@ -2,10 +2,7 @@ import SwiftUI
 
 struct AuthView: View {
     @EnvironmentObject var appState: AppState
-    @AppStorage("preSelectedRole") private var preSelectedRole = "worshipper"
     @State private var showRegister = false
-
-    private var isChurchRole: Bool { preSelectedRole == "church_admin" }
 
     var body: some View {
         ZStack {
@@ -26,15 +23,13 @@ struct AuthView: View {
                         .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
                         .padding(.bottom, 4)
 
-                    Text(isChurchRole ? "Welcome to\nLive Church Network" : "Find Your Church.\nAnywhere.")
+                    Text("Find Your Church.\nAnywhere.")
                         .font(.system(size: 26, weight: .black))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                         .lineSpacing(2)
 
-                    Text(isChurchRole
-                         ? "Set up your church and start reaching your community."
-                         : "Discover communities, watch services live,\nand grow your faith.")
+                    Text("Discover communities, watch services live,\nand grow your faith.")
                         .font(.system(size: 13, weight: .regular))
                         .foregroundColor(.white.opacity(0.65))
                         .multilineTextAlignment(.center)
@@ -171,34 +166,15 @@ struct RegisterView: View {
     let onSwitch: () -> Void
 
     @EnvironmentObject var appState: AppState
-    @AppStorage("preSelectedRole") private var preSelectedRole = "worshipper"
 
-    // Shared
-    @State private var role        = "worshipper"
+    @State private var memberName  = ""
     @State private var email       = ""
     @State private var password    = ""
     @State private var isLoading   = false
     @State private var errorMessage: String?
-    @State private var successMessage: String?
-
-    // Member-only
-    @State private var memberName  = ""
-
-    // Church-only
-    @State private var churchName    = ""
-    @State private var contactName   = ""
-    @State private var denomination  = ""
-    @State private var city          = ""
-
-    private var isChurch: Bool { role == "church_admin" }
 
     private var formIsValid: Bool {
-        let sharedOk = !email.isEmpty && !password.isEmpty
-        if isChurch {
-            return sharedOk && !churchName.isEmpty && !contactName.isEmpty
-        } else {
-            return sharedOk && !memberName.isEmpty
-        }
+        !email.isEmpty && !password.isEmpty && !memberName.isEmpty
     }
 
     // Uses shared `denominationOptions` from Models.swift
@@ -207,62 +183,32 @@ struct RegisterView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
 
-                // Dynamic title
+                // Simple title
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(isChurch ? "Create your church account" : "Create your account")
+                    Text("Create your account")
                         .font(.system(size: 22, weight: .black))
                         .foregroundColor(.lcText)
-                    Text(isChurch
-                         ? "Set up your church page and start reaching people."
-                         : "Join the Live Church Network community.")
+                    Text("Join the Live Church Network community.")
                         .font(.system(size: 13))
                         .foregroundColor(.lcText3)
                 }
                 .padding(.top, 28)
-                .padding(.bottom, 20)
-                .animation(.easeInOut(duration: 0.2), value: isChurch)
-
-                // Account type cards
-                VStack(spacing: 10) {
-                    AccountTypeCard(
-                        icon: "person.fill",
-                        title: "I'm a Member",
-                        description: "Discover churches, follow communities, and engage with your faith.",
-                        selected: role == "worshipper"
-                    ) { withAnimation(.easeInOut(duration: 0.22)) { role = "worshipper"; preSelectedRole = "worshipper" } }
-
-                    AccountTypeCard(
-                        icon: "building.2.fill",
-                        title: "I Represent a Church",
-                        description: "Create your church page, stream services, and reach people.",
-                        selected: role == "church_admin"
-                    ) { withAnimation(.easeInOut(duration: 0.22)) { role = "church_admin"; preSelectedRole = "church_admin" } }
-                }
-                .onAppear { role = "worshipper"; preSelectedRole = "worshipper" }
                 .padding(.bottom, 24)
 
-                // Dynamic form fields
+                // Form fields
                 VStack(spacing: 14) {
-                    if isChurch {
-                        churchFields
-                    } else {
-                        memberFields
-                    }
+                    AuthField(title: "FULL NAME", placeholder: "Your name", text: $memberName)
+                    AuthField(title: "EMAIL", placeholder: "you@example.com",
+                              text: $email, keyboard: .emailAddress)
+                    AuthField(title: "PASSWORD", placeholder: "At least 8 characters",
+                              text: $password, isSecure: true)
                 }
-                .animation(.easeInOut(duration: 0.22), value: isChurch)
 
-                // Errors / success
+                // Error message
                 if let error = errorMessage {
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.circle.fill").foregroundColor(.red)
                         Text(error).font(.system(size: 13)).foregroundColor(.red)
-                    }
-                    .padding(.top, 12)
-                }
-                if let success = successMessage {
-                    HStack(spacing: 6) {
-                        Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
-                        Text(success).font(.system(size: 13)).foregroundColor(.green)
                     }
                     .padding(.top, 12)
                 }
@@ -302,115 +248,18 @@ struct RegisterView: View {
         }
     }
 
-    // MARK: Member fields
-
-    @ViewBuilder
-    private var memberFields: some View {
-        AuthField(title: "FULL NAME", placeholder: "Your name", text: $memberName)
-        AuthField(title: "EMAIL", placeholder: "you@example.com",
-                  text: $email, keyboard: .emailAddress)
-        AuthField(title: "PASSWORD", placeholder: "At least 8 characters",
-                  text: $password, isSecure: true)
-    }
-
-    // MARK: Church fields
-
-    @ViewBuilder
-    private var churchFields: some View {
-        // Required
-        sectionDivider("REQUIRED")
-
-        AuthField(title: "CHURCH NAME", placeholder: "e.g. Grace Community Church",
-                  text: $churchName)
-
-        AuthField(title: "YOUR NAME (CHURCH CONTACT)",
-                  placeholder: "The person managing this account",
-                  text: $contactName)
-
-        AuthField(title: "EMAIL", placeholder: "church@example.com",
-                  text: $email, keyboard: .emailAddress)
-
-        AuthField(title: "PASSWORD", placeholder: "At least 8 characters",
-                  text: $password, isSecure: true)
-
-        // Optional
-        sectionDivider("OPTIONAL — COMPLETE NOW OR LATER")
-
-        // Denomination picker
-        VStack(alignment: .leading, spacing: 6) {
-            Text("DENOMINATION")
-                .font(.system(size: 11, weight: .bold))
-                .foregroundColor(.lcText2)
-                .tracking(0.3)
-            Menu {
-                Button("None / Not sure") { denomination = "" }
-                Divider()
-                ForEach(denominationOptions, id: \.self) { opt in
-                    Button(opt) { denomination = opt }
-                }
-            } label: {
-                HStack {
-                    Text(denomination.isEmpty ? "Select denomination…" : denomination)
-                        .font(.system(size: 15))
-                        .foregroundColor(denomination.isEmpty ? Color(.placeholderText) : .lcText)
-                    Spacer()
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 12))
-                        .foregroundColor(.lcText3)
-                }
-                .padding(13)
-                .background(Color.lcCream)
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
-            }
-        }
-
-        AuthField(title: "CITY / LOCATION", placeholder: "e.g. Nashville, TN", text: $city)
-    }
-
-    private func sectionDivider(_ label: String) -> some View {
-        HStack(spacing: 10) {
-            Rectangle().fill(Color.lcBorder).frame(height: 1)
-            Text(label)
-                .font(.system(size: 10, weight: .bold))
-                .foregroundColor(.lcText3)
-                .tracking(0.4)
-                .fixedSize()
-            Rectangle().fill(Color.lcBorder).frame(height: 1)
-        }
-        .padding(.vertical, 4)
-    }
-
     // MARK: Sign up
 
     private func signUp() async {
         isLoading = true
         errorMessage = nil
-        successMessage = nil
         do {
-            if isChurch {
-                // full_name = church name (display name in app)
-                // bio = contact person's name
-                try await SupabaseService.shared.signUp(
-                    email: email,
-                    password: password,
-                    fullName: churchName.trimmingCharacters(in: .whitespaces),
-                    role: role,
-                    bio: contactName.trimmingCharacters(in: .whitespaces),
-                    city: city.isEmpty ? nil : city.trimmingCharacters(in: .whitespaces),
-                    denomination: denomination.isEmpty ? nil : denomination
-                )
-            } else {
-                try await SupabaseService.shared.signUp(
-                    email: email,
-                    password: password,
-                    fullName: memberName.trimmingCharacters(in: .whitespaces),
-                    role: role
-                )
-            }
-            successMessage = isChurch
-                ? "Church account created! Check your email to confirm."
-                : "Account created! Check your email to confirm."
+            try await SupabaseService.shared.signUp(
+                email: email,
+                password: password,
+                fullName: memberName.trimmingCharacters(in: .whitespaces),
+                role: "worshipper"
+            )
             // Force a profile reload now that the insert has completed — this ensures
             // checkProfileOnboarding sees the correct role and routes to the right
             // onboarding flow instead of racing with the auth signedIn event.
@@ -419,60 +268,6 @@ struct RegisterView: View {
             errorMessage = "Could not create account. \(error.localizedDescription)"
         }
         isLoading = false
-    }
-}
-
-// MARK: - Account type card
-
-struct AccountTypeCard: View {
-    let icon: String
-    let title: String
-    let description: String
-    let selected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(selected ? Color.lcNavy : Color.lcCream)
-                        .frame(width: 44, height: 44)
-                    Image(systemName: icon)
-                        .font(.system(size: 17))
-                        .foregroundColor(selected ? .white : .lcText2)
-                }
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(title)
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.lcText)
-                    Text(description)
-                        .font(.system(size: 12))
-                        .foregroundColor(.lcText3)
-                        .lineSpacing(1.5)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer()
-
-                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 20))
-                    .foregroundColor(selected ? .lcNavy : Color.lcBorder)
-            }
-            .padding(14)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.white)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(selected ? Color.lcNavy : Color.lcBorder, lineWidth: selected ? 2 : 1)
-                    )
-                    .shadow(color: selected ? Color.lcNavy.opacity(0.10) : Color.clear, radius: 6, x: 0, y: 2)
-            )
-        }
-        .buttonStyle(.plain)
-        .animation(.easeInOut(duration: 0.18), value: selected)
     }
 }
 
