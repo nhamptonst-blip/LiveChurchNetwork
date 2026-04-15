@@ -503,15 +503,6 @@ struct ProfileOnboardingView: View {
             homeChurchSlug: homeChurchSlug,
             homeChurchName: homeChurchName
         )
-        // Auto-follow the home church so its posts appear in feed.
-        // Only directory churches have a slug to follow — custom-name churches
-        // (homeChurchName) aren't in the follow graph yet.
-        // Pre-mark in followedSlugs so Step 1 shows it as already-followed.
-        if let slug = homeChurchSlug {
-            try? await SupabaseService.shared.follow(
-                followerId: userId, followingId: slug, followingType: "church")
-            followedSlugs.insert(slug)
-        }
         await appState.loadProfile()
         isSaving = false
         advance()
