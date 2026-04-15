@@ -4,7 +4,7 @@ import PhotosUI
 // MARK: - Profile Onboarding
 //
 // Shown once after a new worshipper account is created.
-// Steps: Profile Setup → Follow Churches → Follow People → Done
+// Steps: Profile Setup → Follow People → Done
 // All steps are skippable. Follows and profile saves happen in real time.
 // Completion is tracked via UserDefaults ("profileOnboarding_complete_{userId}").
 
@@ -27,20 +27,11 @@ struct ProfileOnboardingView: View {
     @State private var avatarImage: UIImage?
     @State private var coverImage: UIImage?
 
-    // Step 1 — church follows
-    @State private var followedSlugs: Set<String> = []
-
-    // Step 2 — people follows
+    // Step 1 — people follows
     @State private var followedUserIds: Set<UUID> = []
 
-    private let totalSteps = 3   // steps 0-2; step 3 = completion
+    private let totalSteps = 2   // steps 0-1; step 2 = completion
 
-    private var suggestedChurches: [Church] {
-        appState.allChurchesForDisplay()
-            .filter { !$0.denomination.isEmpty }
-            .prefix(10)
-            .map { $0 }
-    }
     private let suggestedPeople = Array(MockDataProvider.allSeedUsers.prefix(8))
 
     // Uses shared `denominationOptions` from Models.swift
@@ -59,8 +50,7 @@ struct ProfileOnboardingView: View {
                 Group {
                     switch step {
                     case 0:  profileStep
-                    case 1:  churchesStep
-                    case 2:  peopleStep
+                    case 1:  peopleStep
                     default: completionStep
                     }
                 }
@@ -279,81 +269,7 @@ struct ProfileOnboardingView: View {
         }
     }
 
-    // MARK: - Step 1: Follow churches
-
-    private var churchesStep: some View {
-        VStack(spacing: 0) {
-            stepHeader(
-                title: "Follow Some Churches",
-                subtitle: "Stay connected with churches you love. Their updates will appear in your feed."
-            )
-            .padding(.horizontal, 24)
-            .padding(.top, 16)
-            .padding(.bottom, 12)
-
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(suggestedChurches) { church in
-                        churchRow(church)
-                        if church.id != suggestedChurches.last?.id {
-                            Divider().padding(.leading, 72)
-                        }
-                    }
-                }
-                .background(Color.white)
-                .cornerRadius(14)
-                .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 12)
-            }
-
-            stepActions(
-                followCount: followedSlugs.count,
-                entityLabel: followedSlugs.count == 1 ? "church" : "churches"
-            )
-        }
-    }
-
-    private func churchRow(_ church: Church) -> some View {
-        HStack(spacing: 12) {
-            AsyncImage(url: URL(string: church.image)) { phase in
-                switch phase {
-                case .success(let img): img.resizable().scaledToFill()
-                default:
-                    Color.lcNavy.opacity(0.09)
-                        .overlay(Image(systemName: "building.2")
-                            .font(.system(size: 14))
-                            .foregroundColor(.lcText3))
-                }
-            }
-            .frame(width: 46, height: 46)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(church.name)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.lcText)
-                    .lineLimit(1)
-                if !church.denomination.isEmpty {
-                    Text(church.denomination)
-                        .font(.system(size: 11))
-                        .foregroundColor(.lcText3)
-                }
-            }
-
-            Spacer()
-
-            followToggleButton(
-                isFollowed: followedSlugs.contains(church.slug)
-            ) {
-                Task { await toggleChurchFollow(church) }
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-    }
-
-    // MARK: - Step 2: Follow people
+    // MARK: - Step 1: Follow people
 
     private var peopleStep: some View {
         VStack(spacing: 0) {
@@ -440,7 +356,7 @@ struct ProfileOnboardingView: View {
                     .font(.system(size: 28, weight: .black))
                     .foregroundColor(.lcText)
 
-                Text("Your feed is personalised based on the churches and people you follow.")
+                Text("Your feed is personalised based on the people you follow.")
                     .font(.system(size: 14))
                     .foregroundColor(.lcText3)
                     .multilineTextAlignment(.center)
@@ -450,23 +366,12 @@ struct ProfileOnboardingView: View {
             .padding(.top, 28)
 
             // Summary stats
-            if followedSlugs.count > 0 || followedUserIds.count > 0 {
-                HStack(spacing: 0) {
-                    if followedSlugs.count > 0 {
-                        completionStat(
-                            value: "\(followedSlugs.count)",
-                            label: followedSlugs.count == 1 ? "Church" : "Churches"
-                        )
-                    }
-                    if followedUserIds.count > 0 {
-                        completionStat(
-                            value: "\(followedUserIds.count)",
-                            label: followedUserIds.count == 1 ? "Person" : "People"
-                        )
-                    }
-                }
+            if followedUserIds.count > 0 {
+                completionStat(
+                    value: "\(followedUserIds.count)",
+                    label: followedUserIds.count == 1 ? "Person" : "People"
+                )
                 .padding(.top, 32)
-                .padding(.horizontal, 40)
             }
 
             Spacer()
@@ -575,17 +480,18 @@ struct ProfileOnboardingView: View {
         let name = appState.profile?.fullName ?? ""
 
         // Upload photos if selected
-        var photoUrl: String? = nil
-        var coverUrl: String? = nil
-
         if let avatarImage = avatarImage, let data = avatarImage.jpegData(compressionQuality: 0.75) {
-            photoUrl = try? await SupabaseService.shared.uploadProfileImage(
-                userId: userId, data: data, bucket: "avatars")
+            if let photoUrl = try? await SupabaseService.shared.uploadProfileImage(
+                userId: userId, data: data, bucket: "avatars") {
+                try? await SupabaseService.shared.updateProfilePhotoUrl(userId: userId, photoUrl: photoUrl)
+            }
         }
 
         if let coverImage = coverImage, let data = coverImage.jpegData(compressionQuality: 0.75) {
-            coverUrl = try? await SupabaseService.shared.uploadProfileImage(
-                userId: userId, data: data, bucket: "covers")
+            if let coverUrl = try? await SupabaseService.shared.uploadProfileImage(
+                userId: userId, data: data, bucket: "covers") {
+                try? await SupabaseService.shared.updateProfileCoverUrl(userId: userId, coverUrl: coverUrl)
+            }
         }
 
         try? await SupabaseService.shared.updateProfile(
@@ -595,9 +501,7 @@ struct ProfileOnboardingView: View {
             denomination:   denomination,
             bio:            bio.trimmingCharacters(in: .whitespaces),
             homeChurchSlug: homeChurchSlug,
-            homeChurchName: homeChurchName,
-            photoUrl:       photoUrl,
-            coverUrl:       coverUrl
+            homeChurchName: homeChurchName
         )
         // Auto-follow the home church so its posts appear in feed.
         // Only directory churches have a slug to follow — custom-name churches
@@ -611,19 +515,6 @@ struct ProfileOnboardingView: View {
         await appState.loadProfile()
         isSaving = false
         advance()
-    }
-
-    private func toggleChurchFollow(_ church: Church) async {
-        guard let userId = appState.currentUserId else { return }
-        if followedSlugs.contains(church.slug) {
-            followedSlugs.remove(church.slug)
-            try? await SupabaseService.shared.unfollow(
-                followerId: userId, followingId: church.slug)
-        } else {
-            followedSlugs.insert(church.slug)
-            try? await SupabaseService.shared.follow(
-                followerId: userId, followingId: church.slug, followingType: "church")
-        }
     }
 
     private func toggleUserFollow(_ user: DiscoverableUser) async {
