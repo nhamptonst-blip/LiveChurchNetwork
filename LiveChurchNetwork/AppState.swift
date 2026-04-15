@@ -179,7 +179,7 @@ import Foundation
       }
                                                             
       private func listenForAuthChanges() async {
-          for await (event, session) in await SupabaseService.shared.client.auth.authStateChanges {
+          for await (event, session) in SupabaseService.shared.client.auth.authStateChanges {
               // Capture whether we need to load a profile before releasing the splash screen
               let needsProfileLoad: Bool = await MainActor.run {
                   switch event {
