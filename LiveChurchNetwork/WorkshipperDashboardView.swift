@@ -5,6 +5,7 @@ struct WorkshipperDashboardView: View {
 
     @State private var followerCount = 0
     @State private var followingCount = 0
+    @State private var userPosts: [Post] = []
     @State private var isLoading = true
     @State private var showSignOutAlert = false
     @State private var showEditProfile = false
@@ -19,7 +20,7 @@ struct WorkshipperDashboardView: View {
                         .foregroundColor(.lcText)
                     Spacer()
                     HStack(spacing: 10) {
-                        NavigationLink(destination: CreatePostView(onPosted: { Task { await loadStats() } }).environmentObject(appState)) {
+                        NavigationLink(destination: CreatePostView(onPosted: { Task { await loadStats(); await loadUserPosts() } }).environmentObject(appState)) {
                             HStack(spacing: 5) {
                                 Image(systemName: "square.and.pencil")
                                     .font(.system(size: 12, weight: .semibold))
@@ -149,6 +150,24 @@ struct WorkshipperDashboardView: View {
                     .cornerRadius(12)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 16)
+
+                    // Posts Section
+                    if !userPosts.isEmpty {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text("Your Posts")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.lcText3)
+                                .padding(.horizontal, 16)
+                                .padding(.top, 24)
+                                .padding(.bottom, 12)
+
+                            ForEach(userPosts) { post in
+                                PostCard(post: post)
+                                Divider().padding(.leading, 16)
+                            }
+                        }
+                        .padding(.bottom, 24)
+                    }
                 }
             }
             .background(Color.lcCream)
@@ -169,7 +188,10 @@ struct WorkshipperDashboardView: View {
                 Text("Are you sure?")
             }
         }
-        .task { await loadStats() }
+        .task {
+            await loadStats()
+            await loadUserPosts()
+        }
     }
 
     private var defaultCover: some View {
@@ -201,6 +223,19 @@ struct WorkshipperDashboardView: View {
             followingCount = following.count
         } catch {
             print("Load stats error: \(error)")
+        }
+    }
+
+    private func loadUserPosts() async {
+        guard let userId = appState.currentUserId else { return }
+
+        do {
+            let posts = try await SupabaseService.shared.getUserPosts(userId: userId)
+            await MainActor.run {
+                userPosts = posts.sorted { $0.createdAt > $1.createdAt }
+            }
+        } catch {
+            print("Load user posts error: \(error)")
         }
     }
 }

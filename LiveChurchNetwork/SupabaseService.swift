@@ -539,6 +539,18 @@ private struct ProfileCoverUpdate: Encodable {
              .value
      }
 
+     func getUserPosts(userId: UUID) async throws -> [Post] {
+         return try await client
+             .from("posts")
+             .select()
+             .eq("author_id", value: userId.uuidString)
+             .eq("author_type", value: "worshipper")
+             .order("created_at", ascending: false)
+             .limit(50)
+             .execute()
+             .value
+     }
+
      func getEventsByAuthor(authorName: String) async throws -> [Event] {
          let now = ISO8601DateFormatter().string(from: Date())
          return try await client
