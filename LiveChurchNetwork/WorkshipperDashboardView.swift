@@ -149,16 +149,22 @@ struct WorkshipperDashboardView: View {
 
                     // Posts Section - ONLY render posts from current user
                     if !userPosts.isEmpty {
+                        let filteredPosts = userPosts.filter { $0.authorId == appState.currentUserId && $0.authorType == "worshipper" }
+
+                        print("[Profile] Total posts: \(userPosts.count), Filtered posts: \(filteredPosts.count)")
+                        for (i, post) in filteredPosts.enumerated() {
+                            print("[Profile] Filtered Post \(i+1): \(post.authorName) (ID: \(post.authorId))")
+                        }
+
                         VStack(alignment: .leading, spacing: 0) {
-                            Text("Your Posts")
+                            Text("Your Posts (\(filteredPosts.count))")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(.lcText3)
                                 .padding(.horizontal, 16)
                                 .padding(.top, 24)
                                 .padding(.bottom, 12)
 
-                            // Only render posts where author is the current user
-                            ForEach(userPosts.filter { $0.authorId == appState.currentUserId && $0.authorType == "worshipper" }, id: \.id) { post in
+                            ForEach(filteredPosts, id: \.id) { post in
                                 PostCard(post: post, onLikeToggled: { updatedPost in
                                     if let idx = userPosts.firstIndex(where: { $0.id == updatedPost.id }) {
                                         userPosts[idx] = updatedPost
