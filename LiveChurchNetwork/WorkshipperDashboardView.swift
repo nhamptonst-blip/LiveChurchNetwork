@@ -34,13 +34,17 @@ struct WorkshipperDashboardView: View {
                             .cornerRadius(8)
                         }
                         Button { showEditProfile = true } label: {
-                            Image(systemName: "pencil")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundColor(.lcText3)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 7)
-                                .background(Color.lcBorder.opacity(0.5))
-                                .cornerRadius(8)
+                            HStack(spacing: 4) {
+                                Image(systemName: "pencil.circle.fill")
+                                    .font(.system(size: 14, weight: .semibold))
+                                Text("Edit")
+                                    .font(.system(size: 12, weight: .semibold))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .background(Color.lcGold)
+                            .cornerRadius(8)
                         }
                     }
                 }
@@ -133,14 +137,20 @@ struct WorkshipperDashboardView: View {
                             .padding(.bottom, 16)
 
                             // Sign Out
-                            Button(role: .destructive) { showSignOutAlert = true } label: {
-                                Text("Sign Out")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(.red)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
-                                    .background(Color.red.opacity(0.08))
-                                    .cornerRadius(8)
+                            Button {
+                                showSignOutAlert = true
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "arrow.right.circle.fill")
+                                        .font(.system(size: 14, weight: .semibold))
+                                    Text("Sign Out")
+                                        .font(.system(size: 13, weight: .semibold))
+                                }
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Color.red)
+                                .cornerRadius(8)
                             }
                             .padding(.horizontal, 16)
                             .padding(.bottom, 16)

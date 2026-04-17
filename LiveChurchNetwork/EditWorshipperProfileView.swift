@@ -8,7 +8,10 @@ struct EditWorshipperProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var fullName: String = ""
     @State private var bio: String = ""
+    @State private var city: String = ""
+    @State private var denomination: String = ""
     @State private var isSaving = false
+    @State private var selectedDenomination: String = ""
 
     var body: some View {
         NavigationStack {
@@ -25,6 +28,44 @@ struct EditWorshipperProfileView: View {
                             .background(Color.lcCream)
                             .cornerRadius(8)
                             .textContentType(.name)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("City", systemImage: "mappin.circle.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.lcText3)
+
+                        TextField("Your city", text: $city)
+                            .font(.system(size: 16))
+                            .padding(12)
+                            .background(Color.lcCream)
+                            .cornerRadius(8)
+                            .textContentType(.addressCity)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Denomination", systemImage: "building.2.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.lcText3)
+
+                        Menu {
+                            Button("None") { denomination = "" }
+                            ForEach(denominationOptions, id: \.self) { denom in
+                                Button(denom) { denomination = denom }
+                            }
+                        } label: {
+                            HStack {
+                                Text(denomination.isEmpty ? "Select denomination..." : denomination)
+                                    .foregroundColor(denomination.isEmpty ? .lcText3 : .lcText)
+                                Spacer()
+                                Image(systemName: "chevron.down")
+                                    .foregroundColor(.lcText3)
+                            }
+                            .font(.system(size: 16))
+                            .padding(12)
+                            .background(Color.lcCream)
+                            .cornerRadius(8)
+                        }
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
@@ -68,6 +109,8 @@ struct EditWorshipperProfileView: View {
             .onAppear {
                 fullName = profile.fullName ?? ""
                 bio = profile.bio ?? ""
+                city = profile.city ?? ""
+                denomination = profile.denomination ?? ""
             }
         }
     }
@@ -78,8 +121,8 @@ struct EditWorshipperProfileView: View {
             try await SupabaseService.shared.updateProfile(
                 userId: userId,
                 fullName: fullName,
-                city: profile.city ?? "",
-                denomination: profile.denomination ?? "",
+                city: city,
+                denomination: denomination,
                 bio: bio,
                 homeChurchSlug: profile.homeChurchSlug,
                 homeChurchName: profile.homeChurchName
