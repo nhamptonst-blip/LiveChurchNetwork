@@ -151,11 +151,6 @@ struct WorkshipperDashboardView: View {
                     if !userPosts.isEmpty {
                         let filteredPosts = userPosts.filter { $0.authorId == appState.currentUserId && $0.authorType == "worshipper" }
 
-                        print("[Profile] Total posts: \(userPosts.count), Filtered posts: \(filteredPosts.count)")
-                        for (i, post) in filteredPosts.enumerated() {
-                            print("[Profile] Filtered Post \(i+1): \(post.authorName) (ID: \(post.authorId))")
-                        }
-
                         VStack(alignment: .leading, spacing: 0) {
                             Text("Your Posts (\(filteredPosts.count))")
                                 .font(.system(size: 14, weight: .semibold))
@@ -163,6 +158,12 @@ struct WorkshipperDashboardView: View {
                                 .padding(.horizontal, 16)
                                 .padding(.top, 24)
                                 .padding(.bottom, 12)
+                                .onAppear {
+                                    print("[Profile] Total posts: \(userPosts.count), Filtered posts: \(filteredPosts.count)")
+                                    for (i, post) in filteredPosts.enumerated() {
+                                        print("[Profile] Filtered Post \(i+1): \(post.authorName) (ID: \(post.authorId))")
+                                    }
+                                }
 
                             ForEach(filteredPosts, id: \.id) { post in
                                 PostCard(post: post, onLikeToggled: { updatedPost in
