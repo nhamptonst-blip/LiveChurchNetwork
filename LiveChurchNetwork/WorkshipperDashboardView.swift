@@ -166,12 +166,47 @@ struct WorkshipperDashboardView: View {
                                 }
 
                             ForEach(filteredPosts, id: \.id) { post in
-                                PostCard(post: post, onLikeToggled: { updatedPost in
-                                    if let idx = userPosts.firstIndex(where: { $0.id == updatedPost.id }) {
-                                        userPosts[idx] = updatedPost
+                                // TEST: Simple post preview instead of PostCard
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        Circle()
+                                            .fill(Color.lcNavy)
+                                            .frame(width: 40, height: 40)
+                                            .overlay(
+                                                Text(post.authorName.prefix(1).uppercased())
+                                                    .font(.system(size: 14, weight: .bold))
+                                                    .foregroundColor(.white)
+                                            )
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(post.authorName)
+                                                .font(.system(size: 14, weight: .bold))
+                                            Text("1h ago")
+                                                .font(.system(size: 11))
+                                                .foregroundColor(.lcText3)
+                                        }
+                                        Spacer()
                                     }
-                                })
-                                .environmentObject(appState)
+
+                                    Text(post.content ?? "")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.lcText)
+
+                                    if let photoUrl = post.photoUrl, !photoUrl.isEmpty {
+                                        AsyncImage(url: URL(string: photoUrl)) { phase in
+                                            if case .success(let img) = phase {
+                                                img.resizable().scaledToFill()
+                                            } else {
+                                                Color.lcBorder
+                                            }
+                                        }
+                                        .frame(height: 200)
+                                        .clipped()
+                                    }
+                                }
+                                .padding(14)
+                                .background(Color.white)
+                                .cornerRadius(10)
+
                                 Divider().padding(.leading, 16)
                             }
                         }
