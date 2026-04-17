@@ -499,6 +499,82 @@ private struct UserProfileContentView: View {
 }
 
 
+// MARK: - Follow List Sheet
+
+struct FollowListSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let title: String
+    let entries: [FollowEntry]
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color(.systemGroupedBackground).ignoresSafeArea()
+                if entries.isEmpty {
+                    VStack(spacing: 16) {
+                        Image(systemName: "person.fill.questionmark")
+                            .font(.system(size: 48))
+                            .foregroundColor(Color(.tertiaryLabel))
+                        Text("No \(title.lowercased()) yet")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundColor(Color(.label))
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    List(entries) { entry in
+                        HStack(spacing: 12) {
+                            if let photoUrl = entry.photoUrl, let url = URL(string: photoUrl) {
+                                AsyncImage(url: url) { phase in
+                                    if case .success(let img) = phase {
+                                        img.resizable().scaledToFill()
+                                    } else {
+                                        Color.lcNavy.opacity(0.1)
+                                    }
+                                }
+                                .frame(width: 44, height: 44)
+                                .clipShape(Circle())
+                            } else {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.lcNavy.opacity(0.1))
+                                        .frame(width: 44, height: 44)
+                                    Text(entry.displayName.prefix(1).uppercased())
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(.lcNavy)
+                                }
+                            }
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(entry.displayName)
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(.lcText)
+                                if let subtitle = entry.subtitle, !subtitle.isEmpty {
+                                    Text(subtitle)
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.lcText3)
+                                        .lineLimit(1)
+                                }
+                            }
+
+                            Spacer()
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .listStyle(.plain)
+                }
+            }
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+
 // MARK: - Church List Sheet
 
 struct ChurchListSheet: View {

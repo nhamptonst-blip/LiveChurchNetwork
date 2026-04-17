@@ -49,8 +49,8 @@ import Foundation
               }
               await MainActor.run { profile = p }
               print("[AppState] loadProfile: role=\(p.role ?? "nil")")
-              
-              await checkProfileOnboarding()
+
+              await MainActor.run { checkProfileOnboarding() }
           } catch {
               print("[AppState] loadProfile error: \(error)")
           }
