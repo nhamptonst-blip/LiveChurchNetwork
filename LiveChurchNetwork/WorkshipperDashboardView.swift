@@ -154,7 +154,21 @@ struct WorkshipperDashboardView: View {
                                     .padding(.horizontal, 16)
 
                                 // ONLY render posts from current user
-                                ForEach(userPosts.filter { $0.authorId == appState.currentUserId }, id: \.id) { post in
+                                let filteredForRender = userPosts.filter { $0.authorId == appState.currentUserId }
+
+                                ForEach(filteredForRender, id: \.id) { post in
+                                    // Log every post being rendered
+                                    let _ = print("""
+                                    [RENDER POST]
+                                    ID: \(post.id)
+                                    Author ID: \(post.authorId)
+                                    Author Name: \(post.authorName)
+                                    Author Type: \(post.authorType)
+                                    Content: \(post.content ?? "nil")
+                                    Photo URL: \(post.photoUrl ?? "nil")
+                                    Post Type: \(post.postType)
+                                    ---
+                                    """)
                                     VStack(alignment: .leading, spacing: 8) {
                                         HStack(spacing: 10) {
                                             Circle()
