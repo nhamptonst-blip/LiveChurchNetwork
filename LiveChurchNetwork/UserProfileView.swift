@@ -237,7 +237,7 @@ private struct UserProfileContentView: View {
                         .offset(y: -42)
                         .padding(.bottom, -42)
                     Spacer()
-                    if !isOwnProfile && !appState.isGuest && appState.currentUserId != nil {
+                    if !isOwnProfile && appState.currentUserId != nil {
                         FollowButton(followingId: user.id.uuidString, followingType: "worshipper")
                             .padding(.top, 10)
                     }

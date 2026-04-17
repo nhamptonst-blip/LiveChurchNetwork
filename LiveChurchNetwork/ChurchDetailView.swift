@@ -45,7 +45,10 @@ struct ChurchDetailView: View {
                 actionStrip
                 tabBar.background(Color.white)
                 Divider()
-                tabContent.padding(.bottom, 40)
+                tabContent
+                    .animation(.appStandard, value: selectedTab)
+                    .id(selectedTab)
+                    .padding(.bottom, 40)
             }
         }
         .background(Color.lcCream)
@@ -172,7 +175,7 @@ struct ChurchDetailView: View {
 
     private var followButton: some View {
         Group {
-            if appState.isGuest || appState.currentUserId == nil {
+            if appState.currentUserId == nil {
                 EmptyView()
             } else {
                 Button { Task { await toggleFollow() } } label: {
@@ -264,7 +267,7 @@ struct ChurchDetailView: View {
                     }
 
                     // Contact
-                    if !appState.isGuest && appState.currentUserId != nil {
+                    if appState.currentUserId != nil {
                         Button { showContact = true } label: {
                             actionPill(icon: "envelope.fill", label: "Contact", active: true, accent: false)
                         }
@@ -302,7 +305,7 @@ struct ChurchDetailView: View {
             HStack(spacing: 8) {
                 ForEach(Array(ChurchProfileTab.allCases.prefix(2)), id: \.self) { tab in
                     Button {
-                        withAnimation(.easeInOut(duration: 0.18)) { selectedTab = tab }
+                        withAnimation(.appStandard) { selectedTab = tab }
                     } label: {
                         Text(tab.rawValue)
                             .font(.system(size: 14, weight: selectedTab == tab ? .bold : .medium))
@@ -317,7 +320,7 @@ struct ChurchDetailView: View {
             HStack(spacing: 8) {
                 ForEach(Array(ChurchProfileTab.allCases.dropFirst(2)), id: \.self) { tab in
                     Button {
-                        withAnimation(.easeInOut(duration: 0.18)) { selectedTab = tab }
+                        withAnimation(.appStandard) { selectedTab = tab }
                     } label: {
                         Text(tab.rawValue)
                             .font(.system(size: 14, weight: selectedTab == tab ? .bold : .medium))
@@ -383,11 +386,26 @@ struct ChurchDetailView: View {
         }
     }
 
+    private var livePulsingDot: some View {
+        @State var pulsing = false
+
+        return Circle()
+            .fill(Color.red)
+            .frame(width: 8, height: 8)
+            .overlay(
+                Circle()
+                    .stroke(Color.red.opacity(0.4), lineWidth: 4)
+                    .scaleEffect(pulsing ? 2.2 : 1.0)
+                    .opacity(pulsing ? 0 : 1)
+                    .animation(.easeOut(duration: 0.9).repeatForever(autoreverses: false), value: pulsing)
+            )
+            .onAppear { pulsing = true }
+    }
+
     private var liveNowBanner: some View {
         VStack(spacing: 10) {
             HStack(spacing: 8) {
-                Circle().fill(Color.red).frame(width: 8, height: 8)
-                    .overlay(Circle().stroke(Color.red.opacity(0.3), lineWidth: 3))
+                livePulsingDot
                 Text("LIVE NOW")
                     .font(.system(size: 13, weight: .black))
                     .foregroundColor(.red)
@@ -856,12 +874,14 @@ struct ChurchDetailView: View {
                 try await SupabaseService.shared.unfollow(followerId: userId, followingId: church.slug)
                 isFollowing = false
                 followerCount = max(0, followerCount - 1)
+                HapticEngine.impact(.light)
             } else {
                 try await SupabaseService.shared.follow(followerId: userId,
                                                         followingId: church.slug,
                                                         followingType: "church")
                 isFollowing = true
                 followerCount += 1
+                HapticEngine.impact(.medium)
             }
         } catch { print("Follow error: \(error)") }
         isTogglingFollow = false

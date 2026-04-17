@@ -166,6 +166,11 @@ struct PostCard: View {
                     authorIdentity
                 }
                 .buttonStyle(.plain)
+            } else if post.authorType == "church", let church = authorChurch {
+                NavigationLink(destination: ChurchDetailView(church: church)) {
+                    authorIdentity
+                }
+                .buttonStyle(.plain)
             } else {
                 authorIdentity
             }
@@ -173,7 +178,9 @@ struct PostCard: View {
             Spacer()
 
             if post.authorType == "church" {
-                FollowButton(followingId: post.authorId.uuidString, followingType: "church")
+                // Use church slug from appState if available, otherwise generate from name
+                let churchSlug = authorChurch?.slug ?? post.authorName.lowercased().replacingOccurrences(of: " ", with: "-")
+                FollowButton(followingId: churchSlug, followingType: "church")
             } else if post.authorType == "worshipper" && post.authorId != appState.currentUserId {
                 FollowButton(followingId: post.authorId.uuidString, followingType: "worshipper")
             }
@@ -373,12 +380,15 @@ struct PostCard: View {
     private var actions: some View {
         HStack(spacing: 20) {
             Button {
-                guard !appState.isGuest, let userId = appState.currentUserId else { return }
+                guard let userId = appState.currentUserId else { return }
+                HapticEngine.impact(.light)
                 Task { await toggleLike(userId: userId) }
             } label: {
                 HStack(spacing: 5) {
                     Image(systemName: post.isLiked ? "heart.fill" : "heart")
                         .foregroundColor(post.isLiked ? .red : .lcText3)
+                        .scaleEffect(post.isLiked ? 1.15 : 1.0)
+                        .animation(.appSpring, value: post.isLiked)
                     if post.likeCount > 0 {
                         Text("\(post.likeCount)")
                             .font(.system(size: 13))

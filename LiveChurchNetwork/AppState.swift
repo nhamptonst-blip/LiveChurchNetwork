@@ -4,7 +4,6 @@ import Foundation
                                                             
   final class AppState: ObservableObject {
       @Published var isAuthenticated = false
-      @Published var isGuest = false
       @Published var currentUserId: UUID?
       @Published var profile: Profile?
       @Published var isLoading = true
@@ -50,6 +49,7 @@ import Foundation
               }
               await MainActor.run { profile = p }
               print("[AppState] loadProfile: role=\(p.role ?? "nil")")
+              
               await checkProfileOnboarding()
           } catch {
               print("[AppState] loadProfile error: \(error)")
@@ -101,14 +101,9 @@ import Foundation
           try? await SupabaseService.shared.signOut()
           await MainActor.run {
               isAuthenticated = false
-              isGuest = false
               currentUserId = nil
               profile = nil
           }
-      }
-
-      func continueAsGuest() {
-          isGuest = true
       }
 
       // MARK: - Church Cache
@@ -196,7 +191,6 @@ import Foundation
                   case .signedOut:
                       print("[AppState] auth event: signedOut")
                       isAuthenticated = false
-                      isGuest = false
                       currentUserId = nil
                       profile = nil
                       needsProfileOnboarding = false

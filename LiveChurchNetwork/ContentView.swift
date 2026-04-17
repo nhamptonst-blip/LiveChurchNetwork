@@ -11,7 +11,7 @@ struct ContentView: View {
                 ChurchOnboardingView()
             } else if appState.isAuthenticated && appState.needsProfileOnboarding {
                 ProfileOnboardingView()
-            } else if appState.isAuthenticated || appState.isGuest {
+            } else if appState.isAuthenticated {
                 MainTabView()
             } else {
                 AuthView()
@@ -22,7 +22,6 @@ struct ContentView: View {
         // don't render dark backgrounds underneath our explicit colors.
         .preferredColorScheme(.light)
         .animation(.easeInOut(duration: 0.3), value: appState.isAuthenticated)
-        .animation(.easeInOut(duration: 0.3), value: appState.isGuest)
         .animation(.easeInOut(duration: 0.3), value: appState.isLoading)
         .animation(.easeInOut(duration: 0.3), value: appState.needsProfileOnboarding)
         .animation(.easeInOut(duration: 0.3), value: appState.needsChurchOnboarding)
@@ -65,6 +64,9 @@ struct SplashView: View {
 struct MainTabView: View {
     @EnvironmentObject var appState: AppState
     @State private var unreadCount = 0
+    @State private var selectedTab = 0
+    @AppStorage("pendingNavigationTab") private var pendingTab = 0
+    @State private var showFeedback = false
     private static var appearanceConfigured = false
 
     init() {
@@ -75,32 +77,67 @@ struct MainTabView: View {
     }
 
     var body: some View {
-        TabView {
-            FeedView()
-                .tabItem { Label("Feed", systemImage: "house.fill") }
+        ZStack(alignment: .bottomTrailing) {
+            TabView(selection: $selectedTab) {
+                FeedView()
+                    .tabItem { Label("Feed", systemImage: "house.fill") }
+                    .tag(0)
 
-            DirectoryView()
-                .tabItem { Label("Discover", systemImage: "magnifyingglass") }
+                DirectoryView()
+                    .tabItem { Label("Discover", systemImage: "magnifyingglass") }
+                    .tag(1)
 
-            NotificationsView()
-                .tabItem {
-                    Label("Notifications", systemImage: unreadCount > 0 ? "bell.badge.fill" : "bell.fill")
+                NotificationsView()
+                    .tabItem {
+                        Label("Notifications", systemImage: unreadCount > 0 ? "bell.badge.fill" : "bell.fill")
+                    }
+                    .badge(unreadCount > 0 ? unreadCount : 0)
+                    .tag(2)
+
+                Group {
+                    if appState.profile?.role == "admin" {
+                        AdminDashboardView()
+                    } else if appState.profile?.role == "church_admin" {
+                        ChurchAdminDashboardView()
+                    } else {
+                        WorkshipperDashboardView()
+                    }
                 }
-                .badge(unreadCount > 0 ? unreadCount : 0)
-
-            Group {
-                if appState.profile?.role == "admin" {
-                    AdminDashboardView()
-                } else if appState.profile?.role == "church_admin" {
-                    ChurchAdminDashboardView()
-                } else {
-                    WorkshipperDashboardView()
+                .tabItem { Label("Profile", systemImage: "person.fill") }
+                .tag(3)
+            }
+            .tint(.lcGold)
+            .task { await loadUnreadCount() }
+            .onAppear {
+                if pendingTab > 0 {
+                    selectedTab = pendingTab
+                    pendingTab = 0
                 }
             }
-            .tabItem { Label("Profile", systemImage: "person.fill") }
+
+            // Feedback FAB
+            Button {
+                showFeedback = true
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "bubble.left.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("Feedback")
+                        .font(.system(size: 12, weight: .bold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
+                .background(Color.lcNavy.opacity(0.85))
+                .clipShape(Capsule())
+                .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 3)
+            }
+            .padding(.trailing, 16)
+            .padding(.bottom, 65)
         }
-        .tint(.lcGold)
-        .task { await loadUnreadCount() }
+        .sheet(isPresented: $showFeedback) {
+            FeedbackSheet()
+        }
     }
 
     private func loadUnreadCount() async {
@@ -171,5 +208,126 @@ struct MainTabView: View {
         UITabBar.appearance().scrollEdgeAppearance    = appearance
         UITabBar.appearance().tintColor               = .lcGold
         UITabBar.appearance().unselectedItemTintColor = .lcText3
+    }
+}
+
+// MARK: - Feedback Sheet
+
+struct FeedbackSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var appState: AppState
+
+    @State private var category = "General"
+    @State private var message = ""
+
+    private let categories = ["General", "Bug Report", "Feature Request", "Praise"]
+    private let feedbackEmail = "miked83@icloud.com"
+
+    private var canSend: Bool { !message.trimmingCharacters(in: .whitespaces).isEmpty }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+
+                    // Header
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("We'd love to hear from you")
+                            .font(.system(size: 15))
+                            .foregroundColor(.lcText3)
+                    }
+                    .padding(.top, 4)
+
+                    // Category picker
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("CATEGORY")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.lcText2)
+                            .tracking(0.4)
+                        Picker("Category", selection: $category) {
+                            ForEach(categories, id: \.self) { Text($0).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+
+                    // Message
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("MESSAGE")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.lcText2)
+                            .tracking(0.4)
+                        ZStack(alignment: .topLeading) {
+                            if message.isEmpty {
+                                Text("Tell us what's on your mind…")
+                                    .font(.system(size: 15))
+                                    .foregroundColor(.lcText3)
+                                    .padding(.horizontal, 12)
+                                    .padding(.top, 12)
+                                    .allowsHitTesting(false)
+                            }
+                            TextEditor(text: $message)
+                                .font(.system(size: 15))
+                                .foregroundColor(.lcText)
+                                .scrollContentBackground(.hidden)
+                                .frame(minHeight: 140)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                        }
+                        .background(Color.lcCream)
+                        .cornerRadius(12)
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.lcBorder, lineWidth: 1))
+                    }
+
+                    // Send button
+                    Button {
+                        sendFeedback()
+                    } label: {
+                        Text("Open Mail to Send")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(canSend ? Color.lcNavy : Color.gray.opacity(0.2))
+                            .cornerRadius(12)
+                    }
+                    .disabled(!canSend)
+
+                    Text("Tapping the button opens your Mail app with your feedback pre-filled. Your email address will be included automatically.")
+                        .font(.system(size: 11))
+                        .foregroundColor(.lcText3)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                }
+                .padding(24)
+            }
+            .background(Color.lcCream)
+            .navigationTitle("Send Feedback")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { dismiss() }
+                        .foregroundColor(.lcNavy)
+                }
+            }
+        }
+    }
+
+    private func sendFeedback() {
+        let name = appState.profile?.fullName ?? "LCN User"
+        let subject = "[\(category)] Feedback from \(name)"
+        let body = message.trimmingCharacters(in: .whitespaces)
+
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = feedbackEmail
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: subject),
+            URLQueryItem(name: "body", value: body)
+        ]
+
+        if let url = components.url {
+            UIApplication.shared.open(url)
+        }
+        dismiss()
     }
 }

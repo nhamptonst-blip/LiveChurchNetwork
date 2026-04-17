@@ -13,10 +13,13 @@ struct FeedView: View {
             Group {
                 if isLoading {
                     ProgressView().tint(.lcNavy)
+                        .transition(.opacity)
                 } else {
                     feedList
+                        .transition(.opacity)
                 }
             }
+            .animation(.appStandard, value: isLoading)
             .background(Color.lcCream)
             .navigationTitle("Feed")
             .navigationBarTitleDisplayMode(.inline)
@@ -24,23 +27,21 @@ struct FeedView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     logoMark
                 }
-                if !appState.isGuest {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button {
-                            showCreatePost = true
-                        } label: {
-                            HStack(spacing: 5) {
-                                Image(systemName: "square.and.pencil")
-                                    .font(.system(size: 12, weight: .semibold))
-                                Text("Post")
-                                    .font(.system(size: 13, weight: .semibold))
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(Color.lcNavy)
-                            .clipShape(Capsule())
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showCreatePost = true
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "square.and.pencil")
+                                .font(.system(size: 12, weight: .semibold))
+                            Text("Post")
+                                .font(.system(size: 13, weight: .semibold))
                         }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Color.lcNavy)
+                        .clipShape(Capsule())
                     }
                 }
             }
@@ -82,7 +83,7 @@ struct FeedView: View {
             HStack(spacing: 10) {
                 ForEach(liveChurches) { church in
                     HStack(spacing: 8) {
-                        Circle().fill(Color.red).frame(width: 8, height: 8)
+                        livePulsingDot
                         Text(church.churchName ?? "Church")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(.white)
@@ -100,6 +101,22 @@ struct FeedView: View {
             .padding(.vertical, 10)
         }
         .background(Color.black.opacity(0.9))
+    }
+
+    private var livePulsingDot: some View {
+        @State var pulsing = false
+
+        return Circle()
+            .fill(Color.red)
+            .frame(width: 8, height: 8)
+            .overlay(
+                Circle()
+                    .stroke(Color.red.opacity(0.4), lineWidth: 4)
+                    .scaleEffect(pulsing ? 2.2 : 1.0)
+                    .opacity(pulsing ? 0 : 1)
+                    .animation(.easeOut(duration: 0.9).repeatForever(autoreverses: false), value: pulsing)
+            )
+            .onAppear { pulsing = true }
     }
 
     private var eventsStrip: some View {
@@ -126,19 +143,41 @@ struct FeedView: View {
     }
                                                           
     private var emptyFeed: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 20) {
             Image(systemName: "newspaper")
-                .font(.system(size: 44))
+                .font(.system(size: 48))
                 .foregroundColor(.lcText3)
                 .padding(.top, 60)
-            Text("Nothing in your feed yet")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.lcText)
-            Text("Follow churches and worshippers to see their posts here.")
-                .font(.system(size: 13))
-                .foregroundColor(.lcText3)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
+
+            VStack(spacing: 8) {
+                Text("Your feed is empty")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.lcText)
+                Text("Follow churches and worshippers to see their posts here.")
+                    .font(.system(size: 13))
+                    .foregroundColor(.lcText3)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+
+            Button {
+                UserDefaults.standard.set(1, forKey: "pendingNavigationTab")
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 14, weight: .semibold))
+                    Text("Discover Churches")
+                        .font(.system(size: 15, weight: .bold))
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 50)
+                .background(Color.lcNavy)
+                .cornerRadius(14)
+            }
+            .padding(.horizontal, 40)
+
+            Spacer()
         }
         .frame(maxWidth: .infinity)
     }
@@ -161,7 +200,17 @@ struct FeedView: View {
         isLoading = true
         defer { isLoading = false }
 
-        // 1. Fetch all remote data concurrently
+        // 1. Fetch following list first (needed to filter posts)
+        var followedChurchSlugs: Set<String> = []
+        var followedUserIds: Set<UUID> = []
+
+        if let userId = appState.currentUserId {
+            let follows = (try? await SupabaseService.shared.getFollowing(followerId: userId)) ?? []
+            followedChurchSlugs = Set(follows.filter { $0.followingType == "church" }.map { $0.followingId })
+            followedUserIds = Set(follows.filter { $0.followingType == "worshipper" }.compactMap { UUID(uuidString: $0.followingId) })
+        }
+
+        // 2. Fetch all remote data concurrently
         async let postsTask  = SupabaseService.shared.getFeedPosts()
         async let eventsTask = SupabaseService.shared.getUpcomingEvents()
         async let liveTask   = SupabaseService.shared.getLiveChurches()
@@ -171,10 +220,21 @@ struct FeedView: View {
         let rawEvents = (try? await eventsTask) ?? []
         let rawLive   = (try? await liveTask)   ?? []
 
-        // 2. Guard against stale results from a cancelled task
+        // 3. Guard against stale results from a cancelled task
         guard !Task.isCancelled else { return }
 
-        // 3. Fetch liked post IDs now that all other data is in hand
+        // 4. Filter posts to only include those from followed accounts
+        rawPosts = rawPosts.filter { post in
+            if post.authorType == "church" {
+                let authorSlug = post.authorName.lowercased().replacingOccurrences(of: " ", with: "-")
+                return followedChurchSlugs.contains(authorSlug)
+            } else if post.authorType == "worshipper" {
+                return followedUserIds.contains(post.authorId)
+            }
+            return false
+        }
+
+        // 5. Fetch liked post IDs now that all other data is in hand
         if let userId = appState.currentUserId {
             let liked = (try? await SupabaseService.shared.getLikedPostIds(userId: userId)) ?? []
             for i in rawPosts.indices {
@@ -184,7 +244,7 @@ struct FeedView: View {
 
         guard !Task.isCancelled else { return }
 
-        // 4. Sort posts by type priority then recency
+        // 6. Sort posts by type priority then recency
         let sorted = rawPosts.sorted { a, b in
             let priority = ["livestream": 0, "announcement": 1, "event": 2, "verse": 3, "prayer": 3, "update": 3]
             let ap = priority[a.postType] ?? 2
@@ -193,12 +253,12 @@ struct FeedView: View {
             return a.createdAt > b.createdAt
         }
 
-        // 5. Merge real posts with seed posts — real posts first, then seed fill
+        // 7. Merge real posts with seed posts — real posts first, then seed fill
         let seedPosts = MockDataProvider.feedPosts
         let realIds   = Set(sorted.map { $0.id })
         let merged    = sorted + seedPosts.filter { !realIds.contains($0.id) }
 
-        // 6. Single atomic state update
+        // 8. Single atomic state update
         posts        = merged.isEmpty    ? seedPosts                           : merged
         events       = rawEvents.isEmpty ? MockDataProvider.feedEvents         : rawEvents
         liveChurches = rawLive.isEmpty   ? MockDataProvider.liveFeedChurches  : rawLive

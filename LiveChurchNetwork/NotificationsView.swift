@@ -24,9 +24,7 @@ struct NotificationsView: View {
     var body: some View {
         NavigationStack(path: $path) {
             Group {
-                if appState.isGuest {
-                    guestPrompt
-                } else if isLoading {
+                if isLoading {
                     ProgressView().tint(.lcNavy)
                 } else if notifications.isEmpty {
                     emptyState
@@ -142,7 +140,7 @@ struct NotificationsView: View {
 
     private var notificationsList: some View {
         List {
-            ForEach(notifications) { notification in
+            ForEach(Array(notifications.enumerated()), id: \.element.id) { index, notification in
                 // Plain Button — always reliable in a List inside a NavigationStack.
                 // On tap: mark as read, then push the resolved route onto the path.
                 Button {
@@ -155,10 +153,27 @@ struct NotificationsView: View {
                 .listRowBackground(notification.isRead ? Color.white : Color.lcNavy.opacity(0.04))
                 .listRowSeparatorTint(Color.lcBorder)
                 .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                    if !notification.isRead {
+                        Button {
+                            withAnimation { markReadWithoutNavigation(notification) }
+                            HapticEngine.impact(.light)
+                        } label: {
+                            Label("Mark Read", systemImage: "checkmark.circle")
+                        }
+                        .tint(.lcTeal)
+                    }
+                }
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .animation(.appStandard.delay(Double(index) * 0.04), value: notifications.count)
             }
         }
         .listStyle(.plain)
         .refreshable { await loadNotifications() }
+    }
+
+    private func markReadWithoutNavigation(_ notification: AppNotification) {
+        Task { await markRead(notification) }
     }
 
     // MARK: - Empty state
@@ -177,38 +192,6 @@ struct NotificationsView: View {
                 .foregroundColor(.lcText3)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
-            Spacer()
-        }
-    }
-
-    // MARK: - Guest prompt
-
-    private var guestPrompt: some View {
-        VStack(spacing: 16) {
-            Spacer()
-            Image(systemName: "bell.badge")
-                .font(.system(size: 44))
-                .foregroundColor(.lcNavy.opacity(0.3))
-            Text("Sign in for notifications")
-                .font(.system(size: 18, weight: .black))
-                .foregroundColor(.lcText)
-            Text("Create an account to get notified about live streams, events, and posts.")
-                .font(.system(size: 13))
-                .foregroundColor(.lcText3)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-            Button {
-                appState.isGuest = false
-            } label: {
-                Text("Sign Up / Sign In")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(Color.lcNavy)
-                    .cornerRadius(12)
-                    .padding(.horizontal, 40)
-            }
             Spacer()
         }
     }
@@ -313,11 +296,13 @@ struct NotificationRowContent: View {
                     .fill(Color.lcNavy)
                     .frame(width: 8, height: 8)
                     .padding(.top, 6)
+                    .transition(.scale.combined(with: .opacity))
             } else {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.lcText3.opacity(0.4))
                     .padding(.top, 4)
+                    .transition(.opacity)
             }
         }
         .padding(.vertical, 10)

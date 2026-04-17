@@ -12,6 +12,7 @@ private enum DiscoverSection: String, CaseIterable {
 struct DirectoryView: View {
     @EnvironmentObject var appState: AppState
     @State private var section: DiscoverSection = .churches
+    @State private var isLoading = true
 
     // ── Church state ────────────────────────────────────────────────────
     @State private var churchSearch        = ""
@@ -104,6 +105,8 @@ struct DirectoryView: View {
                     if section == .churches { churchesContent }
                     else                   { peopleContent }
                 }
+                .animation(.appStandard, value: section)
+                .id(section)
             }
             .background(Color.lcCream)
             .navigationTitle("Discover")
@@ -118,7 +121,7 @@ struct DirectoryView: View {
         HStack(spacing: 0) {
             ForEach(DiscoverSection.allCases, id: \.self) { tab in
                 Button {
-                    withAnimation(.easeInOut(duration: 0.16)) { section = tab }
+                    withAnimation(.appStandard) { section = tab }
                 } label: {
                     VStack(spacing: 0) {
                         HStack(spacing: 6) {
@@ -147,7 +150,24 @@ struct DirectoryView: View {
             churchSearchBar
             filterRow
 
-            if filteredChurches.isEmpty {
+            if isLoading {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        churchResultsHeader
+                        LazyVGrid(
+                            columns: [GridItem(.flexible(), spacing: 14),
+                                      GridItem(.flexible(), spacing: 14)],
+                            spacing: 14
+                        ) {
+                            ForEach(0..<6, id: \.self) { _ in
+                                ChurchCardSkeleton()
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 24)
+                    }
+                }
+            } else if filteredChurches.isEmpty {
                 churchEmptyState
             } else {
                 ScrollView {
@@ -227,7 +247,10 @@ struct DirectoryView: View {
     private var filterRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                Button { showLiveOnly.toggle() } label: {
+                Button {
+                    withAnimation(.appSpring) { showLiveOnly.toggle() }
+                    HapticEngine.selection()
+                } label: {
                     HStack(spacing: 5) {
                         if showLiveOnly { Circle().fill(Color.red).frame(width: 6, height: 6) }
                         Text("Live Now").font(.system(size: 12, weight: .semibold))
@@ -238,10 +261,13 @@ struct DirectoryView: View {
                     .cornerRadius(20)
                     .overlay(RoundedRectangle(cornerRadius: 20)
                         .stroke(showLiveOnly ? Color.clear : Color.red.opacity(0.3), lineWidth: 1))
+                    .scaleEffect(showLiveOnly ? 1.0 : 1.0)
+                    .animation(.appSpring, value: showLiveOnly)
                 }
                 ForEach(denominations, id: \.self) { denom in
                     Button {
-                        withAnimation(.easeInOut(duration: 0.14)) { selectedDenomination = denom }
+                        withAnimation(.appSpring) { selectedDenomination = denom }
+                        HapticEngine.selection()
                     } label: {
                         Text(denom)
                             .font(.system(size: 12, weight: .semibold))
@@ -250,6 +276,8 @@ struct DirectoryView: View {
                             .background(selectedDenomination == denom
                                         ? Color.lcNavy : Color.lcNavy.opacity(0.06))
                             .cornerRadius(20)
+                            .scaleEffect(selectedDenomination == denom ? 1.05 : 1.0)
+                            .animation(.appSpring, value: selectedDenomination == denom)
                     }
                     .buttonStyle(.plain)
                 }
@@ -463,6 +491,8 @@ struct DirectoryView: View {
                 for: viewer, from: churches, seedUsers: discoveredMembers, followGraph: graph
             ).prefix(8)
         )
+
+        isLoading = false
     }
 }
 
@@ -579,8 +609,8 @@ struct UserDiscoveryCard: View {
 
             Spacer(minLength: 4)
 
-            // Follow button (real users only)
-            if !appState.isGuest, appState.currentUserId != nil {
+            // Follow button
+            if appState.currentUserId != nil {
                 FollowButton(
                     followingId: user.id.uuidString,
                     followingType: "worshipper"
@@ -591,5 +621,51 @@ struct UserDiscoveryCard: View {
         .background(Color.white)
         .cornerRadius(14)
         .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
+    }
+}
+
+// MARK: - Church Card Skeleton (Loading State)
+
+struct ChurchCardSkeleton: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Thumbnail skeleton
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.lcBorder.opacity(0.3))
+                .frame(height: 140)
+                .shimmer(isAnimating: isAnimating)
+
+            // Info section skeleton
+            VStack(alignment: .leading, spacing: 8) {
+                // Title skeleton
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.lcBorder.opacity(0.3))
+                    .frame(height: 12)
+                    .shimmer(isAnimating: isAnimating)
+
+                // Denomination badge skeleton
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.lcBorder.opacity(0.3))
+                    .frame(width: 60, height: 20)
+                    .shimmer(isAnimating: isAnimating)
+            }
+            .padding(12)
+        }
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
+        .onAppear { isAnimating = true }
+    }
+}
+
+// MARK: - Shimmer Modifier (for skeleton)
+
+extension View {
+    func shimmer(isAnimating: Bool) -> some View {
+        self
+            .opacity(isAnimating ? 0.6 : 1.0)
+            .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: isAnimating)
     }
 }

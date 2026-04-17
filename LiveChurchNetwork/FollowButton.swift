@@ -11,13 +11,14 @@ struct FollowButton: View {
 
     var body: some View {
         Group {
-            if appState.isGuest || appState.currentUserId == nil {
+            if appState.currentUserId == nil {
                 EmptyView()
             } else if isLoading {
                 ProgressView().tint(.lcNavy).scaleEffect(0.7)
                     .frame(width: 72, height: 28)
             } else {
                 Button {
+                    print("[FollowButton] Clicked for \(followingType) \(followingId), isFollowing=\(isFollowing), isToggling=\(isToggling)")
                     Task { await toggleFollow() }
                 } label: {
                     Text(isFollowing ? "Following" : "Follow")
@@ -36,6 +37,7 @@ struct FollowButton: View {
             }
         }
         .task { await checkFollowing() }
+        .onAppear { print("[FollowButton] Appeared with followingId=\(followingId), followingType=\(followingType)") }
     }
 
     private func checkFollowing() async {
@@ -50,18 +52,26 @@ struct FollowButton: View {
     }
 
     private func toggleFollow() async {
-        guard let userId = appState.currentUserId else { return }
+        print("[FollowButton.toggleFollow] Starting for \(followingType) \(followingId), currently following: \(isFollowing)")
+        guard let userId = appState.currentUserId else {
+            print("[FollowButton.toggleFollow] No user ID")
+            return
+        }
         isToggling = true
         do {
             if isFollowing {
+                print("[FollowButton.toggleFollow] Unfollowing...")
                 try await SupabaseService.shared.unfollow(followerId: userId, followingId: followingId)
                 isFollowing = false
+                print("[FollowButton.toggleFollow] Unfollow successful")
             } else {
+                print("[FollowButton.toggleFollow] Following...")
                 try await SupabaseService.shared.follow(followerId: userId, followingId: followingId, followingType: followingType)
                 isFollowing = true
+                print("[FollowButton.toggleFollow] Follow successful")
             }
         } catch {
-            print("Toggle follow error: \(error)")
+            print("[FollowButton.toggleFollow] Error: \(error)")
         }
         isToggling = false
     }

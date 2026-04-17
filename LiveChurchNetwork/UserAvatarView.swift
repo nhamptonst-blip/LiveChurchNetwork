@@ -59,7 +59,9 @@ struct UserAvatarView: View {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .success(let img):
-                        img.resizable().scaledToFill()
+                        img.resizable()
+                            .scaledToFill()
+                            .transition(.opacity.animation(.appFadeIn))
                     default:
                         fallbackCircle
                     }

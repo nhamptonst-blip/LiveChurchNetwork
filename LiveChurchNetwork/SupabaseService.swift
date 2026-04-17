@@ -104,7 +104,7 @@ private struct PrivacySettingsUpdate: Encodable {
 }
 
 // NOTE: Requires 'bio text', 'photo_url text', 'cover_url text', 'home_church_slug text',
-// 'home_church_name text' columns in profiles table.
+// 'home_church_name text', 'languages text' columns in profiles table.
 private struct ProfileUpdate: Encodable {
     let full_name: String
     let city: String
@@ -112,6 +112,7 @@ private struct ProfileUpdate: Encodable {
     let bio: String
     let home_church_slug: String?
     let home_church_name: String?
+    let languages: String?
 }
 
 private struct ProfilePhotoUpdate: Encodable {
@@ -217,7 +218,8 @@ private struct ProfileCoverUpdate: Encodable {
                         denomination: String,
                         bio: String,
                         homeChurchSlug: String?,
-                        homeChurchName: String?) async throws {
+                        homeChurchName: String?,
+                        languages: String? = nil) async throws {
          try await client
              .from("profiles")
              .update(ProfileUpdate(
@@ -226,7 +228,8 @@ private struct ProfileCoverUpdate: Encodable {
                  denomination: denomination,
                  bio: bio,
                  home_church_slug: homeChurchSlug,
-                 home_church_name: homeChurchName
+                 home_church_name: homeChurchName,
+                 languages: languages
              ))
              .eq("id", value: userId.uuidString)
              .execute()

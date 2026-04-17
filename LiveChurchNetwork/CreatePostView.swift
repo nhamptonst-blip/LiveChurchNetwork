@@ -8,69 +8,96 @@ struct CreatePostView: View {
     @EnvironmentObject var appState: AppState
 
     var onPosted: (() async -> Void)?
- 
-    @State private var content = ""
-    @State private var videoUrl = ""
-    @State private var scriptureRef = ""
-    @State private var postType = "update"
+
+    // Shared fields
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var selectedImageData: Data?
     @State private var isPosting = false
     @State private var errorMessage: String?
+    @State private var postType = "update"
 
-    private let postTypes = [
-        ("update",       "Update",    "text.bubble"),
-        ("verse",        "Verse",     "book.fill"),
-        ("announcement", "Announce",  "megaphone.fill"),
-        ("prayer",       "Prayer",    "hands.sparkles.fill"),
-        ("event",        "Event",     "calendar"),
-        ("livestream",   "Livestream", "antenna.radiowaves.left.and.right"),
+    // Update fields
+    @State private var updateContent = ""
+
+    // Verse fields
+    @State private var scriptureRef = ""
+    @State private var verseText = ""
+    @State private var reflection = ""
+
+    // Event fields
+    @State private var eventTitle = ""
+    @State private var eventDate = Date()
+    @State private var eventTime = Date()
+    @State private var eventLocation = ""
+    @State private var eventDescription = ""
+
+    // Livestream fields
+    @State private var streamTitle = ""
+    @State private var streamUrl = ""
+    @State private var streamTime = Date()
+    @State private var streamDescription = ""
+
+    // Prayer fields
+    @State private var prayerTitle = ""
+    @State private var prayerMessage = ""
+
+    // Announcement fields
+    @State private var announcementTitle = ""
+    @State private var announcementBody = ""
+
+    private let postTypeConfigs: [(value: String, label: String, description: String, icon: String)] = [
+        ("update", "Update", "Share news", "text.bubble"),
+        ("verse", "Verse", "Share scripture", "book.fill"),
+        ("event", "Event", "Announce event", "calendar"),
+        ("livestream", "Stream", "Go live", "antenna.radiowaves.left.and.right"),
+        ("prayer", "Prayer", "Request prayer", "hands.sparkles.fill"),
+        ("announcement", "Announce", "Important notice", "megaphone.fill"),
     ]
                                                                                                                                                                                
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    // Post type selector
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Post Type")
-                            .font(.system(size: 13, weight: .semibold))
+                VStack(alignment: .leading, spacing: 24) {
+                    // Post type selector grid
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("POST TYPE")
+                            .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.lcText2)
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                                ForEach(postTypes, id: \.0) { type, label, icon in
-                                    Button {
-                                        postType = type
-                                    } label: {
-                                        HStack(spacing: 5) {
-                                            Image(systemName: icon).font(.system(size: 11))
-                                            Text(label).font(.system(size: 12, weight: .semibold))
-                                        }
-                                        .foregroundColor(postType == type ? .white : .lcNavy)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
-                                        .background(postType == type ? Color.lcNavy : Color.lcNavy.opacity(0.07))
-                                        .cornerRadius(20)
+                            .tracking(0.5)
+
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                            ForEach(postTypeConfigs, id: \.value) { config in
+                                Button {
+                                    postType = config.value
+                                } label: {
+                                    VStack(spacing: 6) {
+                                        Image(systemName: config.icon)
+                                            .font(.system(size: 18))
+                                        Text(config.label)
+                                            .font(.system(size: 12, weight: .bold))
+                                        Text(config.description)
+                                            .font(.system(size: 10))
+                                            .foregroundColor(.lcText3)
                                     }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(12)
+                                    .background(postType == config.value ? Color.lcNavy.opacity(0.1) : Color.white)
+                                    .overlay(RoundedRectangle(cornerRadius: 10)
+                                        .stroke(postType == config.value ? Color.lcNavy : Color.lcBorder, lineWidth: 1.5))
+                                    .cornerRadius(10)
+                                    .foregroundColor(postType == config.value ? .lcNavy : .lcText2)
                                 }
                             }
                         }
                     }
 
-                    // Type-specific form fields
-                    switch postType {
-                    case "verse":
-                        verseFields
-                    case "announcement":
-                        announcementFields
-                    case "prayer":
-                        prayerFields
-                    default:
-                        defaultFields
-                    }
-                                                                                                                                                                               
+                    // Type-specific form sections
+                    formFields
+
                     if let error = errorMessage {
-                        Text(error).font(.system(size: 13)).foregroundColor(.red)
+                        Text(error)
+                            .font(.system(size: 13))
+                            .foregroundColor(.red)
                     }
 
                     Button {
@@ -80,14 +107,14 @@ struct CreatePostView: View {
                             if isPosting {
                                 ProgressView().tint(.lcText)
                             } else {
-                                Text("Post")
+                                Text("Publish Post")
                                     .font(.system(size: 15, weight: .bold))
                             }
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(canPost ? Color.lcGold : Color.lcBorder)
-                        .foregroundColor(.lcText)
+                        .background(canPost && !isPosting ? Color.lcNavy : Color.lcBorder)
+                        .foregroundColor(.white)
                         .cornerRadius(12)
                     }
                     .disabled(!canPost || isPosting)
@@ -95,7 +122,7 @@ struct CreatePostView: View {
                 .padding(20)
             }
             .background(Color.lcCream)
-            .navigationTitle("New Post")
+            .navigationTitle("Create Post")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -104,19 +131,84 @@ struct CreatePostView: View {
                     } label: {
                         Text("Cancel")
                             .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.lcText3)
+                            .foregroundColor(.lcNavy)
                     }
                 }
             }
         }
     }
+
+    @ViewBuilder
+    private var formFields: some View {
+        switch postType {
+        case "update":
+            updateFields
+        case "verse":
+            verseFields
+        case "event":
+            eventFields
+        case "livestream":
+            livestreamFields
+        case "prayer":
+            prayerFields
+        case "announcement":
+            announcementFields
+        default:
+            updateFields
+        }
+    }
                                                                                                                                                                                
     private var canPost: Bool {
         switch postType {
-        case "verse", "announcement", "prayer":
-            return !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        case "update":
+            return !updateContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || selectedImageData != nil
+        case "verse":
+            return !scriptureRef.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                   !verseText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        case "event":
+            return !eventTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                   !eventLocation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        case "livestream":
+            return !streamTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                   isValidUrl(streamUrl) &&
+                   !streamUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        case "prayer":
+            return !prayerTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                   !prayerMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        case "announcement":
+            return !announcementTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                   !announcementBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         default:
-            return !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || selectedImageData != nil
+            return false
+        }
+    }
+
+    private func isValidUrl(_ url: String) -> Bool {
+        let trimmed = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty { return false }
+        guard let url = URL(string: trimmed) else { return false }
+        return url.scheme != nil && (url.host != nil || url.path.count > 1)
+    }
+
+    // MARK: - Update fields
+
+    private var updateFields: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Content")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                TextEditor(text: $updateContent)
+                    .font(.system(size: 15))
+                    .foregroundColor(.lcText)
+                    .scrollContentBackground(.hidden)
+                    .frame(minHeight: 120)
+                    .padding(10)
+                    .background(Color.lcCream)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
+            }
+            photoPicker
         }
     }
 
@@ -137,10 +229,181 @@ struct CreatePostView: View {
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
             }
             VStack(alignment: .leading, spacing: 8) {
-                Text("Verse Text & Reflection")
+                Text("Verse Text")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.lcText2)
-                TextEditor(text: $content)
+                TextEditor(text: $verseText)
+                    .font(.system(size: 15))
+                    .foregroundColor(.lcText)
+                    .scrollContentBackground(.hidden)
+                    .frame(minHeight: 100)
+                    .padding(10)
+                    .background(Color.lcCream)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Reflection (Optional)")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                TextEditor(text: $reflection)
+                    .font(.system(size: 15))
+                    .foregroundColor(.lcText)
+                    .scrollContentBackground(.hidden)
+                    .frame(minHeight: 80)
+                    .padding(10)
+                    .background(Color.lcCream)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
+            }
+            photoPicker
+        }
+    }
+
+    // MARK: - Event fields
+
+    private var eventFields: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Event Title")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                TextField("What's happening?", text: $eventTitle)
+                    .font(.system(size: 15))
+                    .foregroundColor(.lcText)
+                    .padding(12)
+                    .background(Color.lcCream)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Date")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                DatePicker("", selection: $eventDate, displayedComponents: .date)
+                    .datePickerStyle(.compact)
+                    .foregroundColor(.lcText)
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Time")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                DatePicker("", selection: $eventTime, displayedComponents: .hourAndMinute)
+                    .datePickerStyle(.compact)
+                    .foregroundColor(.lcText)
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Location")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                TextField("Where will this take place?", text: $eventLocation)
+                    .font(.system(size: 15))
+                    .foregroundColor(.lcText)
+                    .padding(12)
+                    .background(Color.lcCream)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Description")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                TextEditor(text: $eventDescription)
+                    .font(.system(size: 15))
+                    .foregroundColor(.lcText)
+                    .scrollContentBackground(.hidden)
+                    .frame(minHeight: 100)
+                    .padding(10)
+                    .background(Color.lcCream)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
+            }
+            photoPicker
+        }
+    }
+
+    // MARK: - Livestream fields
+
+    private var livestreamFields: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Stream Title")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                TextField("What are you streaming?", text: $streamTitle)
+                    .font(.system(size: 15))
+                    .foregroundColor(.lcText)
+                    .padding(12)
+                    .background(Color.lcCream)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Livestream URL")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                TextField("https://youtube.com/... or https://twitch.tv/...", text: $streamUrl)
+                    .font(.system(size: 15))
+                    .foregroundColor(.lcText)
+                    .keyboardType(.URL)
+                    .autocapitalization(.none)
+                    .autocorrectionDisabled()
+                    .padding(12)
+                    .background(Color.lcCream)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
+                if !streamUrl.isEmpty && !isValidUrl(streamUrl) {
+                    Text("Please enter a valid URL")
+                        .font(.system(size: 12))
+                        .foregroundColor(.red)
+                }
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Start Time")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                DatePicker("", selection: $streamTime, displayedComponents: [.date, .hourAndMinute])
+                    .datePickerStyle(.compact)
+                    .foregroundColor(.lcText)
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Description (Optional)")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                TextEditor(text: $streamDescription)
+                    .font(.system(size: 15))
+                    .foregroundColor(.lcText)
+                    .scrollContentBackground(.hidden)
+                    .frame(minHeight: 80)
+                    .padding(10)
+                    .background(Color.lcCream)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
+            }
+        }
+    }
+
+    // MARK: - Prayer fields
+
+    private var prayerFields: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Prayer Title")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                TextField("What do you need prayer for?", text: $prayerTitle)
+                    .font(.system(size: 15))
+                    .foregroundColor(.lcText)
+                    .padding(12)
+                    .background(Color.lcCream)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Prayer Request")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                TextEditor(text: $prayerMessage)
                     .font(.system(size: 15))
                     .foregroundColor(.lcText)
                     .scrollContentBackground(.hidden)
@@ -158,76 +421,32 @@ struct CreatePostView: View {
     private var announcementFields: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Announcement")
+                Text("Announcement Title")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.lcText2)
-                TextEditor(text: $content)
+                TextField("What do you want to announce?", text: $announcementTitle)
                     .font(.system(size: 15))
                     .foregroundColor(.lcText)
-                    .scrollContentBackground(.hidden)
-                    .frame(minHeight: 120)
-                    .padding(10)
-                    .background(Color.lcCream)
-                    .cornerRadius(10)
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
-            }
-            photoPicker
-        }
-    }
-
-    // MARK: - Prayer fields
-
-    private var prayerFields: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Prayer Request")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(.lcText2)
-            TextEditor(text: $content)
-                .font(.system(size: 15))
-                .foregroundColor(.lcText)
-                .scrollContentBackground(.hidden)
-                .frame(minHeight: 120)
-                .padding(10)
-                .background(Color.lcCream)
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
-        }
-    }
-
-    // MARK: - Default fields (update / event / livestream)
-
-    private var defaultFields: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("What's on your heart?")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.lcText2)
-                TextEditor(text: $content)
-                    .font(.system(size: 15))
-                    .foregroundColor(.lcText)
-                    .scrollContentBackground(.hidden)
-                    .frame(minHeight: 120)
-                    .padding(10)
-                    .background(Color.lcCream)
-                    .cornerRadius(10)
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
-            }
-            photoPicker
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Video Link (optional)")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.lcText2)
-                TextField("YouTube or Vimeo URL", text: $videoUrl)
-                    .font(.system(size: 14))
-                    .foregroundColor(.lcText)
-                    .keyboardType(.URL)
-                    .autocapitalization(.none)
-                    .autocorrectionDisabled()
                     .padding(12)
                     .background(Color.lcCream)
                     .cornerRadius(10)
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
             }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Announcement Body")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                TextEditor(text: $announcementBody)
+                    .font(.system(size: 15))
+                    .foregroundColor(.lcText)
+                    .scrollContentBackground(.hidden)
+                    .frame(minHeight: 120)
+                    .padding(10)
+                    .background(Color.lcCream)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
+            }
+            photoPicker
         }
     }
 
@@ -282,7 +501,7 @@ struct CreatePostView: View {
               let profile = appState.profile else { return }
         isPosting = true
         errorMessage = nil
-                                                          
+
         var photoUrl: String? = nil
         if let imageData = selectedImageData {
             let path = "posts/\(UUID().uuidString).jpg"
@@ -299,26 +518,55 @@ struct CreatePostView: View {
                 print("Photo upload error: \(error)")
             }
         }
-                                                                                                                                                                               
+
         let authorType = (profile.role == "church_admin") ? "church" : "worshipper"
         let authorName = profile.fullName ?? "Anonymous"
-                                                                                                                                                                               
-        // For verse posts, scripture reference is stored in videoUrl
-        let finalVideoUrl: String? = {
-            if postType == "verse" {
-                return scriptureRef.isEmpty ? nil : scriptureRef
+
+        // Build content based on post type
+        var postContent = ""
+        var videoUrlForPost: String? = nil
+
+        switch postType {
+        case "update":
+            postContent = updateContent
+
+        case "verse":
+            postContent = "\(scriptureRef)\n\n\(verseText)"
+            if !reflection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                postContent += "\n\n\(reflection)"
             }
-            return videoUrl.isEmpty ? nil : videoUrl
-        }()
+
+        case "event":
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateStyle = .medium
+            let timeFormatter = DateFormatter()
+            timeFormatter.timeStyle = .short
+            let dateStr = dateFormatter.string(from: eventDate)
+            let timeStr = timeFormatter.string(from: eventTime)
+            postContent = "\(eventTitle)\n\nDate: \(dateStr)\nTime: \(timeStr)\nLocation: \(eventLocation)\n\n\(eventDescription)"
+
+        case "livestream":
+            postContent = streamDescription.isEmpty ? streamTitle : streamDescription
+            videoUrlForPost = streamUrl
+
+        case "prayer":
+            postContent = "\(prayerTitle)\n\n\(prayerMessage)"
+
+        case "announcement":
+            postContent = "\(announcementTitle)\n\n\(announcementBody)"
+
+        default:
+            postContent = updateContent
+        }
 
         do {
             try await SupabaseService.shared.createPost(
                 authorId: userId,
                 authorName: authorName,
                 authorType: authorType,
-                content: content.isEmpty ? nil : content,
+                content: postContent.isEmpty ? nil : postContent,
                 photoUrl: photoUrl,
-                videoUrl: finalVideoUrl,
+                videoUrl: videoUrlForPost,
                 postType: postType
             )
             await onPosted?()
@@ -328,4 +576,4 @@ struct CreatePostView: View {
         }
         isPosting = false
     }
-} 
+}
