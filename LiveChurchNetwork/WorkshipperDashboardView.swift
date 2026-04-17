@@ -150,7 +150,7 @@ struct WorkshipperDashboardView: View {
                     // Posts Section
                     if !userPosts.isEmpty {
                         VStack(alignment: .leading, spacing: 0) {
-                            Text("Your Posts")
+                            Text("Your Posts (\(userPosts.count))")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(.lcText3)
                                 .padding(.horizontal, 16)
@@ -158,7 +158,13 @@ struct WorkshipperDashboardView: View {
                                 .padding(.bottom, 12)
 
                             ForEach(userPosts) { post in
-                                PostCard(post: post)
+                                VStack {
+                                    PostCard(post: post)
+                                    Text("Author: \(post.authorName) (ID: \(post.authorId))")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(.lcText3)
+                                        .padding(.horizontal, 16)
+                                }
                                 Divider().padding(.leading, 16)
                             }
                         }
@@ -223,16 +229,32 @@ struct WorkshipperDashboardView: View {
     }
 
     private func loadUserPosts() async {
-        guard let userId = appState.currentUserId else { return }
+        guard let userId = appState.currentUserId else {
+            print("[WorkshipperDashboardView] No current user ID")
+            return
+        }
 
         do {
             let posts = try await SupabaseService.shared.getUserPosts(userId: userId)
-            print("[WorkshipperDashboardView] Loaded \(posts.count) posts for userId: \(userId)")
-            for post in posts {
-                print("[WorkshipperDashboardView] Post - id: \(post.id), authorId: \(post.authorId), authorName: \(post.authorName), authorType: \(post.authorType)")
+            print("[WorkshipperDashboardView] ===== LOADED POSTS =====")
+            print("[WorkshipperDashboardView] Current user ID: \(userId)")
+            print("[WorkshipperDashboardView] Total posts returned: \(posts.count)")
+
+            for (index, post) in posts.enumerated() {
+                print("[WorkshipperDashboardView] Post \(index + 1):")
+                print("[WorkshipperDashboardView]   - ID: \(post.id)")
+                print("[WorkshipperDashboardView]   - Author ID: \(post.authorId)")
+                print("[WorkshipperDashboardView]   - Author Name: \(post.authorName)")
+                print("[WorkshipperDashboardView]   - Author Type: \(post.authorType)")
+                print("[WorkshipperDashboardView]   - Content: \(post.content ?? "nil")")
+                print("[WorkshipperDashboardView]   - Match? \(post.authorId == userId ? "✅ YES" : "❌ NO - WRONG USER!")")
             }
+            print("[WorkshipperDashboardView] ===== END POSTS =====")
+
             await MainActor.run {
+                print("[WorkshipperDashboardView] Setting userPosts array with \(posts.count) posts")
                 userPosts = posts.sorted { $0.createdAt > $1.createdAt }
+                print("[WorkshipperDashboardView] userPosts array now has \(userPosts.count) items")
             }
         } catch {
             print("Load user posts error: \(error)")
