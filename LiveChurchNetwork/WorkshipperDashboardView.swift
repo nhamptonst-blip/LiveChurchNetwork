@@ -147,28 +147,24 @@ struct WorkshipperDashboardView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 16)
 
-                    // Posts Section - ONLY show filtered posts from current user
-                    if !userPosts.isEmpty {
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text("Your Posts (\(userPosts.count))")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.lcText3)
+                    // TEST: Temporarily showing raw list of userPosts to debug
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("DEBUG - Posts in array: \(userPosts.count)")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.blue)
+                            .padding(8)
+                            .background(Color.blue.opacity(0.1))
+                            .padding(.horizontal, 16)
+
+                        ForEach(userPosts, id: \.id) { post in
+                            Text("• \(post.authorName): \(post.content?.prefix(30) ?? "no content")")
+                                .font(.system(size: 11))
+                                .foregroundColor(.black)
                                 .padding(.horizontal, 16)
-                                .padding(.top, 24)
-                                .padding(.bottom, 12)
-
-                            ForEach(userPosts, id: \.id) { post in
-                                // Verify this is the current user's post
-                                if post.authorId == appState.currentUserId && post.authorType == "worshipper" {
-                                    PostCard(post: post)
-                                    Divider().padding(.leading, 16)
-                                }
-                            }
                         }
-                        .padding(.bottom, 24)
                     }
+                    .padding(.top, 24)
 
-                    // End marker
                     Text("END OF PROFILE")
                         .font(.system(size: 10))
                         .foregroundColor(.green)
