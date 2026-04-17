@@ -157,13 +157,17 @@ struct WorkshipperDashboardView: View {
                                 .padding(.top, 24)
                                 .padding(.bottom, 12)
 
-                            ForEach(userPosts) { post in
+                            ForEach(Array(userPosts.enumerated()), id: \.element.id) { index, post in
                                 VStack {
-                                    PostCard(post: post)
-                                    Text("Author: \(post.authorName) (ID: \(post.authorId))")
-                                        .font(.system(size: 10))
-                                        .foregroundColor(.lcText3)
+                                    Text("=== RENDERING POST \(index + 1) ===")
+                                        .font(.system(size: 9))
+                                        .foregroundColor(.blue)
                                         .padding(.horizontal, 16)
+                                    Text("Author: \(post.authorName) | ID: \(post.authorId)")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(.blue)
+                                        .padding(.horizontal, 16)
+                                    PostCard(post: post)
                                 }
                                 Divider().padding(.leading, 16)
                             }
