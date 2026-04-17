@@ -6,14 +6,13 @@ struct WorkshipperDashboardView: View {
     @State private var followerCount = 0
     @State private var followingCount = 0
     @State private var userPosts: [Post] = []
-    @State private var isLoading = true
     @State private var showSignOutAlert = false
     @State private var showEditProfile = false
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Header
+                // HEADER with buttons
                 HStack {
                     Text("My Profile")
                         .font(.system(size: 22, weight: .black))
@@ -43,175 +42,170 @@ struct WorkshipperDashboardView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 16)
 
-                // Profile Card
+                // SCROLLABLE CONTENT - Simple flat list
                 ScrollView {
-                    VStack(spacing: 0) {
-                        // Cover or gradient
-                        ZStack {
-                            if let coverUrl = appState.profile?.coverUrl, let url = URL(string: coverUrl) {
-                                AsyncImage(url: url) { phase in
-                                    switch phase {
-                                    case .success(let img):
-                                        img.resizable().scaledToFill()
-                                    default:
-                                        defaultCover
-                                    }
-                                }
-                            } else {
-                                defaultCover
-                            }
-                        }
-                        .frame(height: 120)
-                        .clipped()
-
+                    VStack(alignment: .leading, spacing: 16) {
+                        // PROFILE CARD
                         VStack(spacing: 0) {
-                            // Avatar
-                            HStack(spacing: 0) {
-                                if let photoUrl = appState.profile?.photoUrl, let url = URL(string: photoUrl) {
+                            // Cover
+                            ZStack {
+                                if let coverUrl = appState.profile?.coverUrl, let url = URL(string: coverUrl) {
                                     AsyncImage(url: url) { phase in
                                         switch phase {
                                         case .success(let img):
                                             img.resizable().scaledToFill()
-                                                .frame(width: 56, height: 56)
-                                                .clipShape(Circle())
                                         default:
-                                            avatarFallback
+                                            LinearGradient(colors: [.lcNavy, .lcNavyDark], startPoint: .topLeading, endPoint: .bottomTrailing)
                                         }
                                     }
                                 } else {
-                                    avatarFallback
-                                }
-                                Spacer()
-                            }
-                            .padding(.horizontal, 16)
-                            .offset(y: -28)
-                            .padding(.bottom, -28)
-
-                            // Info
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(appState.profile?.fullName ?? "Unknown")
-                                    .font(.system(size: 18, weight: .bold))
-                                    .foregroundColor(.lcText)
-
-                                if let bio = appState.profile?.bio, !bio.isEmpty {
-                                    Text(bio)
-                                        .font(.system(size: 13))
-                                        .foregroundColor(.lcText2)
-                                        .lineLimit(3)
+                                    LinearGradient(colors: [.lcNavy, .lcNavyDark], startPoint: .topLeading, endPoint: .bottomTrailing)
                                 }
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 16)
-                            .padding(.top, 16)
-                            .padding(.bottom, 16)
+                            .frame(height: 120)
+                            .clipped()
 
-                            // Stats
-                            HStack(spacing: 24) {
-                                VStack(spacing: 4) {
-                                    Text("\(followerCount)")
-                                        .font(.system(size: 16, weight: .bold))
-                                        .foregroundColor(.lcText)
-                                    Text("Followers")
-                                        .font(.system(size: 11))
-                                        .foregroundColor(.lcText3)
-                                }
-                                VStack(spacing: 4) {
-                                    Text("\(followingCount)")
-                                        .font(.system(size: 16, weight: .bold))
-                                        .foregroundColor(.lcText)
-                                    Text("Following")
-                                        .font(.system(size: 11))
-                                        .foregroundColor(.lcText3)
-                                }
-                                Spacer()
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.bottom, 16)
-
-                            // Sign Out
-                            Button(action: { showSignOutAlert = true }) {
-                                Text("Sign Out")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(.red)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
-                                    .background(Color.red.opacity(0.1))
-                                    .cornerRadius(6)
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.bottom, 16)
-                        }
-                        .background(Color.white)
-                    }
-                    .cornerRadius(12)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 16)
-
-                    // Posts Section - ONLY render posts from current user
-                    if !userPosts.isEmpty {
-                        let filteredPosts = userPosts.filter { $0.authorId == appState.currentUserId && $0.authorType == "worshipper" }
-
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text("Your Posts (\(filteredPosts.count))")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.lcText3)
-                                .padding(.horizontal, 16)
-                                .padding(.top, 24)
-                                .padding(.bottom, 12)
-                                .onAppear {
-                                    print("[Profile] Total posts: \(userPosts.count), Filtered posts: \(filteredPosts.count)")
-                                    for (i, post) in filteredPosts.enumerated() {
-                                        print("[Profile] Filtered Post \(i+1): \(post.authorName) (ID: \(post.authorId))")
-                                    }
-                                }
-
-                            ForEach(filteredPosts, id: \.id) { post in
-                                // TEST: Simple post preview instead of PostCard
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack {
-                                        Circle()
-                                            .fill(Color.lcNavy)
-                                            .frame(width: 40, height: 40)
-                                            .overlay(
-                                                Text(post.authorName.prefix(1).uppercased())
-                                                    .font(.system(size: 14, weight: .bold))
-                                                    .foregroundColor(.white)
-                                            )
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(post.authorName)
-                                                .font(.system(size: 14, weight: .bold))
-                                            Text("1h ago")
-                                                .font(.system(size: 11))
-                                                .foregroundColor(.lcText3)
-                                        }
-                                        Spacer()
-                                    }
-
-                                    Text(post.content ?? "")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.lcText)
-
-                                    if let photoUrl = post.photoUrl, !photoUrl.isEmpty {
-                                        AsyncImage(url: URL(string: photoUrl)) { phase in
+                            VStack(spacing: 0) {
+                                // Avatar
+                                HStack(spacing: 0) {
+                                    if let photoUrl = appState.profile?.photoUrl, let url = URL(string: photoUrl) {
+                                        AsyncImage(url: url) { phase in
                                             if case .success(let img) = phase {
                                                 img.resizable().scaledToFill()
+                                                    .frame(width: 56, height: 56)
+                                                    .clipShape(Circle())
                                             } else {
-                                                Color.lcBorder
+                                                avatarFallback
                                             }
                                         }
-                                        .frame(height: 200)
-                                        .clipped()
+                                    } else {
+                                        avatarFallback
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 16)
+                                .offset(y: -28)
+                                .padding(.bottom, -28)
+
+                                // Info
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(appState.profile?.fullName ?? "Unknown")
+                                        .font(.system(size: 18, weight: .bold))
+                                        .foregroundColor(.lcText)
+
+                                    if let bio = appState.profile?.bio, !bio.isEmpty {
+                                        Text(bio)
+                                            .font(.system(size: 13))
+                                            .foregroundColor(.lcText2)
+                                            .lineLimit(3)
                                     }
                                 }
-                                .padding(14)
-                                .background(Color.white)
-                                .cornerRadius(10)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 16)
+                                .padding(.top, 16)
+                                .padding(.bottom, 16)
 
-                                Divider().padding(.leading, 16)
+                                // Stats
+                                HStack(spacing: 24) {
+                                    VStack(spacing: 4) {
+                                        Text("\(followerCount)")
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundColor(.lcText)
+                                        Text("Followers")
+                                            .font(.system(size: 11))
+                                            .foregroundColor(.lcText3)
+                                    }
+                                    VStack(spacing: 4) {
+                                        Text("\(followingCount)")
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundColor(.lcText)
+                                        Text("Following")
+                                            .font(.system(size: 11))
+                                            .foregroundColor(.lcText3)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.bottom, 16)
+
+                                // Sign Out
+                                Button(action: { showSignOutAlert = true }) {
+                                    Text("Sign Out")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundColor(.red)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 10)
+                                        .background(Color.red.opacity(0.1))
+                                        .cornerRadius(6)
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.bottom, 16)
+                            }
+                            .background(Color.white)
+                        }
+                        .cornerRadius(12)
+
+                        // YOUR POSTS SECTION
+                        if !userPosts.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Your Posts")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.lcText3)
+                                    .padding(.horizontal, 16)
+
+                                // ONLY render posts from current user
+                                ForEach(userPosts.filter { $0.authorId == appState.currentUserId }, id: \.id) { post in
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        HStack(spacing: 10) {
+                                            Circle()
+                                                .fill(Color.lcNavy)
+                                                .frame(width: 40, height: 40)
+                                                .overlay(
+                                                    Text(post.authorName.prefix(1).uppercased())
+                                                        .font(.system(size: 14, weight: .bold))
+                                                        .foregroundColor(.white)
+                                                )
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(post.authorName)
+                                                    .font(.system(size: 14, weight: .bold))
+                                                Text("1h ago")
+                                                    .font(.system(size: 11))
+                                                    .foregroundColor(.lcText3)
+                                            }
+                                            Spacer()
+                                        }
+
+                                        if let content = post.content, !content.isEmpty {
+                                            Text(content)
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.lcText)
+                                        }
+
+                                        if let photoUrl = post.photoUrl, !photoUrl.isEmpty {
+                                            AsyncImage(url: URL(string: photoUrl)) { phase in
+                                                if case .success(let img) = phase {
+                                                    img.resizable().scaledToFill()
+                                                } else {
+                                                    Color.lcBorder
+                                                }
+                                            }
+                                            .frame(height: 200)
+                                            .clipped()
+                                            .cornerRadius(8)
+                                        }
+                                    }
+                                    .padding(14)
+                                    .background(Color.white)
+                                    .cornerRadius(10)
+                                    .padding(.horizontal, 16)
+                                }
                             }
                         }
-                        .padding(.bottom, 24)
+
+                        Spacer()
+                            .frame(height: 24)
                     }
+                    .padding(.vertical, 16)
                 }
             }
             .background(Color.lcCream)
@@ -238,10 +232,6 @@ struct WorkshipperDashboardView: View {
         }
     }
 
-    private var defaultCover: some View {
-        LinearGradient(colors: [.lcNavy, .lcNavyDark], startPoint: .topLeading, endPoint: .bottomTrailing)
-    }
-
     private var avatarFallback: some View {
         ZStack {
             Circle()
@@ -254,9 +244,6 @@ struct WorkshipperDashboardView: View {
     }
 
     private func loadStats() async {
-        isLoading = true
-        defer { isLoading = false }
-
         guard let userId = appState.currentUserId else { return }
 
         do {
@@ -271,32 +258,12 @@ struct WorkshipperDashboardView: View {
     }
 
     private func loadUserPosts() async {
-        guard let userId = appState.currentUserId else {
-            print("[WorkshipperDashboardView] No current user ID")
-            return
-        }
+        guard let userId = appState.currentUserId else { return }
 
         do {
             let posts = try await SupabaseService.shared.getUserPosts(userId: userId)
-            print("[WorkshipperDashboardView] ===== LOADED POSTS =====")
-            print("[WorkshipperDashboardView] Current user ID: \(userId)")
-            print("[WorkshipperDashboardView] Total posts returned: \(posts.count)")
-
-            for (index, post) in posts.enumerated() {
-                print("[WorkshipperDashboardView] Post \(index + 1):")
-                print("[WorkshipperDashboardView]   - ID: \(post.id)")
-                print("[WorkshipperDashboardView]   - Author ID: \(post.authorId)")
-                print("[WorkshipperDashboardView]   - Author Name: \(post.authorName)")
-                print("[WorkshipperDashboardView]   - Author Type: \(post.authorType)")
-                print("[WorkshipperDashboardView]   - Content: \(post.content ?? "nil")")
-                print("[WorkshipperDashboardView]   - Match? \(post.authorId == userId ? "✅ YES" : "❌ NO - WRONG USER!")")
-            }
-            print("[WorkshipperDashboardView] ===== END POSTS =====")
-
             await MainActor.run {
-                print("[WorkshipperDashboardView] Setting userPosts array with \(posts.count) posts")
                 userPosts = posts.sorted { $0.createdAt > $1.createdAt }
-                print("[WorkshipperDashboardView] userPosts array now has \(userPosts.count) items")
             }
         } catch {
             print("Load user posts error: \(error)")
