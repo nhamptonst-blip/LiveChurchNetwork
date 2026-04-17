@@ -19,32 +19,24 @@ struct WorkshipperDashboardView: View {
                         .font(.system(size: 22, weight: .black))
                         .foregroundColor(.lcText)
                     Spacer()
-                    HStack(spacing: 10) {
+                    HStack(spacing: 8) {
                         NavigationLink(destination: CreatePostView(onPosted: { Task { await loadStats(); await loadUserPosts() } }).environmentObject(appState)) {
-                            HStack(spacing: 5) {
-                                Image(systemName: "square.and.pencil")
-                                    .font(.system(size: 12, weight: .semibold))
-                                Text("Post")
-                                    .font(.system(size: 13, weight: .semibold))
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(Color.lcNavy)
-                            .cornerRadius(8)
+                            Text("Post")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(Color.lcNavy)
+                                .cornerRadius(6)
                         }
                         Button { showEditProfile = true } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "pencil.circle.fill")
-                                    .font(.system(size: 14, weight: .semibold))
-                                Text("Edit")
-                                    .font(.system(size: 12, weight: .semibold))
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 7)
-                            .background(Color.lcGold)
-                            .cornerRadius(8)
+                            Text("Edit Profile")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(Color.lcGold)
+                                .cornerRadius(6)
                         }
                     }
                 }
@@ -137,20 +129,14 @@ struct WorkshipperDashboardView: View {
                             .padding(.bottom, 16)
 
                             // Sign Out
-                            Button {
-                                showSignOutAlert = true
-                            } label: {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "arrow.right.circle.fill")
-                                        .font(.system(size: 14, weight: .semibold))
-                                    Text("Sign Out")
-                                        .font(.system(size: 13, weight: .semibold))
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(Color.red)
-                                .cornerRadius(8)
+                            Button(action: { showSignOutAlert = true }) {
+                                Text("Sign Out")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(.red)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                    .background(Color.red.opacity(0.1))
+                                    .cornerRadius(6)
                             }
                             .padding(.horizontal, 16)
                             .padding(.bottom, 16)
@@ -241,6 +227,10 @@ struct WorkshipperDashboardView: View {
 
         do {
             let posts = try await SupabaseService.shared.getUserPosts(userId: userId)
+            print("[WorkshipperDashboardView] Loaded \(posts.count) posts for userId: \(userId)")
+            for post in posts {
+                print("[WorkshipperDashboardView] Post - id: \(post.id), authorId: \(post.authorId), authorName: \(post.authorName), authorType: \(post.authorType)")
+            }
             await MainActor.run {
                 userPosts = posts.sorted { $0.createdAt > $1.createdAt }
             }
