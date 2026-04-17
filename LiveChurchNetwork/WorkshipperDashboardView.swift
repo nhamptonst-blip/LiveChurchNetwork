@@ -147,28 +147,29 @@ struct WorkshipperDashboardView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 16)
 
-                    // TEST: Temporarily showing raw list of userPosts to debug
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("DEBUG - Posts in array: \(userPosts.count)")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.blue)
-                            .padding(8)
-                            .background(Color.blue.opacity(0.1))
-                            .padding(.horizontal, 16)
-
-                        ForEach(userPosts, id: \.id) { post in
-                            Text("• \(post.authorName): \(post.content?.prefix(30) ?? "no content")")
-                                .font(.system(size: 11))
-                                .foregroundColor(.black)
+                    // Posts Section - ONLY render posts from current user
+                    if !userPosts.isEmpty {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text("Your Posts")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.lcText3)
                                 .padding(.horizontal, 16)
-                        }
-                    }
-                    .padding(.top, 24)
+                                .padding(.top, 24)
+                                .padding(.bottom, 12)
 
-                    Text("END OF PROFILE")
-                        .font(.system(size: 10))
-                        .foregroundColor(.green)
-                        .padding(16)
+                            // Only render posts where author is the current user
+                            ForEach(userPosts.filter { $0.authorId == appState.currentUserId && $0.authorType == "worshipper" }, id: \.id) { post in
+                                PostCard(post: post, onLikeToggled: { updatedPost in
+                                    if let idx = userPosts.firstIndex(where: { $0.id == updatedPost.id }) {
+                                        userPosts[idx] = updatedPost
+                                    }
+                                })
+                                .environmentObject(appState)
+                                Divider().padding(.leading, 16)
+                            }
+                        }
+                        .padding(.bottom, 24)
+                    }
                 }
             }
             .background(Color.lcCream)
