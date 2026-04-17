@@ -147,7 +147,7 @@ struct WorkshipperDashboardView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 16)
 
-                    // Posts Section
+                    // Posts Section - ONLY show filtered posts from current user
                     if !userPosts.isEmpty {
                         VStack(alignment: .leading, spacing: 0) {
                             Text("Your Posts (\(userPosts.count))")
@@ -157,23 +157,22 @@ struct WorkshipperDashboardView: View {
                                 .padding(.top, 24)
                                 .padding(.bottom, 12)
 
-                            ForEach(Array(userPosts.enumerated()), id: \.element.id) { index, post in
-                                VStack {
-                                    Text("=== RENDERING POST \(index + 1) ===")
-                                        .font(.system(size: 9))
-                                        .foregroundColor(.blue)
-                                        .padding(.horizontal, 16)
-                                    Text("Author: \(post.authorName) | ID: \(post.authorId)")
-                                        .font(.system(size: 10))
-                                        .foregroundColor(.blue)
-                                        .padding(.horizontal, 16)
+                            ForEach(userPosts, id: \.id) { post in
+                                // Verify this is the current user's post
+                                if post.authorId == appState.currentUserId && post.authorType == "worshipper" {
                                     PostCard(post: post)
+                                    Divider().padding(.leading, 16)
                                 }
-                                Divider().padding(.leading, 16)
                             }
                         }
                         .padding(.bottom, 24)
                     }
+
+                    // End marker
+                    Text("END OF PROFILE")
+                        .font(.system(size: 10))
+                        .foregroundColor(.green)
+                        .padding(16)
                 }
             }
             .background(Color.lcCream)
