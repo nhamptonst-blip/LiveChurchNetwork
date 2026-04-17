@@ -40,7 +40,7 @@ import Foundation
       }
 
       func loadProfile() async {
-          guard let userId = await MainActor.run(body: { currentUserId }) else { return }
+          guard let userId = currentUserId else { return }
           print("[AppState] loadProfile: fetching profile for \(userId)")
           do {
               guard let p = try await SupabaseService.shared.getProfile(userId: userId) else {

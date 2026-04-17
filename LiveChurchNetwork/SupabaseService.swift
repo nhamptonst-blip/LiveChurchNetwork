@@ -153,7 +153,7 @@ private struct ProfileCoverUpdate: Encodable {
          // Church admins need a church_submissions row so onboarding can save info
          if role == "church_admin" {
              print("[SupabaseService] signUp: creating church_submission row")
-             try? await client
+             _ = try? await client
                  .from("church_submissions")
                  .insert(ChurchSubmissionInsert(user_id: userId.uuidString, church_name: fullName))
                  .execute()

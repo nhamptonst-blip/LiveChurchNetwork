@@ -422,3 +422,13 @@ let denominationOptions: [String] = [
       }
   }
 
+  // MARK: - UI Helpers
+
+  /// UI representation of a follower/following with resolved metadata.
+  struct FollowEntry: Identifiable {
+      let id: UUID
+      let displayName: String
+      let photoUrl: String?
+      let subtitle: String?
+  }
+
