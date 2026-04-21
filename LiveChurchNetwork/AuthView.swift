@@ -94,7 +94,7 @@ struct LoginView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 13)
+                .frame(height: 48)
                 .background(Color.lcGold)
                 .foregroundColor(.lcText)
                 .cornerRadius(11)
@@ -122,7 +122,7 @@ struct LoginView: View {
                             .foregroundColor(.lcNavy)
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 14)
+                    .frame(height: 44)
                 }
             }
             .padding(.top, 12)
@@ -136,8 +136,10 @@ struct LoginView: View {
         errorMessage = nil
         do {
             try await SupabaseService.shared.signIn(email: email, password: password)
+            HapticEngine.notification(.success)
         } catch {
             errorMessage = "Invalid email or password."
+            HapticEngine.notification(.error)
         }
         isLoading = false
     }
@@ -245,7 +247,7 @@ struct RegisterView: View {
                         }
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 13)
+                    .frame(height: 48)
                     .background(formIsValid ? Color.lcNavy : Color.gray.opacity(0.2))
                     .foregroundColor(formIsValid ? .white : .lcText3)
                     .cornerRadius(11)
@@ -304,8 +306,10 @@ struct RegisterView: View {
                     homeChurchName: regChurchName.map { $0.trimmingCharacters(in: .whitespaces) }
                 )
             }
+            HapticEngine.notification(.success)
         } catch {
             errorMessage = "Could not create account. \(error.localizedDescription)"
+            HapticEngine.notification(.error)
         }
         isLoading = false
     }

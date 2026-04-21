@@ -2,285 +2,261 @@ import SwiftUI
 
 struct WorkshipperDashboardView: View {
     @EnvironmentObject var appState: AppState
-
     @State private var followerCount = 0
     @State private var followingCount = 0
-    @State private var userPosts: [Post] = []
-    @State private var showSignOutAlert = false
     @State private var showEditProfile = false
+    @State private var userPosts: [Post] = []
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // HEADER with buttons
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                // Header with actions
                 HStack {
                     Text("My Profile")
                         .font(.system(size: 22, weight: .black))
                         .foregroundColor(.lcText)
                     Spacer()
-                    HStack(spacing: 8) {
-                        NavigationLink(destination: CreatePostView(onPosted: { Task { await loadStats(); await loadUserPosts() } }).environmentObject(appState)) {
-                            Text("Post")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
-                                .background(Color.lcNavy)
-                                .cornerRadius(6)
-                        }
-                        Button { showEditProfile = true } label: {
-                            Text("Edit Profile")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
-                                .background(Color.lcGold)
-                                .cornerRadius(6)
-                        }
+                    Button { showEditProfile = true } label: {
+                        Text("Edit Profile")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.lcText3)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.white)
+                            .border(Color.lcBorder, width: 1)
+                            .cornerRadius(8)
                     }
                 }
                 .padding(.horizontal, 16)
-                .padding(.vertical, 16)
 
-                // SCROLLABLE CONTENT - Simple flat list
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        // PROFILE CARD
-                        VStack(spacing: 0) {
-                            // Cover
-                            ZStack {
-                                if let coverUrl = appState.profile?.coverUrl, let url = URL(string: coverUrl) {
+                // Profile card
+                VStack(spacing: 0) {
+                        // Cover
+                        ZStack(alignment: .topLeading) {
+                            if let coverUrl = appState.profile?.coverUrl, let url = URL(string: coverUrl) {
+                                AsyncImage(url: url) { phase in
+                                    switch phase {
+                                    case .success(let img):
+                                        img.resizable().scaledToFill()
+                                    default:
+                                        LinearGradient(colors: [.lcNavy, .lcNavyDark], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                    }
+                                }
+                            } else {
+                                LinearGradient(colors: [.lcNavy, .lcNavyDark], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            }
+                        }
+                        .frame(height: 144)
+                        .clipped()
+
+                        VStack(alignment: .leading, spacing: 16) {
+                            // Avatar
+                            HStack(alignment: .top, spacing: 16) {
+                                if let photoUrl = appState.profile?.photoUrl, let url = URL(string: photoUrl) {
                                     AsyncImage(url: url) { phase in
-                                        switch phase {
-                                        case .success(let img):
+                                        if case .success(let img) = phase {
                                             img.resizable().scaledToFill()
-                                        default:
-                                            LinearGradient(colors: [.lcNavy, .lcNavyDark], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                                .frame(width: 80, height: 80)
+                                                .clipShape(Circle())
+                                        } else {
+                                            avatarPlaceholder
                                         }
                                     }
                                 } else {
-                                    LinearGradient(colors: [.lcNavy, .lcNavyDark], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                    avatarPlaceholder
                                 }
-                            }
-                            .frame(height: 120)
-                            .clipped()
 
-                            VStack(spacing: 0) {
-                                // Avatar
-                                HStack(spacing: 0) {
-                                    if let photoUrl = appState.profile?.photoUrl, let url = URL(string: photoUrl) {
-                                        AsyncImage(url: url) { phase in
-                                            if case .success(let img) = phase {
-                                                img.resizable().scaledToFill()
-                                                    .frame(width: 56, height: 56)
-                                                    .clipShape(Circle())
-                                            } else {
-                                                avatarFallback
-                                            }
-                                        }
-                                    } else {
-                                        avatarFallback
-                                    }
-                                    Spacer()
-                                }
-                                .padding(.horizontal, 16)
-                                .offset(y: -28)
-                                .padding(.bottom, -28)
-
-                                // Info
-                                VStack(alignment: .leading, spacing: 8) {
+                                VStack(alignment: .leading, spacing: 4) {
                                     Text(appState.profile?.fullName ?? "Unknown")
                                         .font(.system(size: 18, weight: .bold))
                                         .foregroundColor(.lcText)
+                                    Text("Member")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.lcText3)
+                                        .textCase(.lowercase)
+                                    if let city = appState.profile?.city, !city.isEmpty {
+                                        Text(city)
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.lcText3)
+                                    }
+                                }
+                                Spacer()
+                            }
+                            .padding(.top, 16)
 
-                                    if let bio = appState.profile?.bio, !bio.isEmpty {
-                                        Text(bio)
+                            // Bio
+                            if let bio = appState.profile?.bio, !bio.isEmpty {
+                                Text(bio)
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.lcText2)
+                                    .lineLimit(4)
+                            }
+
+                            // Info section
+                            VStack(alignment: .leading, spacing: 8) {
+                                if let denom = appState.profile?.denomination, !denom.isEmpty {
+                                    HStack(spacing: 8) {
+                                        Text("DENOMINATION")
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundColor(.lcText3)
+                                            .tracking(0.3)
+                                        Text(denom)
                                             .font(.system(size: 13))
                                             .foregroundColor(.lcText2)
-                                            .lineLimit(3)
                                     }
                                 }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 16)
-                                .padding(.top, 16)
-                                .padding(.bottom, 16)
+                                if let church = appState.profile?.homeChurchName, !church.isEmpty {
+                                    HStack(spacing: 8) {
+                                        Text("CHURCH I ATTEND")
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundColor(.lcText3)
+                                            .tracking(0.3)
+                                        Text(church)
+                                            .font(.system(size: 13))
+                                            .foregroundColor(.lcText2)
+                                    }
+                                }
+                            }
 
-                                // Stats
-                                HStack(spacing: 24) {
-                                    VStack(spacing: 4) {
-                                        Text("\(followerCount)")
-                                            .font(.system(size: 16, weight: .bold))
-                                            .foregroundColor(.lcText)
-                                        Text("Followers")
-                                            .font(.system(size: 11))
-                                            .foregroundColor(.lcText3)
-                                    }
-                                    VStack(spacing: 4) {
+                            // Stats
+                            HStack(spacing: 24) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("\(followerCount)")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(.lcText)
+                                    Text(followerCount == 1 ? "follower" : "followers")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.lcText3)
+                                }
+                                NavigationLink(destination: FollowingListView(userId: appState.currentUserId).environmentObject(appState)) {
+                                    VStack(alignment: .leading, spacing: 2) {
                                         Text("\(followingCount)")
-                                            .font(.system(size: 16, weight: .bold))
+                                            .font(.system(size: 14, weight: .bold))
                                             .foregroundColor(.lcText)
-                                        Text("Following")
-                                            .font(.system(size: 11))
+                                        Text("following")
+                                            .font(.system(size: 12))
                                             .foregroundColor(.lcText3)
                                     }
+                                }
+                                Spacer()
+                            }
+
+                            Divider()
+                                .padding(.vertical, 8)
+
+                            // Sign out button
+                            Button {
+                                Task { await appState.signOut() }
+                            } label: {
+                                Text("Sign Out")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(.lcText3)
+                                    .padding(.vertical, 10)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                        .padding(24)
+                        .background(Color.white)
+                    }
+                .cornerRadius(16)
+                .border(Color.lcBorder, width: 1)
+                .padding(.horizontal, 16)
+
+                // Posts Section
+                if !userPosts.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("My Posts")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.lcText)
+                            .padding(.horizontal, 16)
+
+                        ForEach(userPosts, id: \.id) { post in
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "square.and.pencil")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.lcNavy)
+                                    Text(post.postType.uppercased())
+                                        .font(.system(size: 11, weight: .bold))
+                                        .foregroundColor(.lcNavy)
+                                        .tracking(0.5)
                                     Spacer()
                                 }
-                                .padding(.horizontal, 16)
-                                .padding(.bottom, 16)
 
-                                // Sign Out
-                                Button(action: { showSignOutAlert = true }) {
-                                    Text("Sign Out")
-                                        .font(.system(size: 13, weight: .semibold))
-                                        .foregroundColor(.red)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 10)
-                                        .background(Color.red.opacity(0.1))
-                                        .cornerRadius(6)
+                                if let content = post.content {
+                                    Text(content)
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.lcText2)
+                                        .lineLimit(3)
                                 }
-                                .padding(.horizontal, 16)
-                                .padding(.bottom, 16)
+
+                                HStack(spacing: 12) {
+                                    Text("❤️ \(post.likeCount)")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.lcText3)
+                                    Spacer()
+                                }
                             }
+                            .padding(12)
                             .background(Color.white)
+                            .cornerRadius(8)
+                            .border(Color.lcBorder, width: 1)
                         }
-                        .cornerRadius(12)
-
-                        // YOUR POSTS SECTION
-                        if !userPosts.isEmpty {
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Your Posts")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.lcText3)
-                                    .padding(.horizontal, 16)
-
-                                // ONLY render posts from current user
-                                let filteredForRender = userPosts.filter { $0.authorId == appState.currentUserId }
-
-                                ForEach(filteredForRender, id: \.id) { post in
-                                    // Log every post being rendered
-                                    let _ = print("""
-                                    [RENDER POST]
-                                    ID: \(post.id)
-                                    Author ID: \(post.authorId)
-                                    Author Name: \(post.authorName)
-                                    Author Type: \(post.authorType)
-                                    Content: \(post.content ?? "nil")
-                                    Photo URL: \(post.photoUrl ?? "nil")
-                                    Post Type: \(post.postType)
-                                    ---
-                                    """)
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        HStack(spacing: 10) {
-                                            Circle()
-                                                .fill(Color.lcNavy)
-                                                .frame(width: 40, height: 40)
-                                                .overlay(
-                                                    Text(post.authorName.prefix(1).uppercased())
-                                                        .font(.system(size: 14, weight: .bold))
-                                                        .foregroundColor(.white)
-                                                )
-                                            VStack(alignment: .leading, spacing: 2) {
-                                                Text(post.authorName)
-                                                    .font(.system(size: 14, weight: .bold))
-                                                Text("1h ago")
-                                                    .font(.system(size: 11))
-                                                    .foregroundColor(.lcText3)
-                                            }
-                                            Spacer()
-                                        }
-
-                                        if let content = post.content, !content.isEmpty {
-                                            Text(content)
-                                                .font(.system(size: 14))
-                                                .foregroundColor(.lcText)
-                                        }
-
-                                        if let photoUrl = post.photoUrl, !photoUrl.isEmpty {
-                                            AsyncImage(url: URL(string: photoUrl)) { phase in
-                                                if case .success(let img) = phase {
-                                                    img.resizable().scaledToFill()
-                                                } else {
-                                                    Color.lcBorder
-                                                }
-                                            }
-                                            .frame(height: 200)
-                                            .clipped()
-                                            .cornerRadius(8)
-                                        }
-                                    }
-                                    .padding(14)
-                                    .background(Color.white)
-                                    .cornerRadius(10)
-                                    .padding(.horizontal, 16)
-                                }
-                            }
-                        }
-
-                        Spacer()
-                            .frame(height: 24)
                     }
-                    .padding(.vertical, 16)
+                    .padding(.horizontal, 16)
                 }
             }
-            .background(Color.lcCream)
-            .navigationBarTitleDisplayMode(.inline)
-            .sheet(isPresented: $showEditProfile) {
-                if let profile = appState.profile, let userId = appState.currentUserId {
-                    EditWorshipperProfileView(profile: profile, userId: userId) {
-                        Task { await appState.loadProfile() }
-                    }
+            .padding(.vertical, 16)
+        }
+        .background(Color.lcCream)
+        .onAppear {
+            Task { await loadStats() }
+        }
+        .sheet(isPresented: $showEditProfile) {
+            if let profile = appState.profile, let userId = appState.currentUserId {
+                EditWorshipperProfileView(profile: profile, userId: userId) {
+                    Task { await appState.loadProfile() }
                 }
-            }
-            .alert("Sign Out", isPresented: $showSignOutAlert) {
-                Button("Cancel", role: .cancel) {}
-                Button("Sign Out", role: .destructive) {
-                    Task { await appState.signOut() }
-                }
-            } message: {
-                Text("Are you sure?")
             }
         }
         .task {
             await loadStats()
-            await loadUserPosts()
         }
     }
 
-    private var avatarFallback: some View {
+    private var avatarPlaceholder: some View {
         ZStack {
             Circle()
                 .fill(Color.lcNavy)
-                .frame(width: 56, height: 56)
+                .frame(width: 80, height: 80)
             Text((appState.profile?.fullName ?? "U").prefix(1).uppercased())
-                .font(.system(size: 20, weight: .bold))
+                .font(.system(size: 28, weight: .bold))
                 .foregroundColor(.lcGold)
         }
     }
 
     private func loadStats() async {
         guard let userId = appState.currentUserId else { return }
-
         do {
             let followers = try await SupabaseService.shared.getFollowers(userId: userId)
-            followerCount = followers.count
+            await MainActor.run { followerCount = followers.count }
 
             let following = try await SupabaseService.shared.getFollowing(followerId: userId)
-            followingCount = following.count
+            await MainActor.run { followingCount = following.count }
+
+            let posts = try await SupabaseService.shared.getUserPosts(userId: userId)
+            await MainActor.run { userPosts = posts }
         } catch {
-            print("Load stats error: \(error)")
+            print("Error loading stats: \(error)")
         }
     }
+}
 
-    private func loadUserPosts() async {
-        guard let userId = appState.currentUserId else { return }
+// Placeholder for FollowingListView
+struct FollowingListView: View {
+    let userId: UUID?
 
-        do {
-            let posts = try await SupabaseService.shared.getUserPosts(userId: userId)
-            await MainActor.run {
-                userPosts = posts.sorted { $0.createdAt > $1.createdAt }
-            }
-        } catch {
-            print("Load user posts error: \(error)")
-        }
+    var body: some View {
+        Text("Following")
     }
 }

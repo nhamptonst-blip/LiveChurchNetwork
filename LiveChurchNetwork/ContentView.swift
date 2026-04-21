@@ -79,7 +79,7 @@ struct MainTabView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             TabView(selection: $selectedTab) {
-                FeedView()
+                FeedView(selectedTab: $selectedTab)
                     .tabItem { Label("Feed", systemImage: "house.fill") }
                     .tag(0)
 
@@ -94,17 +94,19 @@ struct MainTabView: View {
                     .badge(unreadCount > 0 ? unreadCount : 0)
                     .tag(2)
 
-                Group {
-                    if appState.profile?.role == "admin" {
-                        AdminDashboardView()
-                    } else if appState.profile?.role == "church_admin" {
-                        ChurchAdminDashboardView()
-                    } else {
-                        WorkshipperDashboardView()
-                    }
+                if appState.profile?.role == "admin" {
+                    AdminDashboardView()
+                        .tabItem { Label("Profile", systemImage: "person.fill") }
+                        .tag(3)
+                } else if appState.profile?.role == "church_admin" {
+                    ChurchAdminDashboardView()
+                        .tabItem { Label("Profile", systemImage: "person.fill") }
+                        .tag(3)
+                } else {
+                    WorkshipperDashboardView()
+                        .tabItem { Label("Profile", systemImage: "person.fill") }
+                        .tag(3)
                 }
-                .tabItem { Label("Profile", systemImage: "person.fill") }
-                .tag(3)
             }
             .tint(.lcGold)
             .task { await loadUnreadCount() }

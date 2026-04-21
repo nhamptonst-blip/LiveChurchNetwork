@@ -98,48 +98,67 @@ struct DirectoryView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                sectionToggle
-                Divider()
-                Group {
-                    if section == .churches { churchesContent }
-                    else                   { peopleContent }
+            ZStack {
+                // Background
+                Color(red: 0.98, green: 0.98, blue: 0.97).ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    // Header
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Discover")
+                            .font(.system(size: 32, weight: .black))
+                            .foregroundColor(.lcText)
+                        Text("Find churches, people, and live services")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.lcText3)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    .padding(.bottom, 24)
+
+                    // Segmented tabs
+                    sectionToggle
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
+
+                    // Content
+                    Group {
+                        if section == .churches { churchesContent }
+                        else                   { peopleContent }
+                    }
+                    .animation(.appStandard, value: section)
+                    .id(section)
                 }
-                .animation(.appStandard, value: section)
-                .id(section)
             }
-            .background(Color.lcCream)
-            .navigationTitle("Discover")
-            .navigationBarTitleDisplayMode(.large)
         }
         .task { await loadDiscoverContent() }
     }
 
-    // MARK: - Segmented toggle
+    // MARK: - Segmented toggle (Pill style)
 
     private var sectionToggle: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 8) {
             ForEach(DiscoverSection.allCases, id: \.self) { tab in
                 Button {
-                    withAnimation(.appStandard) { section = tab }
+                    withAnimation(.appSpring) { section = tab }
+                    HapticEngine.selection()
                 } label: {
-                    VStack(spacing: 0) {
-                        HStack(spacing: 6) {
-                            Image(systemName: tab == .churches ? "building.2.fill" : "person.2.fill")
-                                .font(.system(size: 13))
-                            Text(tab.rawValue)
-                                .font(.system(size: 14, weight: section == tab ? .bold : .regular))
-                        }
-                        .foregroundColor(section == tab ? .lcNavy : .lcText3)
-                        .padding(.vertical, 12)
-                        Rectangle()
-                            .fill(section == tab ? Color.lcNavy : Color.clear)
-                            .frame(height: 2)
+                    HStack(spacing: 8) {
+                        Image(systemName: tab == .churches ? "building.2.fill" : "person.2.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                        Text(tab.rawValue)
+                            .font(.system(size: 14, weight: .bold))
                     }
+                    .frame(maxWidth: .infinity)
+                    .foregroundColor(section == tab ? .white : .lcText2)
+                    .padding(.vertical, 10)
+                    .background(section == tab ? Color.lcNavy : Color.white)
+                    .cornerRadius(12)
+                    .shadow(color: section == tab ? Color.lcNavy.opacity(0.2) : Color.clear, radius: 6, x: 0, y: 2)
                 }
-                .frame(maxWidth: .infinity)
-                .background(Color.white)
             }
+            Spacer()
         }
     }
 
@@ -152,139 +171,181 @@ struct DirectoryView: View {
 
             if isLoading {
                 ScrollView {
-                    VStack(spacing: 0) {
-                        churchResultsHeader
+                    VStack(spacing: 16) {
                         LazyVGrid(
-                            columns: [GridItem(.flexible(), spacing: 14),
-                                      GridItem(.flexible(), spacing: 14)],
-                            spacing: 14
+                            columns: [GridItem(.flexible(), spacing: 16),
+                                      GridItem(.flexible(), spacing: 16)],
+                            spacing: 16
                         ) {
                             ForEach(0..<6, id: \.self) { _ in
                                 ChurchCardSkeleton()
                             }
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 24)
+                        .padding(.horizontal, 20)
                     }
+                    .padding(.vertical, 20)
                 }
             } else if filteredChurches.isEmpty {
                 churchEmptyState
             } else {
                 ScrollView {
-                    VStack(spacing: 0) {
-                        // Suggested carousel — hidden when the user is actively searching/filtering
+                    VStack(spacing: 24) {
+                        // Suggested section — hidden when the user is actively searching/filtering
                         if churchSearch.isEmpty && selectedDenomination == "All"
                             && !showLiveOnly && !suggestedChurches.isEmpty {
                             suggestedChurchesSection
                         }
-                        churchResultsHeader
+
+                        // Results header
+                        if !suggestedChurches.isEmpty && churchSearch.isEmpty {
+                            VStack(alignment: .leading, spacing: 0) {
+                                Divider().padding(.bottom, 16)
+                                Text("All Churches")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(.lcText)
+                            }
+                            .padding(.horizontal, 20)
+                        }
+
+                        // Church grid
                         LazyVGrid(
-                            columns: [GridItem(.flexible(), spacing: 14),
-                                      GridItem(.flexible(), spacing: 14)],
-                            spacing: 14
+                            columns: [GridItem(.flexible(), spacing: 16),
+                                      GridItem(.flexible(), spacing: 16)],
+                            spacing: 16
                         ) {
                             ForEach(filteredChurches) { church in
-                                ChurchCard(church: church)
+                                ChurchCard(
+                                    church: church,
+                                    isFollowing: followedChurchSlugs.contains(church.slug),
+                                    onFollowToggle: {
+                                        Task {
+                                            await toggleChurchFollow(church: church)
+                                        }
+                                    }
+                                )
                             }
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 24)
+                        .padding(.horizontal, 20)
                     }
+                    .padding(.vertical, 20)
                 }
             }
         }
+        .background(Color(red: 0.98, green: 0.98, blue: 0.97))
     }
 
-    // MARK: - Suggested churches carousel
+    // MARK: - Suggested churches section
 
     private var suggestedChurchesSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("Suggested for You")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(.lcText2)
-                Spacer()
-            }
-            .padding(.horizontal, 16)
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Suggested for You")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(.lcText)
+                .padding(.horizontal, 20)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(suggestedChurches.prefix(6)) { church in
-                        NavigationLink(destination: ChurchDetailView(church: church)) {
-                            SuggestedChurchCard(church: church)
+            LazyVGrid(
+                columns: [GridItem(.flexible(), spacing: 16),
+                          GridItem(.flexible(), spacing: 16)],
+                spacing: 16
+            ) {
+                ForEach(suggestedChurches.prefix(4)) { church in
+                    ChurchCard(
+                        church: church,
+                        isFollowing: followedChurchSlugs.contains(church.slug),
+                        onFollowToggle: {
+                            Task {
+                                await toggleChurchFollow(church: church)
+                            }
                         }
-                        .buttonStyle(.plain)
-                    }
+                    )
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 2)
             }
+            .padding(.horizontal, 20)
         }
-        .padding(.top, 4)
-        .padding(.bottom, 14)
     }
 
     private var churchSearchBar: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass").foregroundColor(.lcText3)
-            TextField("Search churches, denominations...", text: $churchSearch)
-                .font(.system(size: 15))
+        HStack(spacing: 12) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.lcText3)
+
+            TextField("Search churches...", text: $churchSearch)
+                .font(.system(size: 16, weight: .regular))
                 .foregroundColor(.lcText)
+
             if !churchSearch.isEmpty {
                 Button { churchSearch = "" } label: {
-                    Image(systemName: "xmark.circle.fill").foregroundColor(.lcText3)
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.lcText3)
                 }
             }
         }
-        .padding(12)
-        .background(Color.white)
-        .cornerRadius(12)
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.lcBorder, lineWidth: 1))
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 14)
         .padding(.vertical, 12)
+        .background(Color.white)
+        .cornerRadius(14)
+        .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+        .padding(.horizontal, 20)
+        .padding(.bottom, 16)
     }
 
     private var filterRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                Button {
-                    withAnimation(.appSpring) { showLiveOnly.toggle() }
-                    HapticEngine.selection()
-                } label: {
-                    HStack(spacing: 5) {
-                        if showLiveOnly { Circle().fill(Color.red).frame(width: 6, height: 6) }
-                        Text("Live Now").font(.system(size: 12, weight: .semibold))
-                    }
-                    .foregroundColor(showLiveOnly ? .white : .red)
-                    .padding(.horizontal, 14).padding(.vertical, 7)
-                    .background(showLiveOnly ? Color.red : Color.red.opacity(0.08))
-                    .cornerRadius(20)
-                    .overlay(RoundedRectangle(cornerRadius: 20)
-                        .stroke(showLiveOnly ? Color.clear : Color.red.opacity(0.3), lineWidth: 1))
-                    .scaleEffect(showLiveOnly ? 1.0 : 1.0)
-                    .animation(.appSpring, value: showLiveOnly)
+        HStack(spacing: 10) {
+            // Live Now button
+            Button {
+                withAnimation(.appSpring) { showLiveOnly.toggle() }
+                HapticEngine.selection()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: showLiveOnly ? "dot.radiowaves.right" : "dot.circle")
+                        .font(.system(size: 13, weight: .bold))
+                    Text("Live Now")
+                        .font(.system(size: 13, weight: .bold))
                 }
+                .foregroundColor(showLiveOnly ? .white : .red)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
+                .background(showLiveOnly ? Color.red : Color.red.opacity(0.1))
+                .cornerRadius(12)
+                .shadow(color: showLiveOnly ? Color.red.opacity(0.3) : Color.clear, radius: 4, x: 0, y: 2)
+            }
+
+            // Denomination picker
+            Menu {
                 ForEach(denominations, id: \.self) { denom in
                     Button {
                         withAnimation(.appSpring) { selectedDenomination = denom }
                         HapticEngine.selection()
                     } label: {
-                        Text(denom)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(selectedDenomination == denom ? .white : .lcNavy)
-                            .padding(.horizontal, 14).padding(.vertical, 7)
-                            .background(selectedDenomination == denom
-                                        ? Color.lcNavy : Color.lcNavy.opacity(0.06))
-                            .cornerRadius(20)
-                            .scaleEffect(selectedDenomination == denom ? 1.05 : 1.0)
-                            .animation(.appSpring, value: selectedDenomination == denom)
+                        HStack {
+                            Text(denom)
+                            if selectedDenomination == denom {
+                                Image(systemName: "checkmark")
+                            }
+                        }
                     }
-                    .buttonStyle(.plain)
                 }
+            } label: {
+                HStack(spacing: 6) {
+                    Text(selectedDenomination)
+                        .font(.system(size: 13, weight: .bold))
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 10, weight: .semibold))
+                }
+                .foregroundColor(selectedDenomination == "All" ? .lcNavy : .white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 9)
+                .background(selectedDenomination == "All" ? Color.white : Color.lcNavy)
+                .cornerRadius(12)
+                .shadow(color: selectedDenomination == "All" ? Color.clear : Color.lcNavy.opacity(0.2), radius: 4, x: 0, y: 2)
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 12)
+
+            Spacer()
         }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 16)
     }
 
     private var churchResultsHeader: some View {
@@ -327,17 +388,24 @@ struct DirectoryView: View {
                 VStack(spacing: 12) {
                     Spacer()
                     Image(systemName: "person.2")
-                        .font(.system(size: 40)).foregroundColor(.lcText3)
-                    Text("No users found")
-                        .font(.system(size: 16, weight: .bold)).foregroundColor(.lcText)
-                    Text("Try a different search term.")
-                        .font(.system(size: 13)).foregroundColor(.lcText3)
+                        .font(.system(size: 48))
+                        .foregroundColor(.lcText3)
+                    Text("No people found")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.lcText)
+                    Text("Try a different search or discover featured worshippers.")
+                        .font(.system(size: 13))
+                        .foregroundColor(.lcText3)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
                     Spacer()
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color(red: 0.98, green: 0.98, blue: 0.97))
             } else if !peopleSearch.isEmpty {
                 // Active search — plain results, no suggested section
                 ScrollView {
-                    LazyVStack(spacing: 12) {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                         ForEach(filteredPeople) { user in
                             NavigationLink(destination: UserProfileView(userId: user.id)) {
                                 UserDiscoveryCard(user: user)
@@ -346,59 +414,87 @@ struct DirectoryView: View {
                         }
                     }
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 24)
+                    .padding(.vertical, 20)
                 }
+                .background(Color(red: 0.98, green: 0.98, blue: 0.97))
             } else {
-                // Browsing — top 5 as "Suggested", rest under "More Worshippers"
+                // Browsing — suggested + more worshippers
                 ScrollView {
-                    LazyVStack(spacing: 12) {
-                        sectionLabel("Suggested for You")
-                        ForEach(Array(rankedPeople.prefix(5))) { user in
-                            NavigationLink(destination: UserProfileView(userId: user.id)) {
-                                UserDiscoveryCard(user: user)
+                    VStack(spacing: 24) {
+                        // Suggested section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Suggested for You")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.lcText)
+                                .padding(.horizontal, 16)
+
+                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                                ForEach(Array(rankedPeople.prefix(5))) { user in
+                                    NavigationLink(destination: UserProfileView(userId: user.id)) {
+                                        UserDiscoveryCard(user: user)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
-                            .buttonStyle(.plain)
+                            .padding(.horizontal, 16)
                         }
 
+                        // More worshippers section
                         if rankedPeople.count > 5 {
-                            Rectangle()
-                                .fill(Color.lcBorder)
-                                .frame(height: 1)
-                                .padding(.vertical, 6)
-                            sectionLabel("More Worshippers")
-                            ForEach(Array(rankedPeople.dropFirst(5))) { user in
-                                NavigationLink(destination: UserProfileView(userId: user.id)) {
-                                    UserDiscoveryCard(user: user)
+                            VStack(alignment: .leading, spacing: 16) {
+                                VStack(alignment: .leading, spacing: 0) {
+                                    Divider().padding(.bottom, 16)
+                                    Text("More Worshippers")
+                                        .font(.system(size: 18, weight: .bold))
+                                        .foregroundColor(.lcText)
                                 }
-                                .buttonStyle(.plain)
+                                .padding(.horizontal, 16)
+
+                                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                                    ForEach(Array(rankedPeople.dropFirst(5))) { user in
+                                        NavigationLink(destination: UserProfileView(userId: user.id)) {
+                                            UserDiscoveryCard(user: user)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                .padding(.horizontal, 16)
                             }
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 24)
+                    .padding(.vertical, 20)
                 }
+                .background(Color(red: 0.98, green: 0.98, blue: 0.97))
             }
         }
+        .background(Color(red: 0.98, green: 0.98, blue: 0.97))
     }
 
     private var peopleSearchBar: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass").foregroundColor(.lcText3)
+        HStack(spacing: 12) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.lcText3)
+
             TextField("Search people...", text: $peopleSearch)
-                .font(.system(size: 15))
+                .font(.system(size: 16, weight: .regular))
                 .foregroundColor(.lcText)
+
             if !peopleSearch.isEmpty {
                 Button { peopleSearch = "" } label: {
-                    Image(systemName: "xmark.circle.fill").foregroundColor(.lcText3)
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.lcText3)
                 }
             }
         }
-        .padding(12)
-        .background(Color.white)
-        .cornerRadius(12)
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.lcBorder, lineWidth: 1))
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 14)
         .padding(.vertical, 12)
+        .background(Color.white)
+        .cornerRadius(14)
+        .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+        .padding(.horizontal, 20)
+        .padding(.bottom, 16)
     }
 
     private func sectionLabel(_ text: String) -> some View {
@@ -411,12 +507,12 @@ struct DirectoryView: View {
 
     // MARK: - Load
 
-    private func toChurch(_ submission: ChurchSubmission) -> Church {
+    private func toChurch(_ submission: ChurchSubmission, photoUrl: String?) -> Church {
         let slug = (submission.churchName ?? "").lowercased().replacingOccurrences(of: " ", with: "-")
         return Church(
             name: submission.churchName ?? "",
             slug: slug,
-            image: "",
+            image: photoUrl ?? "",
             denomination: submission.denomination ?? "",
             permalink: "",
             phone: submission.phone ?? "",
@@ -453,8 +549,20 @@ struct DirectoryView: View {
         let live = (try? await liveTask) ?? []
         let members = (try? await membersTask) ?? []
 
-        // Convert ChurchSubmission records to Church structs
-        churches = approved.map { toChurch($0) }
+        // Fetch church user profiles to get logos (photo_url)
+        let churchUserIds = approved.map { $0.userId }
+        let churchProfiles = (try? await SupabaseService.shared.getProfiles(ids: churchUserIds)) ?? []
+
+        // Build a map of userId → photo_url for quick lookup
+        var churchPhotoMap: [UUID: String] = [:]
+        for profile in churchProfiles {
+            if let photoUrl = profile.photoUrl {
+                churchPhotoMap[profile.id] = photoUrl
+            }
+        }
+
+        // Convert ChurchSubmission records to Church structs, adding profile photos
+        churches = approved.map { toChurch($0, photoUrl: churchPhotoMap[$0.userId]) }
 
         // Convert Profile records to DiscoverableUser structs
         discoveredMembers = members.map { toDiscoverableUser($0) }
@@ -493,6 +601,30 @@ struct DirectoryView: View {
         )
 
         isLoading = false
+    }
+
+    private func toggleChurchFollow(church: Church) async {
+        guard let currentUserId = appState.currentUserId else { return }
+
+        let isCurrentlyFollowing = followedChurchSlugs.contains(church.slug)
+
+        do {
+            if isCurrentlyFollowing {
+                HapticEngine.impact(.light)
+                try await SupabaseService.shared.unfollow(followerId: currentUserId, followingId: church.slug)
+                await MainActor.run {
+                    followedChurchSlugs.remove(church.slug)
+                }
+            } else {
+                HapticEngine.impact(.medium)
+                try await SupabaseService.shared.follow(followerId: currentUserId, followingId: church.slug, followingType: "church")
+                await MainActor.run {
+                    followedChurchSlugs.insert(church.slug)
+                }
+            }
+        } catch {
+            print("Error toggling follow for church \(church.name): \(error)")
+        }
     }
 }
 
@@ -565,62 +697,145 @@ struct SuggestedChurchCard: View {
     }
 }
 
-// MARK: - User Discovery Card
+/// MARK: - User Discovery Card
 
 struct UserDiscoveryCard: View {
     let user: DiscoverableUser
     @EnvironmentObject var appState: AppState
 
+    private var userInitial: String {
+        String(user.name.prefix(1)).uppercased()
+    }
+
+    // Gradient color based on denomination hash for visual variety
+    private var gradientColors: (top: Color, bottom: Color) {
+        let hash = (user.denomination ?? "").hashValue % 5
+        switch hash {
+        case 0: return (Color(red: 0.2, green: 0.4, blue: 0.8), Color(red: 0.1, green: 0.3, blue: 0.7))
+        case 1: return (Color(red: 0.8, green: 0.3, blue: 0.3), Color(red: 0.7, green: 0.2, blue: 0.2))
+        case 2: return (Color(red: 0.3, green: 0.6, blue: 0.4), Color(red: 0.2, green: 0.5, blue: 0.3))
+        case 3: return (Color(red: 0.8, green: 0.5, blue: 0.2), Color(red: 0.7, green: 0.4, blue: 0.1))
+        default: return (Color(red: 0.6, green: 0.3, blue: 0.7), Color(red: 0.5, green: 0.2, blue: 0.6))
+        }
+    }
+
     var body: some View {
-        HStack(spacing: 14) {
-            // Avatar
-            UserAvatarView(user: user, size: .medium)
-
-            // Info
-            VStack(alignment: .leading, spacing: 4) {
-                Text(user.name)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(.lcText)
-                    .lineLimit(1)
-
-                HStack(spacing: 6) {
-                    if let denom = user.denomination, !denom.isEmpty {
-                        Text(denom)
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.lcNavy)
-                            .padding(.horizontal, 8).padding(.vertical, 2)
-                            .background(Color.lcNavy.opacity(0.08))
-                            .cornerRadius(20)
+        VStack(alignment: .leading, spacing: 0) {
+            ZStack(alignment: .bottomLeading) {
+                // Cover image or gradient
+                if let coverUrl = user.coverImageUrl, !coverUrl.isEmpty, let url = URL(string: coverUrl) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let img):
+                            img.resizable()
+                                .scaledToFill()
+                                .overlay(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.2)]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                        default:
+                            LinearGradient(
+                                gradient: Gradient(colors: [gradientColors.top, gradientColors.bottom]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        }
                     }
-                    if user.followerCount > 0 {
-                        Text("\(user.followerCount) followers")
-                            .font(.system(size: 11))
-                            .foregroundColor(.lcText3)
-                    }
+                } else {
+                    LinearGradient(
+                        gradient: Gradient(colors: [gradientColors.top, gradientColors.bottom]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
                 }
 
+                // Overlapping circular avatar
+                ZStack {
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 70, height: 70)
+                        .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
+
+                    if let photoUrl = user.photoUrl, !photoUrl.isEmpty, let url = URL(string: photoUrl) {
+                        AsyncImage(url: url) { phase in
+                            if case .success(let img) = phase {
+                                img.resizable()
+                                    .scaledToFill()
+                                    .frame(width: 64, height: 64)
+                                    .clipShape(Circle())
+                            } else {
+                                userInitialCircle
+                            }
+                        }
+                    } else {
+                        userInitialCircle
+                    }
+                }
+                .offset(x: 12, y: 28)
+            }
+            .frame(height: 140)
+            .clipped()
+
+            // Content area
+            VStack(alignment: .leading, spacing: 8) {
+                // Top spacing for overlapping avatar
+                Spacer().frame(height: 20)
+
+                // User name
+                Text(user.name)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.lcText)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                // Denomination badge
+                if let denomination = user.denomination, !denomination.isEmpty {
+                    Text(denomination)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.lcNavy)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.lcNavy.opacity(0.08))
+                        .cornerRadius(6)
+                }
+
+                // Bio/Description
                 if let bio = user.bio, !bio.isEmpty {
                     Text(bio)
-                        .font(.system(size: 12))
-                        .foregroundColor(.lcText3)
-                        .lineLimit(1)
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(.lcText2)
+                        .lineLimit(2)
+                }
+
+                Spacer()
+
+                // Follow button
+                if appState.currentUserId != nil {
+                    FollowButton(
+                        followingId: user.id.uuidString,
+                        followingType: "worshipper"
+                    )
                 }
             }
-
-            Spacer(minLength: 4)
-
-            // Follow button
-            if appState.currentUserId != nil {
-                FollowButton(
-                    followingId: user.id.uuidString,
-                    followingType: "worshipper"
-                )
-            }
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
         }
-        .padding(14)
         .background(Color.white)
-        .cornerRadius(14)
-        .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 3)
+    }
+
+    private var userInitialCircle: some View {
+        ZStack {
+            Circle()
+                .fill(Color.white.opacity(0.3))
+            Text(userInitial)
+                .font(.system(size: 24, weight: .black))
+                .foregroundColor(.white)
+        }
     }
 }
 

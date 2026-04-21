@@ -37,6 +37,12 @@ struct ChurchDetailView: View {
         church.website.isEmpty ? church.permalink : church.website
     }
 
+    private var backgroundImageName: String {
+        let backgroundImages = ["lcn1", "lcn2", "lcn3", "lcn4"]
+        let hash = abs(church.name.hashValue % 4)
+        return backgroundImages[hash]
+    }
+
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
@@ -66,24 +72,14 @@ struct ChurchDetailView: View {
     private var headerSection: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .topLeading) {
-                AsyncImage(url: URL(string: church.image)) { phase in
-                    switch phase {
-                    case .success(let img):
-                        img.resizable().scaledToFill()
-                    default:
-                        LinearGradient(
-                            colors: [.lcNavy, .lcNavyDark],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    }
-                }
-                .frame(height: 200)
-                .clipped()
-                .overlay(
-                    LinearGradient(colors: [.clear, .black.opacity(0.45)],
-                                   startPoint: .center, endPoint: .bottom)
-                )
+                // Use LCN background image (same as discover card)
+                Image(backgroundImageName)
+                    .resizable()
+                    .scaledToFill()
+
+                // Overlay with dark gradient for text readability
+                LinearGradient(colors: [.clear, .black.opacity(0.45)],
+                               startPoint: .center, endPoint: .bottom)
 
                 if church.isLive {
                     Text("● LIVE NOW")
@@ -97,6 +93,8 @@ struct ChurchDetailView: View {
                         .padding(.leading, 16)
                 }
             }
+            .frame(height: 200)
+            .clipped()
 
             VStack(spacing: 0) {
                 HStack(alignment: .bottom, spacing: 14) {

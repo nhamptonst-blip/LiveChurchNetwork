@@ -2,16 +2,44 @@ import SwiftUI
                                                                                                                                                                                
 struct FeedView: View {
     @EnvironmentObject var appState: AppState
+    @Binding var selectedTab: Int
     @State private var posts: [Post] = []
     @State private var events: [Event] = []
     @State private var liveChurches: [ChurchSubmission] = []
     @State private var isLoading = true
     @State private var showCreatePost = false
+    @State private var errorMessage: String?
                                                                                                                                                                                
     var body: some View {
         NavigationStack {
             Group {
-                if isLoading {
+                if let error = errorMessage {
+                    VStack(spacing: 16) {
+                        Image(systemName: "exclamationmark.circle")
+                            .font(.system(size: 48))
+                            .foregroundColor(.red)
+                        Text("Something went wrong")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.lcText)
+                        Text(error)
+                            .font(.system(size: 14))
+                            .foregroundColor(.lcText2)
+                            .multilineTextAlignment(.center)
+                        Button {
+                            Task { await loadFeed() }
+                        } label: {
+                            Text("Try Again")
+                                .font(.system(size: 15, weight: .bold))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
+                                .background(Color.lcNavy)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                        }
+                        .padding(.top, 8)
+                    }
+                    .padding(24)
+                } else if isLoading {
                     ProgressView().tint(.lcNavy)
                         .transition(.opacity)
                 } else {
@@ -161,7 +189,7 @@ struct FeedView: View {
             }
 
             Button {
-                UserDefaults.standard.set(1, forKey: "pendingNavigationTab")
+                selectedTab = 1
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass")
@@ -198,8 +226,10 @@ struct FeedView: View {
     @MainActor
     private func loadFeed() async {
         isLoading = true
+        errorMessage = nil
         defer { isLoading = false }
 
+        do {
         // 1. Fetch following list first (needed to filter posts)
         var followedChurchSlugs: Set<String> = []
         var followedUserIds: Set<UUID> = []
@@ -223,8 +253,13 @@ struct FeedView: View {
         // 3. Guard against stale results from a cancelled task
         guard !Task.isCancelled else { return }
 
-        // 4. Filter posts to only include those from followed accounts
+        // 4. Filter posts to only include those from followed accounts + own posts
         rawPosts = rawPosts.filter { post in
+            // Always include own posts
+            if post.authorId == appState.currentUserId {
+                return true
+            }
+
             if post.authorType == "church" {
                 let authorSlug = post.authorName.lowercased().replacingOccurrences(of: " ", with: "-")
                 return followedChurchSlugs.contains(authorSlug)
@@ -253,17 +288,17 @@ struct FeedView: View {
             return a.createdAt > b.createdAt
         }
 
-        // 7. Merge real posts with seed posts — real posts first, then seed fill
-        let seedPosts = MockDataProvider.feedPosts
-        let realIds   = Set(sorted.map { $0.id })
-        let merged    = sorted + seedPosts.filter { !realIds.contains($0.id) }
-
+        // 7. Only show real posts from followed accounts (no seed/mock data)
         // 8. Single atomic state update
-        posts        = merged.isEmpty    ? seedPosts                           : merged
-        events       = rawEvents.isEmpty ? MockDataProvider.feedEvents         : rawEvents
-        liveChurches = rawLive.isEmpty   ? MockDataProvider.liveFeedChurches  : rawLive
+        posts        = sorted
+        events       = rawEvents
+        liveChurches = rawLive
 
         print("[FeedView] Loaded — posts: \(posts.count), events: \(events.count), live: \(liveChurches.count)")
+        } catch {
+            errorMessage = "Failed to load feed. Please check your connection and try again."
+            print("[FeedView] Error: \(error)")
+        }
     }
 }
                                                                                                                                                                                

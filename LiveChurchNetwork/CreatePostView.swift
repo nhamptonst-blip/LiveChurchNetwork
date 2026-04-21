@@ -58,36 +58,75 @@ struct CreatePostView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    // Post type selector grid
+                    // Composer header - profile avatar + name
+                    HStack(spacing: 12) {
+                        if let photoUrlStr = appState.profile?.photoUrl,
+                           let photoUrl = URL(string: photoUrlStr) {
+                            AsyncImage(url: photoUrl) { image in
+                                image.resizable().scaledToFill()
+                            } placeholder: {
+                                Color.lcNavy.opacity(0.1)
+                            }
+                            .frame(width: 44, height: 44)
+                            .clipShape(Circle())
+                        } else {
+                            Circle()
+                                .fill(Color.lcNavy.opacity(0.1))
+                                .frame(width: 44, height: 44)
+                                .overlay(
+                                    Text(String(appState.profile?.fullName?.prefix(1) ?? "U").uppercased())
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(.lcNavy)
+                                )
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(appState.profile?.fullName ?? "You")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.lcText)
+                            Text("What's on your heart today?")
+                                .font(.system(size: 13))
+                                .foregroundColor(.lcText3)
+                        }
+                        Spacer()
+                    }
+                    .padding(.bottom, 4)
+
+                    // Post type selector - horizontal pill row
                     VStack(alignment: .leading, spacing: 12) {
                         Text("POST TYPE")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.lcText2)
                             .tracking(0.5)
 
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                            ForEach(postTypeConfigs, id: \.value) { config in
-                                Button {
-                                    postType = config.value
-                                } label: {
-                                    VStack(spacing: 6) {
-                                        Image(systemName: config.icon)
-                                            .font(.system(size: 18))
-                                        Text(config.label)
-                                            .font(.system(size: 12, weight: .bold))
-                                        Text(config.description)
-                                            .font(.system(size: 10))
-                                            .foregroundColor(.lcText3)
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(postTypeConfigs, id: \.value) { config in
+                                    Button {
+                                        postType = config.value
+                                    } label: {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: config.icon)
+                                                .font(.system(size: 13, weight: .semibold))
+                                            Text(config.label)
+                                                .font(.system(size: 13, weight: .semibold))
+                                        }
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 9)
+                                        .background(postType == config.value ? Color.lcNavy : Color.white)
+                                        .foregroundColor(postType == config.value ? .white : Color("lcText2"))
+                                        .clipShape(Capsule())
+                                        .overlay(
+                                            Capsule().stroke(
+                                                postType == config.value ? Color.clear : Color("lcBorder"),
+                                                lineWidth: 1.5
+                                            )
+                                        )
                                     }
-                                    .frame(maxWidth: .infinity)
-                                    .padding(12)
-                                    .background(postType == config.value ? Color.lcNavy.opacity(0.1) : Color.white)
-                                    .overlay(RoundedRectangle(cornerRadius: 10)
-                                        .stroke(postType == config.value ? Color.lcNavy : Color.lcBorder, lineWidth: 1.5))
-                                    .cornerRadius(10)
-                                    .foregroundColor(postType == config.value ? .lcNavy : .lcText2)
+                                    .buttonStyle(.plain)
                                 }
                             }
+                            .padding(.vertical, 2)
                         }
                     }
 
@@ -103,21 +142,30 @@ struct CreatePostView: View {
                     Button {
                         Task { await post() }
                     } label: {
-                        Group {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(canPost && !isPosting ? Color.lcNavy : Color("lcBorder"))
+                                .shadow(
+                                    color: canPost && !isPosting ? Color.lcNavy.opacity(0.3) : .clear,
+                                    radius: 8,
+                                    x: 0,
+                                    y: 3
+                                )
+
                             if isPosting {
-                                ProgressView().tint(.lcText)
+                                ProgressView().tint(.white)
                             } else {
                                 Text("Publish Post")
-                                    .font(.system(size: 15, weight: .bold))
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.white)
                             }
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(canPost && !isPosting ? Color.lcNavy : Color.lcBorder)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
+                        .frame(height: 52)
                     }
                     .disabled(!canPost || isPosting)
+                    .animation(.easeInOut(duration: 0.15), value: canPost)
+                    .animation(.easeInOut(duration: 0.15), value: isPosting)
                 }
                 .padding(20)
             }
@@ -207,6 +255,15 @@ struct CreatePostView: View {
                     .background(Color.lcCream)
                     .cornerRadius(10)
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
+                    .overlay(alignment: .topLeading) {
+                        if updateContent.isEmpty {
+                            Text("What's on your heart today?")
+                                .font(.system(size: 15))
+                                .foregroundColor(.lcText3)
+                                .padding(14)
+                                .allowsHitTesting(false)
+                        }
+                    }
             }
             photoPicker
         }
@@ -569,10 +626,13 @@ struct CreatePostView: View {
                 videoUrl: videoUrlForPost,
                 postType: postType
             )
+            HapticEngine.notification(.success)
             await onPosted?()
             dismiss()
         } catch {
+            print("Post creation error: \(error)")
             errorMessage = "Could not post. Please try again."
+            HapticEngine.notification(.error)
         }
         isPosting = false
     }
