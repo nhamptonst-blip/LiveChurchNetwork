@@ -215,18 +215,41 @@ struct DirectoryView: View {
                             spacing: 16
                         ) {
                             ForEach(filteredChurches, id: \.slug) { church in
-                                NavigationLink(destination: ChurchDetailView(church: church)) {
-                                    ChurchCard(
-                                        church: church,
-                                        isFollowing: followedChurchSlugs.contains(church.slug),
-                                        onFollowToggle: {
-                                            Task {
-                                                await toggleChurchFollow(church: church)
+                                ZStack(alignment: .topTrailing) {
+                                    NavigationLink(destination: ChurchDetailView(church: church)) {
+                                        ChurchCard(
+                                            church: church,
+                                            isFollowing: false
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    // Follow button overlay - positioned separately
+                                    VStack {
+                                        HStack {
+                                            Spacer()
+                                            Button(action: {
+                                                Task {
+                                                    await toggleChurchFollow(church: church)
+                                                }
+                                            }) {
+                                                Text(followedChurchSlugs.contains(church.slug) ? "Following" : "Follow")
+                                                    .font(.system(size: 11, weight: .bold))
+                                                    .foregroundColor(followedChurchSlugs.contains(church.slug) ? .lcNavy : .white)
+                                                    .padding(.horizontal, 10)
+                                                    .padding(.vertical, 6)
+                                                    .background(followedChurchSlugs.contains(church.slug) ? Color.white : Color.lcNavy)
+                                                    .cornerRadius(8)
+                                                    .overlay(
+                                                        RoundedRectangle(cornerRadius: 8)
+                                                            .stroke(Color.lcNavy, lineWidth: followedChurchSlugs.contains(church.slug) ? 1.5 : 0)
+                                                    )
                                             }
+                                            .padding(12)
                                         }
-                                    )
+                                        Spacer()
+                                    }
                                 }
-                                .buttonStyle(.plain)
                             }
                         }
                         .padding(.horizontal, 20)
@@ -253,18 +276,41 @@ struct DirectoryView: View {
                 spacing: 16
             ) {
                 ForEach(suggestedChurches.prefix(4), id: \.slug) { church in
-                    NavigationLink(destination: ChurchDetailView(church: church)) {
-                        ChurchCard(
-                            church: church,
-                            isFollowing: followedChurchSlugs.contains(church.slug),
-                            onFollowToggle: {
-                                Task {
-                                    await toggleChurchFollow(church: church)
+                    ZStack(alignment: .topTrailing) {
+                        NavigationLink(destination: ChurchDetailView(church: church)) {
+                            ChurchCard(
+                                church: church,
+                                isFollowing: false
+                            )
+                        }
+                        .buttonStyle(.plain)
+
+                        // Follow button overlay - positioned separately
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Button(action: {
+                                    Task {
+                                        await toggleChurchFollow(church: church)
+                                    }
+                                }) {
+                                    Text(followedChurchSlugs.contains(church.slug) ? "Following" : "Follow")
+                                        .font(.system(size: 11, weight: .bold))
+                                        .foregroundColor(followedChurchSlugs.contains(church.slug) ? .lcNavy : .white)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(followedChurchSlugs.contains(church.slug) ? Color.white : Color.lcNavy)
+                                        .cornerRadius(8)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(Color.lcNavy, lineWidth: followedChurchSlugs.contains(church.slug) ? 1.5 : 0)
+                                        )
                                 }
+                                .padding(12)
                             }
-                        )
+                            Spacer()
+                        }
                     }
-                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 20)

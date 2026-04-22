@@ -2,8 +2,6 @@ import SwiftUI
 
 struct ChurchCard: View {
     let church: Church
-    var isFollowing: Bool = false
-    var onFollowToggle: (() -> Void)?
 
     private var churchInitial: String {
         String(church.name.prefix(1)).uppercased()
@@ -132,31 +130,6 @@ struct ChurchCard: View {
                 .padding(.bottom, 0)
             }
 
-            // Follow button (separate, not in NavigationLink)
-            if let onFollowToggle = onFollowToggle {
-                VStack {
-                    Spacer()
-                    Button(action: {
-                        onFollowToggle()
-                        HapticEngine.impact(isFollowing ? .light : .medium)
-                    }) {
-                        Text(isFollowing ? "Following" : "Follow")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(isFollowing ? .lcNavy : .white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(isFollowing ? Color.white : Color.lcNavy)
-                            .cornerRadius(10)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(Color.lcNavy, lineWidth: isFollowing ? 1.5 : 0)
-                            )
-                            .shadow(color: isFollowing ? Color.clear : Color.lcNavy.opacity(0.2), radius: 4, x: 0, y: 2)
-                    }
-                }
-                .padding(14)
-                .padding(.top, 0)
-            }
         }
         .background(Color.white)
         .cornerRadius(16)
