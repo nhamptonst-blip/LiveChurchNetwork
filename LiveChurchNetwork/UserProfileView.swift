@@ -281,10 +281,13 @@ struct UserProfileView: View {
         do {
             if let profile = try await SupabaseService.shared.getProfile(userId: userId) {
                 let followers = try await SupabaseService.shared.getFollowers(userId: userId)
-                let isFollowing = (try? await SupabaseService.shared.isFollowingUser(
-                    followerId: appState.currentUserId ?? UUID(),
-                    subjectId: userId
-                )) ?? false
+                var isFollowing = false
+                if let followerId = appState.currentUserId {
+                    isFollowing = (try? await SupabaseService.shared.isFollowingUser(
+                        followerId: followerId,
+                        subjectId: userId
+                    )) ?? false
+                }
 
                 await MainActor.run {
                     self.profile = profile

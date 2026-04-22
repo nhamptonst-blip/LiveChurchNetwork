@@ -255,7 +255,9 @@ struct EditWorshipperProfileView: View {
             }
         } catch {
             print("Error saving profile: \(error)")
+            await MainActor.run { isSaving = false }
+            return
         }
-        isSaving = false
+        await MainActor.run { isSaving = false }
     }
 }

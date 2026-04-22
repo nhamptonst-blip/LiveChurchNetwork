@@ -136,8 +136,8 @@ struct PostDetailView: View {
                     }
                 }
 
-                if let videoUrl = post.videoUrl, !videoUrl.isEmpty {
-                    Link(destination: URL(string: videoUrl) ?? URL(string: "https://youtube.com")!) {
+                if let videoUrl = post.videoUrl, !videoUrl.isEmpty, let url = URL(string: videoUrl) {
+                    Link(destination: url) {
                         HStack(spacing: 10) {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 8)
