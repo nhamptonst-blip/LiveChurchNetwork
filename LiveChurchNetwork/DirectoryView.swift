@@ -98,37 +98,39 @@ struct DirectoryView: View {
     // ── Body ────────────────────────────────────────────────────────────
 
     var body: some View {
-        ZStack {
-            // Background
-            Color(red: 0.98, green: 0.98, blue: 0.97).ignoresSafeArea()
+        NavigationStack {
+            ZStack {
+                // Background
+                Color(red: 0.98, green: 0.98, blue: 0.97).ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                // Header
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Discover")
-                        .font(.system(size: 32, weight: .black))
-                        .foregroundColor(.lcText)
-                    Text("Find churches, people, and live services")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.lcText3)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
-                .padding(.bottom, 24)
-
-                // Segmented tabs
-                sectionToggle
+                VStack(spacing: 0) {
+                    // Header
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Discover")
+                            .font(.system(size: 32, weight: .black))
+                            .foregroundColor(.lcText)
+                        Text("Find churches, people, and live services")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.lcText3)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 20)
-                    .padding(.vertical, 16)
+                    .padding(.top, 16)
+                    .padding(.bottom, 24)
 
-                // Content
-                Group {
-                    if section == .churches { churchesContent }
-                    else                   { peopleContent }
+                    // Segmented tabs
+                    sectionToggle
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
+
+                    // Content
+                    Group {
+                        if section == .churches { churchesContent }
+                        else                   { peopleContent }
+                    }
+                    .animation(.appStandard, value: section)
+                    .id(section)
                 }
-                .animation(.appStandard, value: section)
-                .id(section)
             }
         }
         .task { await loadDiscoverContent() }
