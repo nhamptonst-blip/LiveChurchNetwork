@@ -236,8 +236,13 @@ struct FeedView: View {
 
         if let userId = appState.currentUserId {
             let follows = (try? await SupabaseService.shared.getFollowing(followerId: userId)) ?? []
+            print("[FeedView] Total follows: \(follows.count)")
+            for follow in follows {
+                print("[FeedView]   - Type: \(follow.followingType), ID: \(follow.followingId)")
+            }
             followedChurchSlugs = Set(follows.filter { $0.followingType == "church" }.map { $0.followingId })
             followedUserIds = Set(follows.filter { $0.followingType == "worshipper" }.compactMap { UUID(uuidString: $0.followingId) })
+            print("[FeedView] Followed churches: \(followedChurchSlugs.count), Followed worshippers: \(followedUserIds.count)")
         }
 
         // 2. Fetch all remote data concurrently
@@ -254,6 +259,7 @@ struct FeedView: View {
         guard !Task.isCancelled else { return }
 
         // 4. Filter posts to only include those from followed accounts + own posts
+        let unfilteredCount = rawPosts.count
         rawPosts = rawPosts.filter { post in
             // Always include own posts
             if post.authorId == appState.currentUserId {
@@ -262,12 +268,21 @@ struct FeedView: View {
 
             if post.authorType == "church" {
                 let authorSlug = post.authorName.lowercased().replacingOccurrences(of: " ", with: "-")
-                return followedChurchSlugs.contains(authorSlug)
+                let isFollowed = followedChurchSlugs.contains(authorSlug)
+                if !isFollowed {
+                    print("[FeedView] Filtering out church post: \(post.authorName) (slug: \(authorSlug))")
+                }
+                return isFollowed
             } else if post.authorType == "worshipper" {
-                return followedUserIds.contains(post.authorId)
+                let isFollowed = followedUserIds.contains(post.authorId)
+                if !isFollowed {
+                    print("[FeedView] Filtering out worshipper post: \(post.authorName) (\(post.authorId))")
+                }
+                return isFollowed
             }
             return false
         }
+        print("[FeedView] Filtered posts: \(unfilteredCount) -> \(rawPosts.count)")
 
         // 5. Fetch liked post IDs now that all other data is in hand
         if let userId = appState.currentUserId {
