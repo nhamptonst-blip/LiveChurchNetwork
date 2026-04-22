@@ -34,6 +34,12 @@ struct UserProfileView: View {
             .navigationBarTitleDisplayMode(.inline)
             .task {
                 await loadProfile()
+                // Debug: List all loaded posts
+                print("[UserProfileView] Task completed - loaded \(userPosts.count) posts")
+                for (idx, post) in userPosts.enumerated() {
+                    let contentLen = post.content?.count ?? 0
+                    print("[UserProfileView] Post \(idx): type=\(post.postType), contentLen=\(contentLen), hasPhoto=\(post.photoUrl != nil)")
+                }
             }
         }
     }
@@ -211,9 +217,10 @@ struct UserProfileView: View {
                 } else {
                     VStack(spacing: 12) {
                         ForEach(userPosts, id: \.id) { post in
-                            NavigationLink(destination: PostDetailView(post: post).environmentObject(appState)) {
-                                postRow(post)
-                            }
+                            NavigationLink(
+                                destination: PostDetailView(post: post).environmentObject(appState),
+                                label: { postRow(post) }
+                            )
                             .buttonStyle(.plain)
                         }
                     }
@@ -227,7 +234,7 @@ struct UserProfileView: View {
     }
 
     private func postRow(_ post: Post) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             // Post header
             HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -250,14 +257,19 @@ struct UserProfileView: View {
                 }
             }
 
-            // Post content - full text
+            // Post content - full text (IMPORTANT: Must show entire content)
             if let content = post.content, !content.isEmpty {
-                Text(content)
-                    .font(.system(size: 14))
-                    .foregroundColor(.lcText)
-                    .lineSpacing(4)
-                    .lineLimit(nil)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(content)
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundColor(.lcText)
+                        .lineSpacing(5)
+                        .lineLimit(nil)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .onAppear {
+                            print("[postRow] Rendering \(post.postType) post (\(content.count) chars)")
+                        }
+                }
             }
 
             // Post photo
@@ -267,19 +279,19 @@ struct UserProfileView: View {
                         img.resizable()
                             .scaledToFill()
                             .frame(maxWidth: .infinity)
-                            .frame(height: 200)
+                            .frame(height: 220)
                             .clipped()
                             .cornerRadius(8)
                     } else {
                         RoundedRectangle(cornerRadius: 8)
                             .fill(Color.lcBorder)
-                            .frame(height: 200)
+                            .frame(height: 220)
                             .overlay(ProgressView().tint(.lcNavy))
                     }
                 }
             }
         }
-        .padding(14)
+        .padding(16)
         .background(Color.white)
         .cornerRadius(8)
         .border(Color.lcBorder, width: 1)
