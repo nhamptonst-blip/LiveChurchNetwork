@@ -56,6 +56,8 @@ struct PostDetailView: View {
                 await loadAuthorPhoto()
                 displayContent = post.content
                 displayPhotoUrl = post.photoUrl
+                // Debug: Log post and user info
+                print("[PostDetailView] post.authorId=\(post.authorId), currentUserId=\(appState.currentUserId ?? UUID()), isOwnPost=\(isOwnPost)")
             }
         }
     }

@@ -307,6 +307,7 @@ struct UserProfileView: View {
         do {
             await MainActor.run { isLoadingPosts = true }
             let posts = try await SupabaseService.shared.getUserPosts(userId: userId)
+            print("[UserProfileView] Loaded \(posts.count) posts for user \(userId)")
             await MainActor.run {
                 self.userPosts = posts
                 isLoadingPosts = false

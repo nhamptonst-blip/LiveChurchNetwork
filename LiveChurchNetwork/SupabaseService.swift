@@ -570,7 +570,6 @@ private struct ProfileCoverUpdate: Encodable {
              .from("posts")
              .select()
              .eq("author_id", value: userId.uuidString)
-             .eq("author_type", value: "worshipper")
              .order("created_at", ascending: false)
              .limit(50)
              .execute()
