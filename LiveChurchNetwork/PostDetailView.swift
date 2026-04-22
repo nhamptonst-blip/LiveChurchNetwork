@@ -12,6 +12,8 @@ struct PostDetailView: View {
     @State private var isSaving = false
     @State private var authorPhotoUrl: String?
     @State private var isLoadingAuthor = true
+    @State private var displayContent: String? = nil
+    @State private var displayPhotoUrl: String? = nil
 
     private var isOwnPost: Bool {
         post.authorId == appState.currentUserId
@@ -35,6 +37,8 @@ struct PostDetailView: View {
             .navigationBarBackButtonHidden(false)
             .task {
                 await loadAuthorPhoto()
+                displayContent = post.content
+                displayPhotoUrl = post.photoUrl
             }
         }
     }
@@ -102,14 +106,16 @@ struct PostDetailView: View {
 
             // Post content
             VStack(alignment: .leading, spacing: 12) {
-                if let content = post.content, !content.isEmpty {
+                let displayedContent = displayContent ?? post.content
+                if let content = displayedContent, !content.isEmpty {
                     Text(content)
                         .font(.system(size: 15))
                         .foregroundColor(.lcText)
                         .lineSpacing(4)
                 }
 
-                if let photoUrl = post.photoUrl, !photoUrl.isEmpty, let url = URL(string: photoUrl) {
+                let displayedPhoto = displayPhotoUrl ?? post.photoUrl
+                if let photoUrl = displayedPhoto, !photoUrl.isEmpty, let url = URL(string: photoUrl) {
                     AsyncImage(url: url) { phase in
                         if case .success(let img) = phase {
                             img.resizable()
@@ -260,8 +266,8 @@ struct PostDetailView: View {
     }
 
     private func startEditing() {
-        editedContent = post.content ?? ""
-        editedPhotoUrl = post.photoUrl ?? ""
+        editedContent = displayContent ?? post.content ?? ""
+        editedPhotoUrl = displayPhotoUrl ?? post.photoUrl ?? ""
         editedVideoUrl = post.videoUrl ?? ""
         isEditing = true
     }
@@ -275,6 +281,8 @@ struct PostDetailView: View {
                 photoUrl: editedPhotoUrl.isEmpty ? nil : editedPhotoUrl
             )
             await MainActor.run {
+                displayContent = editedContent
+                displayPhotoUrl = editedPhotoUrl.isEmpty ? nil : editedPhotoUrl
                 isEditing = false
                 isSaving = false
                 HapticEngine.impact(.light)
