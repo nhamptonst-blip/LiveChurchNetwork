@@ -275,10 +275,7 @@ struct DirectoryView: View {
                 ForEach(suggestedChurches.prefix(4), id: \.slug) { church in
                     ZStack(alignment: .topTrailing) {
                         NavigationLink(destination: ChurchDetailView(church: church)) {
-                            ChurchCard(
-                                church: church,
-                                isFollowing: false
-                            )
+                            ChurchCard(church: church)
                         }
                         .buttonStyle(.plain)
 
