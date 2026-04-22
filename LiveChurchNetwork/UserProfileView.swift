@@ -227,13 +227,14 @@ struct UserProfileView: View {
     }
 
     private func postRow(_ post: Post) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
+            // Post header
             HStack(spacing: 8) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(post.content?.prefix(60) ?? "Untitled")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.lcText)
-                        .lineLimit(2)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(post.postType.uppercased())
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.lcNavy)
+                        .tracking(0.5)
                     Text(formatRelativeTime(post.createdAt))
                         .font(.system(size: 11))
                         .foregroundColor(.lcText3)
@@ -248,10 +249,40 @@ struct UserProfileView: View {
                         .foregroundColor(.lcText2)
                 }
             }
-            .padding(12)
-            .background(Color.lcCream)
-            .cornerRadius(8)
+
+            // Post content - full text
+            if let content = post.content, !content.isEmpty {
+                Text(content)
+                    .font(.system(size: 14))
+                    .foregroundColor(.lcText)
+                    .lineSpacing(4)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            // Post photo
+            if let photoUrl = post.photoUrl, !photoUrl.isEmpty, let url = URL(string: photoUrl) {
+                AsyncImage(url: url) { phase in
+                    if case .success(let img) = phase {
+                        img.resizable()
+                            .scaledToFill()
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 200)
+                            .clipped()
+                            .cornerRadius(8)
+                    } else {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.lcBorder)
+                            .frame(height: 200)
+                            .overlay(ProgressView().tint(.lcNavy))
+                    }
+                }
+            }
         }
+        .padding(14)
+        .background(Color.white)
+        .cornerRadius(8)
+        .border(Color.lcBorder, width: 1)
     }
 
     private func formatRelativeTime(_ date: Date) -> String {
