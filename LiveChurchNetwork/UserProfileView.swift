@@ -209,7 +209,7 @@ struct UserProfileView: View {
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.lcText)
                         .lineLimit(2)
-                    Text(formatRelativeTime(Date(timeIntervalSince1970: post.created_at.timeIntervalSince1970)))
+                    Text(formatRelativeTime(post.createdAt))
                         .font(.system(size: 11))
                         .foregroundColor(.lcText3)
                 }
@@ -218,7 +218,7 @@ struct UserProfileView: View {
                     Image(systemName: "heart.fill")
                         .font(.system(size: 12))
                         .foregroundColor(.red)
-                    Text("\(post.like_count)")
+                    Text("\(post.likeCount)")
                         .font(.system(size: 11))
                         .foregroundColor(.lcText2)
                 }

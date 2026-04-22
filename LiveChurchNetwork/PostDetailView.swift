@@ -10,6 +10,8 @@ struct PostDetailView: View {
     @State private var editedPhotoUrl = ""
     @State private var editedVideoUrl = ""
     @State private var isSaving = false
+    @State private var authorPhotoUrl: String?
+    @State private var isLoadingAuthor = true
 
     private var isOwnPost: Bool {
         post.authorId == appState.currentUserId
@@ -31,6 +33,23 @@ struct PostDetailView: View {
             .navigationTitle(isEditing ? "Edit Post" : "Post")
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(false)
+            .task {
+                await loadAuthorPhoto()
+            }
+        }
+    }
+
+    private func loadAuthorPhoto() async {
+        do {
+            if let profile = try await SupabaseService.shared.getProfile(userId: post.authorId) {
+                await MainActor.run {
+                    self.authorPhotoUrl = profile.photoUrl
+                    isLoadingAuthor = false
+                }
+            }
+        } catch {
+            print("Error loading author photo: \(error)")
+            await MainActor.run { isLoadingAuthor = false }
         }
     }
 
@@ -38,7 +57,7 @@ struct PostDetailView: View {
         VStack(alignment: .leading, spacing: 16) {
             // Header with author info
             HStack(spacing: 12) {
-                if let photoUrl = post.authorPhotoUrl {
+                if let photoUrl = authorPhotoUrl {
                     AsyncImage(url: URL(string: photoUrl)) { phase in
                         if case .success(let img) = phase {
                             img.resizable().scaledToFill()
@@ -53,10 +72,10 @@ struct PostDetailView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(post.author_name)
+                    Text(post.authorName)
                         .font(.system(size: 14, weight: .bold))
                         .foregroundColor(.lcText)
-                    Text(formatRelativeTime(Date(timeIntervalSince1970: post.created_at.timeIntervalSince1970)))
+                    Text(formatRelativeTime(post.createdAt))
                         .font(.system(size: 11))
                         .foregroundColor(.lcText3)
                 }
@@ -90,7 +109,7 @@ struct PostDetailView: View {
                         .lineSpacing(4)
                 }
 
-                if let photoUrl = post.photo_url, !photoUrl.isEmpty, let url = URL(string: photoUrl) {
+                if let photoUrl = post.photoUrl, !photoUrl.isEmpty, let url = URL(string: photoUrl) {
                     AsyncImage(url: url) { phase in
                         if case .success(let img) = phase {
                             img.resizable()
@@ -108,7 +127,7 @@ struct PostDetailView: View {
                     }
                 }
 
-                if let videoUrl = post.video_url, !videoUrl.isEmpty {
+                if let videoUrl = post.videoUrl, !videoUrl.isEmpty {
                     Link(destination: URL(string: videoUrl) ?? URL(string: "https://youtube.com")!) {
                         HStack(spacing: 10) {
                             ZStack {
@@ -149,7 +168,7 @@ struct PostDetailView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "heart.fill")
                         .foregroundColor(.red)
-                    Text("\(post.like_count)")
+                    Text("\(post.likeCount)")
                         .font(.system(size: 13))
                         .foregroundColor(.lcText2)
                 }
@@ -177,7 +196,7 @@ struct PostDetailView: View {
                     .cornerRadius(8)
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.lcBorder, lineWidth: 1))
 
-                if let photoUrl = post.photo_url, !photoUrl.isEmpty {
+                if let photoUrl = post.photoUrl, !photoUrl.isEmpty {
                     VStack(alignment: .trailing) {
                         AsyncImage(url: URL(string: photoUrl)) { phase in
                             if case .success(let img) = phase {
@@ -242,8 +261,8 @@ struct PostDetailView: View {
 
     private func startEditing() {
         editedContent = post.content ?? ""
-        editedPhotoUrl = post.photo_url ?? ""
-        editedVideoUrl = post.video_url ?? ""
+        editedPhotoUrl = post.photoUrl ?? ""
+        editedVideoUrl = post.videoUrl ?? ""
         isEditing = true
     }
 
