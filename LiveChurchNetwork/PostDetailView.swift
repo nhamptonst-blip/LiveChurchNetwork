@@ -268,14 +268,9 @@ struct PostDetailView: View {
 
     private func saveChanges() async {
         isSaving = true
-        do {
-            // TODO: Implement post update in SupabaseService
-            await MainActor.run {
-                isEditing = false
-                isSaving = false
-            }
-        } catch {
-            print("Error saving post: \(error)")
+        // TODO: Implement post update in SupabaseService
+        _ = await MainActor.run {
+            isEditing = false
             isSaving = false
         }
     }

@@ -659,13 +659,13 @@ struct DirectoryView: View {
             if isCurrentlyFollowing {
                 HapticEngine.impact(.light)
                 try await SupabaseService.shared.unfollow(followerId: currentUserId, followingId: church.slug)
-                await MainActor.run {
+                _ = await MainActor.run {
                     followedChurchSlugs.remove(church.slug)
                 }
             } else {
                 HapticEngine.impact(.medium)
                 try await SupabaseService.shared.follow(followerId: currentUserId, followingId: church.slug, followingType: "church")
-                await MainActor.run {
+                _ = await MainActor.run {
                     followedChurchSlugs.insert(church.slug)
                 }
             }
