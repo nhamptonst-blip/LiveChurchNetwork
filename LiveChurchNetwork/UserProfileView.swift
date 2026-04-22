@@ -141,7 +141,7 @@ struct UserProfileView: View {
                     .padding(.vertical, 8)
 
                 // Edit Profile button (if own profile) or Follow button (if other profile)
-                if isOwnProfile, let profile = profile, let currentUserId = appState.currentUserId {
+                if isOwnProfile, let currentUserId = appState.currentUserId {
                     NavigationLink(
                         destination: EditWorshipperProfileView(
                             profile: profile,
