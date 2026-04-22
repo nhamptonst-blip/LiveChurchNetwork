@@ -48,6 +48,7 @@ struct CreatePostView: View {
     // Post enhancements (for update type)
     @State private var isImportant = false
     @State private var isPinned = false
+    @State private var sendNotification = false
     @State private var highlightInFeed = false
 
     private var postTypeConfigs: [(value: String, label: String, description: String, icon: String)] {
@@ -149,6 +150,7 @@ struct CreatePostView: View {
                     .onChange(of: postType) { _ in
                         isImportant = false
                         isPinned = false
+                        sendNotification = false
                         highlightInFeed = false
                     }
 
@@ -303,6 +305,10 @@ struct CreatePostView: View {
                     enhancementToggleRow(icon: "📌", label: "Pin to Top",
                                         subtitle: "Stays at top of followers' feeds",
                                         isOn: $isPinned)
+                    Divider().padding(.leading, 44)
+                    enhancementToggleRow(icon: "🔔", label: "Send Notification",
+                                        subtitle: "Notify your followers",
+                                        isOn: $sendNotification)
                     Divider().padding(.leading, 44)
                     enhancementToggleRow(icon: "✨", label: "Highlight in Feed",
                                         subtitle: "Visual emphasis in the feed",
@@ -675,7 +681,7 @@ struct CreatePostView: View {
                 postType: postType,
                 isImportant: postType == "update" ? isImportant : false,
                 isPinned: postType == "update" ? isPinned : false,
-                sendNotification: false,
+                sendNotification: postType == "update" ? sendNotification : false,
                 highlightInFeed: postType == "update" ? highlightInFeed : false
             )
             HapticEngine.notification(.success)
