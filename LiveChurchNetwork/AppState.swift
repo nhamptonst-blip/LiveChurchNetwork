@@ -27,6 +27,7 @@ import Foundation
               await MainActor.run {
                   currentUserId = session.user.id
                   isAuthenticated = true
+                  print("[AppState.checkSession] Set currentUserId=\(session.user.id)")
               }
               await loadProfile()
           } catch {
@@ -34,6 +35,7 @@ import Foundation
                   isAuthenticated = false
                   currentUserId = nil
                   profile = nil
+                  print("[AppState.checkSession] Session error: \(error)")
               }
           }
           await MainActor.run { isLoading = false }

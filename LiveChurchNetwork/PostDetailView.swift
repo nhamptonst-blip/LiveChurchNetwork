@@ -19,7 +19,9 @@ struct PostDetailView: View {
     private var isOwnPost: Bool {
         // Use checkIsOwnPost to ensure this updates when appState changes
         _ = checkIsOwnPost
-        return post.authorId == appState.currentUserId
+        let result = post.authorId == appState.currentUserId
+        print("[PostDetailView.isOwnPost] post.authorId=\(post.authorId) vs appState.currentUserId=\(String(describing: appState.currentUserId)) => \(result)")
+        return result
     }
 
     var body: some View {
@@ -53,6 +55,9 @@ struct PostDetailView: View {
                     }
                 }
             }
+        }
+        .onAppear {
+            print("[PostDetailView.toolbar] isEditing=\(isEditing), isOwnPost=\(isOwnPost)")
         }
         .task {
             await loadAuthorPhoto()
