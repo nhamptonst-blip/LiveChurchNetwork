@@ -178,51 +178,49 @@ struct UserProfileView: View {
             .padding(24)
             .background(Color.white)
 
-            // My Posts section (only if own profile)
-            if appState.currentUserId == userId {
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack {
-                        Text("My Posts")
-                            .font(.system(size: 16, weight: .bold))
+            // Posts section (show for all users)
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text(isOwnProfile ? "My Posts" : "Posts")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.lcText)
+                    Spacer()
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 24)
+
+                if isLoadingPosts {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(24)
+                } else if userPosts.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "doc.text")
+                            .font(.system(size: 32))
+                            .foregroundColor(.lcText3)
+                        Text("No posts yet")
+                            .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.lcText)
-                        Spacer()
+                        Text(isOwnProfile ? "Create your first post to share with followers" : "This user hasn't posted yet")
+                            .font(.system(size: 12))
+                            .foregroundColor(.lcText3)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(32)
+                } else {
+                    VStack(spacing: 12) {
+                        ForEach(userPosts, id: \.id) { post in
+                            NavigationLink(destination: PostDetailView(post: post).environmentObject(appState)) {
+                                postRow(post)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                     .padding(.horizontal, 24)
-                    .padding(.top, 24)
-
-                    if isLoadingPosts {
-                        ProgressView()
-                            .frame(maxWidth: .infinity)
-                            .padding(24)
-                    } else if userPosts.isEmpty {
-                        VStack(spacing: 12) {
-                            Image(systemName: "doc.text")
-                                .font(.system(size: 32))
-                                .foregroundColor(.lcText3)
-                            Text("No posts yet")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.lcText)
-                            Text("Create your first post to share with followers")
-                                .font(.system(size: 12))
-                                .foregroundColor(.lcText3)
-                                .multilineTextAlignment(.center)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(32)
-                    } else {
-                        VStack(spacing: 12) {
-                            ForEach(userPosts, id: \.id) { post in
-                                NavigationLink(destination: PostDetailView(post: post).environmentObject(appState)) {
-                                    postRow(post)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding(.horizontal, 24)
-                    }
                 }
-                .background(Color.white)
             }
+            .background(Color.white)
 
             Spacer()
         }
@@ -297,10 +295,8 @@ struct UserProfileView: View {
                 }
             }
 
-            // Load user's posts if this is their own profile
-            if appState.currentUserId == userId {
-                await loadUserPosts()
-            }
+            // Load user's posts for all profiles
+            await loadUserPosts()
         } catch {
             print("Error loading profile: \(error)")
             await MainActor.run { isLoading = false }
