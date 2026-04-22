@@ -163,48 +163,69 @@ struct WorkshipperDashboardView: View {
                 .padding(.horizontal, 16)
 
                 // Posts Section
-                if !userPosts.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("My Posts")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.lcText)
-                            .padding(.horizontal, 16)
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("My Posts")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.lcText)
+                        .padding(.horizontal, 16)
 
+                    if userPosts.isEmpty {
+                        VStack(spacing: 12) {
+                            Image(systemName: "doc.text")
+                                .font(.system(size: 32))
+                                .foregroundColor(.lcText3)
+                            Text("No posts yet")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.lcText)
+                            Text("Create your first post to share with followers")
+                                .font(.system(size: 12))
+                                .foregroundColor(.lcText3)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(32)
+                    } else {
                         ForEach(userPosts, id: \.id) { post in
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "square.and.pencil")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.lcNavy)
-                                    Text(post.postType.uppercased())
-                                        .font(.system(size: 11, weight: .bold))
-                                        .foregroundColor(.lcNavy)
-                                        .tracking(0.5)
-                                    Spacer()
-                                }
+                            NavigationLink(destination: PostDetailView(post: post).environmentObject(appState)) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "square.and.pencil")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundColor(.lcNavy)
+                                        Text(post.postType.uppercased())
+                                            .font(.system(size: 11, weight: .bold))
+                                            .foregroundColor(.lcNavy)
+                                            .tracking(0.5)
+                                        Spacer()
+                                    }
 
-                                if let content = post.content {
-                                    Text(content)
-                                        .font(.system(size: 13))
-                                        .foregroundColor(.lcText2)
-                                        .lineLimit(3)
-                                }
+                                    if let content = post.content {
+                                        Text(content)
+                                            .font(.system(size: 13))
+                                            .foregroundColor(.lcText2)
+                                            .lineLimit(3)
+                                    }
 
-                                HStack(spacing: 12) {
-                                    Text("❤️ \(post.likeCount)")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.lcText3)
-                                    Spacer()
+                                    HStack(spacing: 12) {
+                                        Text("❤️ \(post.likeCount)")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.lcText3)
+                                        Spacer()
+                                    }
                                 }
+                                .padding(12)
+                                .background(Color.white)
+                                .cornerRadius(8)
+                                .border(Color.lcBorder, width: 1)
                             }
-                            .padding(12)
-                            .background(Color.white)
-                            .cornerRadius(8)
-                            .border(Color.lcBorder, width: 1)
+                            .buttonStyle(.plain)
                         }
                     }
-                    .padding(.horizontal, 16)
                 }
+                .padding(.horizontal, 16)
+                .background(Color.white)
+                .cornerRadius(12)
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.lcBorder, lineWidth: 1))
             }
             .padding(.vertical, 16)
         }
