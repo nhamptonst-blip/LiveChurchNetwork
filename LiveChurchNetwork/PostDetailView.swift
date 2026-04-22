@@ -14,51 +14,53 @@ struct PostDetailView: View {
     @State private var isLoadingAuthor = true
     @State private var displayContent: String? = nil
     @State private var displayPhotoUrl: String? = nil
+    @State private var checkIsOwnPost = false
 
     private var isOwnPost: Bool {
-        post.authorId == appState.currentUserId
+        // Use checkIsOwnPost to ensure this updates when appState changes
+        _ = checkIsOwnPost
+        return post.authorId == appState.currentUserId
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    if isEditing {
-                        editingSection
-                    } else {
-                        viewingSection
-                    }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                if isEditing {
+                    editingSection
+                } else {
+                    viewingSection
                 }
-                .padding(16)
             }
-            .background(Color.lcCream)
-            .navigationTitle(isEditing ? "Edit Post" : "Post")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(false)
-            .toolbar {
-                if !isEditing && isOwnPost {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Menu {
-                            Button("Edit") {
-                                startEditing()
-                            }
-                            Button("Delete", role: .destructive) {
-                                // TODO: Implement delete
-                            }
-                        } label: {
-                            Image(systemName: "ellipsis")
-                                .foregroundColor(.lcText3)
+            .padding(16)
+        }
+        .background(Color.lcCream)
+        .navigationTitle(isEditing ? "Edit Post" : "Post")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(false)
+        .toolbar {
+            if !isEditing && isOwnPost {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Button("Edit") {
+                            startEditing()
                         }
+                        Button("Delete", role: .destructive) {
+                            // TODO: Implement delete
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .foregroundColor(.lcText3)
                     }
                 }
             }
-            .task {
-                await loadAuthorPhoto()
-                displayContent = post.content
-                displayPhotoUrl = post.photoUrl
-                // Debug: Log post and user info
-                print("[PostDetailView] post.authorId=\(post.authorId), currentUserId=\(appState.currentUserId ?? UUID()), isOwnPost=\(isOwnPost)")
-            }
+        }
+        .task {
+            await loadAuthorPhoto()
+            displayContent = post.content
+            displayPhotoUrl = post.photoUrl
+            checkIsOwnPost = true  // Trigger state update for toolbar
+            // Debug: Log post and user info
+            print("[PostDetailView] post.authorId=\(post.authorId), currentUserId=\(appState.currentUserId ?? UUID()), isOwnPost=\(isOwnPost)")
         }
     }
 
