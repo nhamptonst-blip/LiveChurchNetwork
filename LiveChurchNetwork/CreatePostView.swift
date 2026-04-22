@@ -109,42 +109,40 @@ struct CreatePostView: View {
                     }
                     .padding(.bottom, 4)
 
-                    // Post type selector - horizontal pill row
+                    // Post type selector - vertical grid
                     VStack(alignment: .leading, spacing: 12) {
                         Text("POST TYPE")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.lcText2)
                             .tracking(0.5)
 
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                                ForEach(postTypeConfigs, id: \.value) { config in
-                                    Button {
-                                        postType = config.value
-                                    } label: {
-                                        HStack(spacing: 6) {
-                                            Image(systemName: config.icon)
-                                                .font(.system(size: 13, weight: .semibold))
-                                                .foregroundColor(Color.lcText)
-                                            Text(config.label)
-                                                .font(.system(size: 13, weight: .semibold))
-                                                .foregroundColor(Color.lcText)
-                                        }
-                                        .padding(.horizontal, 14)
-                                        .padding(.vertical, 9)
-                                        .background(postType == config.value ? Color.lcNavy : Color.white)
-                                        .clipShape(Capsule())
-                                        .overlay(
-                                            Capsule().stroke(
-                                                postType == config.value ? Color.clear : Color("lcBorder"),
-                                                lineWidth: 1.5
-                                            )
-                                        )
+                        let columns = [GridItem(.flexible()), GridItem(.flexible())]
+                        LazyVGrid(columns: columns, spacing: 10) {
+                            ForEach(postTypeConfigs, id: \.value) { config in
+                                Button {
+                                    postType = config.value
+                                } label: {
+                                    VStack(spacing: 6) {
+                                        Image(systemName: config.icon)
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .foregroundColor(postType == config.value ? Color.white : Color.lcText)
+                                        Text(config.label)
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundColor(postType == config.value ? Color.white : Color.lcText)
                                     }
-                                    .buttonStyle(.plain)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(postType == config.value ? Color.lcNavy : Color.white)
+                                    .cornerRadius(10)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10).stroke(
+                                            postType == config.value ? Color.clear : Color("lcBorder"),
+                                            lineWidth: 1.5
+                                        )
+                                    )
                                 }
+                                .buttonStyle(.plain)
                             }
-                            .padding(.vertical, 2)
                         }
                     }
                     .onChange(of: postType) { _ in
