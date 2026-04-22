@@ -10,6 +10,10 @@ struct UserProfileView: View {
     @State private var userPosts: [Post] = []
     @State private var isLoadingPosts = false
 
+    private var isOwnProfile: Bool {
+        appState.currentUserId == userId
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -137,7 +141,7 @@ struct UserProfileView: View {
                     .padding(.vertical, 8)
 
                 // Edit Profile button (if own profile) or Follow button (if other profile)
-                if appState.currentUserId == userId {
+                if isOwnProfile {
                     NavigationLink(destination: EditWorshipperProfileView().environmentObject(appState)) {
                         Text("Edit Profile")
                             .font(.system(size: 13, weight: .semibold))
@@ -167,11 +171,14 @@ struct UserProfileView: View {
             // My Posts section (only if own profile)
             if appState.currentUserId == userId {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("My Posts")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.lcText)
-                        .padding(.horizontal, 24)
-                        .padding(.top, 24)
+                    HStack {
+                        Text("My Posts")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.lcText)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
 
                     if isLoadingPosts {
                         ProgressView()
