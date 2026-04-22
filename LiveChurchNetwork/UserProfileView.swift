@@ -7,6 +7,8 @@ struct UserProfileView: View {
     @State private var isLoading = true
     @State private var followerCount = 0
     @State private var viewerFollows = false
+    @State private var userPosts: [Post] = []
+    @State private var isLoadingPosts = false
 
     var body: some View {
         ScrollView {
@@ -152,7 +154,88 @@ struct UserProfileView: View {
             .padding(24)
             .background(Color.white)
 
+            // My Posts section (only if own profile)
+            if appState.currentUserId == userId {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("My Posts")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.lcText)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 24)
+
+                    if isLoadingPosts {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .padding(24)
+                    } else if userPosts.isEmpty {
+                        VStack(spacing: 12) {
+                            Image(systemName: "doc.text")
+                                .font(.system(size: 32))
+                                .foregroundColor(.lcText3)
+                            Text("No posts yet")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.lcText)
+                            Text("Create your first post to share with followers")
+                                .font(.system(size: 12))
+                                .foregroundColor(.lcText3)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(32)
+                    } else {
+                        VStack(spacing: 12) {
+                            ForEach(userPosts, id: \.id) { post in
+                                NavigationLink(destination: PostDetailView(post: post)) {
+                                    postRow(post)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, 24)
+                    }
+                }
+                .background(Color.white)
+            }
+
             Spacer()
+        }
+    }
+
+    private func postRow(_ post: Post) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(post.content?.prefix(60) ?? "Untitled")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.lcText)
+                        .lineLimit(2)
+                    Text(formatRelativeTime(Date(timeIntervalSince1970: post.created_at.timeIntervalSince1970)))
+                        .font(.system(size: 11))
+                        .foregroundColor(.lcText3)
+                }
+                Spacer()
+                HStack(spacing: 6) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.red)
+                    Text("\(post.like_count)")
+                        .font(.system(size: 11))
+                        .foregroundColor(.lcText2)
+                }
+            }
+            .padding(12)
+            .background(Color.lcCream)
+            .cornerRadius(8)
+        }
+    }
+
+    private func formatRelativeTime(_ date: Date) -> String {
+        let diff = Date().timeIntervalSince(date)
+        switch diff {
+        case ..<60:       return "just now"
+        case ..<3600:     return "\(Int(diff/60))m ago"
+        case ..<86400:    return "\(Int(diff/3600))h ago"
+        default:          return "\(Int(diff/86400))d ago"
         }
     }
 
@@ -183,9 +266,28 @@ struct UserProfileView: View {
                     self.isLoading = false
                 }
             }
+
+            // Load user's posts if this is their own profile
+            if appState.currentUserId == userId {
+                await loadUserPosts()
+            }
         } catch {
             print("Error loading profile: \(error)")
             await MainActor.run { isLoading = false }
+        }
+    }
+
+    private func loadUserPosts() async {
+        do {
+            await MainActor.run { isLoadingPosts = true }
+            let posts = try await SupabaseService.shared.getUserPosts(userId: userId)
+            await MainActor.run {
+                self.userPosts = posts
+                isLoadingPosts = false
+            }
+        } catch {
+            print("Error loading user posts: \(error)")
+            await MainActor.run { isLoadingPosts = false }
         }
     }
 
