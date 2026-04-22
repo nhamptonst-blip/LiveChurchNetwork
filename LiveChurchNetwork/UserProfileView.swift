@@ -208,7 +208,7 @@ struct UserProfileView: View {
                     } else {
                         VStack(spacing: 12) {
                             ForEach(userPosts, id: \.id) { post in
-                                NavigationLink(destination: PostDetailView(post: post)) {
+                                NavigationLink(destination: PostDetailView(post: post).environmentObject(appState)) {
                                     postRow(post)
                                 }
                                 .buttonStyle(.plain)
