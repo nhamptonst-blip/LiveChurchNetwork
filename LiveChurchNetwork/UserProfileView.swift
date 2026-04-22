@@ -141,8 +141,14 @@ struct UserProfileView: View {
                     .padding(.vertical, 8)
 
                 // Edit Profile button (if own profile) or Follow button (if other profile)
-                if isOwnProfile {
-                    NavigationLink(destination: EditWorshipperProfileView().environmentObject(appState)) {
+                if isOwnProfile, let profile = profile, let currentUserId = appState.currentUserId {
+                    NavigationLink(
+                        destination: EditWorshipperProfileView(
+                            profile: profile,
+                            userId: currentUserId,
+                            onSave: {}
+                        ).environmentObject(appState)
+                    ) {
                         Text("Edit Profile")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.white)
