@@ -118,7 +118,7 @@ struct PostDetailView: View {
                                 .frame(height: 240)
                                 .clipped()
                                 .cornerRadius(12)
-                        } else if case .loading = phase {
+                        } else {
                             RoundedRectangle(cornerRadius: 12)
                                 .fill(Color.lcBorder)
                                 .frame(height: 240)
@@ -252,7 +252,7 @@ struct PostDetailView: View {
         ZStack {
             Circle()
                 .fill(Color.lcNavy.opacity(0.1))
-            Text(post.author_name.prefix(1).uppercased())
+            Text(post.authorName.prefix(1).uppercased())
                 .font(.system(size: 16, weight: .bold))
                 .foregroundColor(.lcNavy)
         }
