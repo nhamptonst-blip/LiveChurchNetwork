@@ -268,10 +268,20 @@ struct PostDetailView: View {
 
     private func saveChanges() async {
         isSaving = true
-        // TODO: Implement post update in SupabaseService
-        _ = await MainActor.run {
-            isEditing = false
-            isSaving = false
+        do {
+            try await SupabaseService.shared.updatePost(
+                postId: post.id,
+                content: editedContent,
+                photoUrl: editedPhotoUrl.isEmpty ? nil : editedPhotoUrl
+            )
+            await MainActor.run {
+                isEditing = false
+                isSaving = false
+                HapticEngine.impact(.light)
+            }
+        } catch {
+            print("Error saving post: \(error)")
+            await MainActor.run { isSaving = false }
         }
     }
 

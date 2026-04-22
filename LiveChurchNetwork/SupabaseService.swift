@@ -417,6 +417,24 @@ private struct ProfileCoverUpdate: Encodable {
              .execute()
      }
                                                            
+     func updatePost(postId: UUID, content: String?, photoUrl: String?) async throws {
+         var updates: [String: AnyJSON] = [:]
+         if let content = content {
+             updates["content"] = .string(content)
+         }
+         if let photoUrl = photoUrl {
+             updates["photo_url"] = .string(photoUrl)
+         }
+
+         if !updates.isEmpty {
+             try await client
+                 .from("posts")
+                 .update(updates)
+                 .eq("id", value: postId.uuidString)
+                 .execute()
+         }
+     }
+
      func deletePost(postId: UUID) async throws {
          try await client
              .from("posts")
