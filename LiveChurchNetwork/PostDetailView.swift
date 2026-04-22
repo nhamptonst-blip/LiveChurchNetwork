@@ -94,46 +94,51 @@ struct PostDetailView: View {
                     authorInitialCircle
                 }
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(post.authorName)
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.lcText)
                     Text(formatRelativeTime(post.createdAt))
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundColor(.lcText3)
                 }
 
                 Spacer()
             }
-            .padding(14)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
             .background(Color.white)
             .cornerRadius(12)
 
             // Post content
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 14) {
                 let displayedContent = displayContent ?? post.content
                 if let content = displayedContent, !content.isEmpty {
                     Text(content)
-                        .font(.system(size: 15))
+                        .font(.system(size: 15, weight: .regular))
                         .foregroundColor(.lcText)
-                        .lineSpacing(4)
+                        .lineSpacing(5)
+                        .lineLimit(nil)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 let displayedPhoto = displayPhotoUrl ?? post.photoUrl
                 if let photoUrl = displayedPhoto, !photoUrl.isEmpty, let url = URL(string: photoUrl) {
-                    AsyncImage(url: url) { phase in
-                        if case .success(let img) = phase {
-                            img.resizable()
-                                .scaledToFill()
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 240)
-                                .clipped()
-                                .cornerRadius(12)
-                        } else {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.lcBorder)
-                                .frame(height: 240)
-                                .overlay(ProgressView().tint(.lcNavy))
+                    VStack(spacing: 0) {
+                        AsyncImage(url: url) { phase in
+                            if case .success(let img) = phase {
+                                img.resizable()
+                                    .scaledToFill()
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 280)
+                                    .clipped()
+                                    .cornerRadius(12)
+                            } else {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.lcBorder)
+                                    .frame(height: 280)
+                                    .overlay(ProgressView().tint(.lcNavy))
+                            }
                         }
                     }
                 }
@@ -170,7 +175,7 @@ struct PostDetailView: View {
                     }
                 }
             }
-            .padding(14)
+            .padding(16)
             .background(Color.white)
             .cornerRadius(12)
 
@@ -185,7 +190,7 @@ struct PostDetailView: View {
                 }
                 Spacer()
             }
-            .padding(14)
+            .padding(16)
             .background(Color.white)
             .cornerRadius(12)
         }
