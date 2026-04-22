@@ -231,7 +231,10 @@ struct WorkshipperDashboardView: View {
         }
         .background(Color.lcCream)
         .onAppear {
-            Task { await loadStats() }
+            Task {
+                await appState.loadProfile()
+                await loadStats()
+            }
         }
         .sheet(isPresented: $showEditProfile) {
             if let profile = appState.profile, let userId = appState.currentUserId {
@@ -241,6 +244,7 @@ struct WorkshipperDashboardView: View {
             }
         }
         .task {
+            await appState.loadProfile()
             await loadStats()
         }
     }

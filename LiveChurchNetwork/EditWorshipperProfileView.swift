@@ -20,13 +20,25 @@ struct EditWorshipperProfileView: View {
     @State private var isSaving = false
 
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Edit Profile")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.lcText)
+                Spacer()
+                Button(action: { dismiss() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(.lcText3)
+                }
+            }
+            .padding(16)
+            .background(Color.white)
+            .border(Color.lcBorder, width: 1)
+
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    Text("Edit Your Profile")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.lcText)
-                        .padding(.horizontal, 16)
 
                     // Cover photo
                     VStack(alignment: .leading, spacing: 8) {
@@ -202,19 +214,13 @@ struct EditWorshipperProfileView: View {
                 .padding(.vertical, 20)
             }
             .background(Color.lcCream)
-            .navigationTitle("Edit Profile")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-            }
-            .onAppear {
-                fullName = profile.fullName ?? ""
-                city = profile.city ?? ""
-                denomination = profile.denomination ?? ""
-                bio = profile.bio ?? ""
-            }
+        }
+        .background(Color.lcCream)
+        .onAppear {
+            fullName = profile.fullName ?? ""
+            city = profile.city ?? ""
+            denomination = profile.denomination ?? ""
+            bio = profile.bio ?? ""
         }
     }
 
