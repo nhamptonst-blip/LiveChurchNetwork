@@ -15,24 +15,26 @@ struct UserProfileView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                if isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if let profile = profile {
-                    profileContent(profile)
-                } else {
-                    Text("User not found")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    if isLoading {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else if let profile = profile {
+                        profileContent(profile)
+                    } else {
+                        Text("User not found")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
                 }
             }
-        }
-        .background(Color.lcCream)
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .task {
-            await loadProfile()
+            .background(Color.lcCream)
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .task {
+                await loadProfile()
+            }
         }
     }
 
@@ -146,7 +148,9 @@ struct UserProfileView: View {
                         destination: EditWorshipperProfileView(
                             profile: profile,
                             userId: currentUserId,
-                            onSave: {}
+                            onSave: {
+                                Task { await loadProfile() }
+                            }
                         ).environmentObject(appState)
                     ) {
                         Text("Edit Profile")

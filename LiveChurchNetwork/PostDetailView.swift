@@ -35,6 +35,23 @@ struct PostDetailView: View {
             .navigationTitle(isEditing ? "Edit Post" : "Post")
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(false)
+            .toolbar {
+                if !isEditing && isOwnPost {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Menu {
+                            Button("Edit") {
+                                startEditing()
+                            }
+                            Button("Delete", role: .destructive) {
+                                // TODO: Implement delete
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .foregroundColor(.lcText3)
+                        }
+                    }
+                }
+            }
             .task {
                 await loadAuthorPhoto()
                 displayContent = post.content
@@ -85,20 +102,6 @@ struct PostDetailView: View {
                 }
 
                 Spacer()
-
-                if isOwnPost {
-                    Menu {
-                        Button("Edit") {
-                            startEditing()
-                        }
-                        Button("Delete", role: .destructive) {
-                            // TODO: Implement delete
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .foregroundColor(.lcText3)
-                    }
-                }
             }
             .padding(14)
             .background(Color.white)
@@ -202,7 +205,8 @@ struct PostDetailView: View {
                     .cornerRadius(8)
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.lcBorder, lineWidth: 1))
 
-                if let photoUrl = post.photoUrl, !photoUrl.isEmpty {
+                let currentPhoto = editedPhotoUrl.isEmpty ? nil : editedPhotoUrl
+                if let photoUrl = currentPhoto, !photoUrl.isEmpty {
                     VStack(alignment: .trailing) {
                         AsyncImage(url: URL(string: photoUrl)) { phase in
                             if case .success(let img) = phase {
