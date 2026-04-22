@@ -43,6 +43,10 @@ import Foundation
      let photo_url: String?
      let video_url: String?
      let post_type: String
+     let is_important: Bool
+     let is_pinned: Bool
+     let send_notification: Bool
+     let highlight_in_feed: Bool
  }
 
  private struct EventInsert: Encodable {
@@ -398,14 +402,18 @@ private struct ProfileCoverUpdate: Encodable {
      }
 
      func createPost(authorId: UUID, authorName: String, authorType: String,
-                     content: String?, photoUrl: String?, videoUrl: String?, postType: String) async throws {
+                     content: String?, photoUrl: String?, videoUrl: String?, postType: String,
+                     isImportant: Bool = false, isPinned: Bool = false,
+                     sendNotification: Bool = false, highlightInFeed: Bool = false) async throws {
          try await client
              .from("posts")
              .insert(PostInsert(author_id: authorId.uuidString, author_name: authorName,
                                 author_type: authorType, content: content,
                                 photo_url: photoUrl?.isEmpty == true ? nil : photoUrl,
                                 video_url: videoUrl?.isEmpty == true ? nil : videoUrl,
-                                post_type: postType))
+                                post_type: postType,
+                                is_important: isImportant, is_pinned: isPinned,
+                                send_notification: sendNotification, highlight_in_feed: highlightInFeed))
              .execute()
      }
                                                            

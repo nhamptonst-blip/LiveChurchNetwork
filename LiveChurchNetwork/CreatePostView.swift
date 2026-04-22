@@ -45,14 +45,30 @@ struct CreatePostView: View {
     @State private var announcementTitle = ""
     @State private var announcementBody = ""
 
-    private let postTypeConfigs: [(value: String, label: String, description: String, icon: String)] = [
-        ("update", "Update", "Share news", "text.bubble"),
-        ("verse", "Verse", "Share scripture", "book.fill"),
-        ("event", "Event", "Announce event", "calendar"),
-        ("livestream", "Stream", "Go live", "antenna.radiowaves.left.and.right"),
-        ("prayer", "Prayer", "Request prayer", "hands.sparkles.fill"),
-        ("announcement", "Announce", "Important notice", "megaphone.fill"),
-    ]
+    // Post enhancements (for update type)
+    @State private var isImportant = false
+    @State private var isPinned = false
+    @State private var highlightInFeed = false
+
+    private var postTypeConfigs: [(value: String, label: String, description: String, icon: String)] {
+        let isChurch = appState.profile?.role == "church_admin"
+        if isChurch {
+            return [
+                ("update", "Update", "Share news", "text.bubble"),
+                ("verse", "Verse", "Share scripture", "book.fill"),
+                ("prayer", "Prayer", "Request prayer", "hands.sparkles.fill"),
+                ("announcement", "Announce", "Important notice", "megaphone.fill"),
+                ("livestream", "Stream", "Go live", "antenna.radiowaves.left.and.right"),
+            ]
+        } else {
+            return [
+                ("update", "Update", "Share news", "text.bubble"),
+                ("verse", "Verse", "Share scripture", "book.fill"),
+                ("prayer", "Prayer", "Request prayer", "hands.sparkles.fill"),
+                ("event", "Event", "Announce event", "calendar"),
+            ]
+        }
+    }
                                                                                                                                                                                
     var body: some View {
         NavigationStack {
@@ -108,13 +124,14 @@ struct CreatePostView: View {
                                         HStack(spacing: 6) {
                                             Image(systemName: config.icon)
                                                 .font(.system(size: 13, weight: .semibold))
+                                                .foregroundColor(Color.lcText)
                                             Text(config.label)
                                                 .font(.system(size: 13, weight: .semibold))
+                                                .foregroundColor(Color.lcText)
                                         }
                                         .padding(.horizontal, 14)
                                         .padding(.vertical, 9)
                                         .background(postType == config.value ? Color.lcNavy : Color.white)
-                                        .foregroundColor(postType == config.value ? .white : Color("lcText2"))
                                         .clipShape(Capsule())
                                         .overlay(
                                             Capsule().stroke(
@@ -128,6 +145,11 @@ struct CreatePostView: View {
                             }
                             .padding(.vertical, 2)
                         }
+                    }
+                    .onChange(of: postType) { _ in
+                        isImportant = false
+                        isPinned = false
+                        highlightInFeed = false
                     }
 
                     // Type-specific form sections
@@ -265,6 +287,32 @@ struct CreatePostView: View {
                         }
                     }
             }
+
+            // Post enhancements
+            VStack(alignment: .leading, spacing: 12) {
+                Text("POST ENHANCEMENTS")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.lcText3)
+                    .tracking(0.5)
+
+                VStack(spacing: 0) {
+                    enhancementToggleRow(icon: "⚡", label: "Mark as Important",
+                                        subtitle: "Highlighted in the feed",
+                                        isOn: $isImportant)
+                    Divider().padding(.leading, 44)
+                    enhancementToggleRow(icon: "📌", label: "Pin to Top",
+                                        subtitle: "Stays at top of followers' feeds",
+                                        isOn: $isPinned)
+                    Divider().padding(.leading, 44)
+                    enhancementToggleRow(icon: "✨", label: "Highlight in Feed",
+                                        subtitle: "Visual emphasis in the feed",
+                                        isOn: $highlightInFeed)
+                }
+                .background(Color.white)
+                .cornerRadius(12)
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.lcBorder, lineWidth: 1))
+            }
+
             photoPicker
         }
     }
@@ -624,7 +672,11 @@ struct CreatePostView: View {
                 content: postContent.isEmpty ? nil : postContent,
                 photoUrl: photoUrl,
                 videoUrl: videoUrlForPost,
-                postType: postType
+                postType: postType,
+                isImportant: postType == "update" ? isImportant : false,
+                isPinned: postType == "update" ? isPinned : false,
+                sendNotification: false,
+                highlightInFeed: postType == "update" ? highlightInFeed : false
             )
             HapticEngine.notification(.success)
             await onPosted?()
@@ -635,5 +687,19 @@ struct CreatePostView: View {
             HapticEngine.notification(.error)
         }
         isPosting = false
+    }
+
+    @ViewBuilder
+    private func enhancementToggleRow(icon: String, label: String, subtitle: String, isOn: Binding<Bool>) -> some View {
+        HStack(spacing: 12) {
+            Text(icon).font(.system(size: 18))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label).font(.system(size: 14, weight: .medium)).foregroundColor(.lcText)
+                Text(subtitle).font(.system(size: 12)).foregroundColor(.lcText3)
+            }
+            Spacer()
+            Toggle("", isOn: isOn).labelsHidden().tint(Color.lcNavy)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 12)
     }
 }

@@ -51,6 +51,11 @@ struct PostCard: View {
             actions
         }
         .background(Color.white)
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(post.isImportant ? Color.yellow.opacity(0.7) : Color.clear, lineWidth: 1.5)
+        )
         .padding(.vertical, 2)
     }
 
@@ -146,16 +151,30 @@ struct PostCard: View {
 
     private var authorIdentityNameStack: some View {
         // ── Name + sublabel ──────────────────────────────────────────
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
                 Text(post.authorName)
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.lcText)
                 postTypeBadge
             }
-            Text(authorSublabel)
-                .font(.system(size: 11))
-                .foregroundColor(.lcText3)
+            HStack(spacing: 6) {
+                Text(authorSublabel)
+                    .font(.system(size: 11))
+                    .foregroundColor(.lcText3)
+                if post.isImportant {
+                    HStack(spacing: 3) {
+                        Text("⚡")
+                        Text("Important")
+                            .font(.system(size: 10, weight: .semibold))
+                    }
+                    .foregroundColor(.orange)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.orange.opacity(0.15))
+                    .cornerRadius(12)
+                }
+            }
         }
     }
 
@@ -231,12 +250,15 @@ struct PostCard: View {
 
     private var verseCard: some View {
         VStack(alignment: .leading, spacing: 8) {
+            // Extract scripture reference (first line before double newline)
+            let scriptureRef = post.content?.components(separatedBy: "\n\n").first ?? ""
+
             HStack(spacing: 6) {
                 Image(systemName: "book.fill")
                     .font(.system(size: 12))
                     .foregroundColor(.lcGold)
-                if let ref = post.videoUrl, !ref.isEmpty {
-                    Text(ref)
+                if !scriptureRef.isEmpty {
+                    Text(scriptureRef)
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.lcGold)
                 }

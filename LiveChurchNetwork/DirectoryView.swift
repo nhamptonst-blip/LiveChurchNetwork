@@ -35,6 +35,7 @@ struct DirectoryView: View {
     // ── Dynamic members from Supabase ────────────────────────────────
     @State private var discoveredMembers: [DiscoverableUser] = []
 
+
     private let denominations: [String] = [
         "All", "Non-Denominational", "Baptist", "Catholic", "Methodist",
         "Pentecostal", "Orthodox", "Presbyterian", "Lutheran", "Evangelical",
@@ -97,39 +98,37 @@ struct DirectoryView: View {
     // ── Body ────────────────────────────────────────────────────────────
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                // Background
-                Color(red: 0.98, green: 0.98, blue: 0.97).ignoresSafeArea()
+        ZStack {
+            // Background
+            Color(red: 0.98, green: 0.98, blue: 0.97).ignoresSafeArea()
 
-                VStack(spacing: 0) {
-                    // Header
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Discover")
-                            .font(.system(size: 32, weight: .black))
-                            .foregroundColor(.lcText)
-                        Text("Find churches, people, and live services")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.lcText3)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                    .padding(.bottom, 24)
-
-                    // Segmented tabs
-                    sectionToggle
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 16)
-
-                    // Content
-                    Group {
-                        if section == .churches { churchesContent }
-                        else                   { peopleContent }
-                    }
-                    .animation(.appStandard, value: section)
-                    .id(section)
+            VStack(spacing: 0) {
+                // Header
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Discover")
+                        .font(.system(size: 32, weight: .black))
+                        .foregroundColor(.lcText)
+                    Text("Find churches, people, and live services")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.lcText3)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 24)
+
+                // Segmented tabs
+                sectionToggle
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
+
+                // Content
+                Group {
+                    if section == .churches { churchesContent }
+                    else                   { peopleContent }
+                }
+                .animation(.appStandard, value: section)
+                .id(section)
             }
         }
         .task { await loadDiscoverContent() }
@@ -213,16 +212,19 @@ struct DirectoryView: View {
                                       GridItem(.flexible(), spacing: 16)],
                             spacing: 16
                         ) {
-                            ForEach(filteredChurches) { church in
-                                ChurchCard(
-                                    church: church,
-                                    isFollowing: followedChurchSlugs.contains(church.slug),
-                                    onFollowToggle: {
-                                        Task {
-                                            await toggleChurchFollow(church: church)
+                            ForEach(filteredChurches, id: \.slug) { church in
+                                NavigationLink(destination: ChurchDetailView(church: church)) {
+                                    ChurchCard(
+                                        church: church,
+                                        isFollowing: followedChurchSlugs.contains(church.slug),
+                                        onFollowToggle: {
+                                            Task {
+                                                await toggleChurchFollow(church: church)
+                                            }
                                         }
-                                    }
-                                )
+                                    )
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                         .padding(.horizontal, 20)
@@ -248,16 +250,19 @@ struct DirectoryView: View {
                           GridItem(.flexible(), spacing: 16)],
                 spacing: 16
             ) {
-                ForEach(suggestedChurches.prefix(4)) { church in
-                    ChurchCard(
-                        church: church,
-                        isFollowing: followedChurchSlugs.contains(church.slug),
-                        onFollowToggle: {
-                            Task {
-                                await toggleChurchFollow(church: church)
+                ForEach(suggestedChurches.prefix(4), id: \.slug) { church in
+                    NavigationLink(destination: ChurchDetailView(church: church)) {
+                        ChurchCard(
+                            church: church,
+                            isFollowing: followedChurchSlugs.contains(church.slug),
+                            onFollowToggle: {
+                                Task {
+                                    await toggleChurchFollow(church: church)
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 20)

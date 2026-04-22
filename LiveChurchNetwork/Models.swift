@@ -326,6 +326,10 @@ let denominationOptions: [String] = [
       let videoUrl: String?
       let postType: String
       var likeCount: Int
+      var isImportant: Bool = false
+      var isPinned: Bool = false
+      var sendNotification: Bool = false
+      var highlightInFeed: Bool = false
       let createdAt: Date
       var isLiked: Bool = false
 
@@ -338,6 +342,10 @@ let denominationOptions: [String] = [
           case videoUrl   = "video_url"
           case postType   = "post_type"
           case likeCount  = "like_count"
+          case isImportant = "is_important"
+          case isPinned = "is_pinned"
+          case sendNotification = "send_notification"
+          case highlightInFeed = "highlight_in_feed"
           case createdAt  = "created_at"
       }
   }
