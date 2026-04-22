@@ -136,8 +136,18 @@ struct UserProfileView: View {
                 Divider()
                     .padding(.vertical, 8)
 
-                // Follow button (if not own profile)
-                if appState.currentUserId != userId {
+                // Edit Profile button (if own profile) or Follow button (if other profile)
+                if appState.currentUserId == userId {
+                    NavigationLink(destination: EditWorshipperProfileView().environmentObject(appState)) {
+                        Text("Edit Profile")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                            .background(Color.lcNavy)
+                            .cornerRadius(8)
+                    }
+                } else {
                     Button {
                         Task { await toggleFollow() }
                     } label: {
