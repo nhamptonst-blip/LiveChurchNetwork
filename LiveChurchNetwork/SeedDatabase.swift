@@ -1,7 +1,6 @@
 import Foundation
 import Supabase
 
-/// Cleans and seeds the database with test data
 class DatabaseSeeder {
     let client: SupabaseClient
 
@@ -27,7 +26,6 @@ class DatabaseSeeder {
     }
 
     private func cleanDatabase() async throws {
-        // Delete in order of foreign key dependencies
         try await client.from("comments").delete().execute()
         try await client.from("likes").delete().execute()
         try await client.from("notifications").delete().execute()
@@ -58,34 +56,33 @@ class DatabaseSeeder {
         ]
 
         let denominations = ["Baptist", "Pentecostal", "Methodist", "Lutheran", "Presbyterian", "Evangelical", "Assembly of God", "Bible Church", "Christian", "Reformed"]
+        let cities = ["Austin", "Dallas", "Houston", "San Antonio", "New Braunfels"]
 
         for (index, name) in churchNames.enumerated() {
             let userId = UUID()
             let churchId = UUID()
 
-            // Create profile for church admin
-            try await client.from("profiles").insert([
-                "id": userId.uuidString,
-                "full_name": name,
-                "role": "church_admin",
-                "bio": "Welcoming church in the community",
-                "city": ["Austin", "Dallas", "Houston", "San Antonio", "New Braunfels"][index % 5],
-                "denomination": denominations[index % 10]
-            ]).execute()
+            try await client.from("profiles").insert(ProfileInsert(
+                id: userId.uuidString,
+                full_name: name,
+                role: "church_admin",
+                bio: "Welcoming church in the community",
+                city: cities[index % 5],
+                denomination: denominations[index % 10]
+            )).execute()
 
-            // Create church submission
-            try await client.from("church_submissions").insert([
-                "id": churchId.uuidString,
-                "user_id": userId.uuidString,
-                "church_name": name,
-                "denomination": denominations[index % 10],
-                "phone": "512-555-\(String(format: "%04d", 1000 + index))",
-                "website": "https://\(name.lowercased().replacingOccurrences(of: " ", with: "")).com",
-                "service_times": "Sundays 9am, 11am",
-                "about": "We are a loving community dedicated to serving God and each other.",
-                "is_live": index % 3 == 0,
-                "status": "approved"
-            ]).execute()
+            try await client.from("church_submissions").insert(ChurchSubmissionInsert(
+                id: churchId.uuidString,
+                user_id: userId.uuidString,
+                church_name: name,
+                denomination: denominations[index % 10],
+                phone: "512-555-\(String(format: "%04d", 1000 + index))",
+                website: "https://\(name.lowercased().replacingOccurrences(of: " ", with: "")).com",
+                service_times: "Sundays 9am, 11am",
+                about: "We are a loving community dedicated to serving God and each other.",
+                is_live: index % 3 == 0,
+                status: "approved"
+            )).execute()
 
             churches.append(ChurchData(userId: userId, churchId: churchId, name: name))
             print("  ✓ Created church: \(name)")
@@ -106,14 +103,14 @@ class DatabaseSeeder {
             let userId = UUID()
             let name = "\(firstNames[index]) \(lastNames[index])"
 
-            try await client.from("profiles").insert([
-                "id": userId.uuidString,
-                "full_name": name,
-                "role": "worshipper",
-                "bio": "Just a regular person exploring faith and community",
-                "city": cities[index],
-                "denomination": denominations[index]
-            ]).execute()
+            try await client.from("profiles").insert(ProfileInsert(
+                id: userId.uuidString,
+                full_name: name,
+                role: "worshipper",
+                bio: "Just a regular person exploring faith and community",
+                city: cities[index],
+                denomination: denominations[index]
+            )).execute()
 
             worshippers.append(WorshipperData(userId: userId, name: name, city: cities[index]))
             print("  ✓ Created worshipper: \(name)")
@@ -123,32 +120,30 @@ class DatabaseSeeder {
     }
 
     private func setupFollows(churches: [ChurchData], worshippers: [WorshipperData]) async throws {
-        // Each worshipper follows 3-5 random churches
         for worshipper in worshippers {
             let numFollows = Int.random(in: 3...5)
             let shuffledChurches = churches.shuffled()
 
             for i in 0..<numFollows {
                 let church = shuffledChurches[i]
-                try await client.from("follows").insert([
-                    "follower_id": worshipper.userId.uuidString,
-                    "following_id": church.userId.uuidString,
-                    "following_type": "worshipper"
-                ]).execute()
+                try await client.from("follows").insert(FollowInsert(
+                    follower_id: worshipper.userId.uuidString,
+                    following_id: church.userId.uuidString,
+                    following_type: "church"
+                )).execute()
             }
         }
 
-        // Each worshipper also follows 2-3 other worshippers
         for worshipper in worshippers {
             let numFollows = Int.random(in: 2...3)
             let others = worshippers.filter { $0.userId != worshipper.userId }.shuffled()
 
             for i in 0..<min(numFollows, others.count) {
-                try await client.from("follows").insert([
-                    "follower_id": worshipper.userId.uuidString,
-                    "following_id": others[i].userId.uuidString,
-                    "following_type": "worshipper"
-                ]).execute()
+                try await client.from("follows").insert(FollowInsert(
+                    follower_id: worshipper.userId.uuidString,
+                    following_id: others[i].userId.uuidString,
+                    following_type: "worshipper"
+                )).execute()
             }
         }
 
@@ -170,52 +165,96 @@ class DatabaseSeeder {
             "Community event this Saturday - everyone welcome!"
         ]
 
-        // Churches create 2-3 posts each
         for church in churches {
             let numPosts = Int.random(in: 2...3)
             for _ in 0..<numPosts {
                 let postType = postTypes.randomElement() ?? "update"
                 let content = contents.randomElement() ?? "Hello community!"
 
-                try await client.from("posts").insert([
-                    "id": UUID().uuidString,
-                    "author_id": church.userId.uuidString,
-                    "author_name": church.name,
-                    "author_type": "church",
-                    "content": content,
-                    "post_type": postType,
-                    "is_important": Bool.random(),
-                    "is_pinned": false,
-                    "like_count": 0,
-                    "created_at": ISO8601DateFormatter().string(from: Date())
-                ]).execute()
+                try await client.from("posts").insert(PostInsert(
+                    author_id: church.userId.uuidString,
+                    author_name: church.name,
+                    author_type: "church",
+                    content: content,
+                    photo_url: nil,
+                    video_url: nil,
+                    post_type: postType,
+                    is_important: Bool.random(),
+                    is_pinned: false,
+                    send_notification: false,
+                    highlight_in_feed: false
+                )).execute()
             }
         }
 
-        // Worshippers create 1-2 posts each
         for worshipper in worshippers {
             let numPosts = Int.random(in: 1...2)
             for _ in 0..<numPosts {
                 let postType = ["prayer", "update"].randomElement() ?? "update"
                 let content = contents.randomElement() ?? "Hello church family!"
 
-                try await client.from("posts").insert([
-                    "id": UUID().uuidString,
-                    "author_id": worshipper.userId.uuidString,
-                    "author_name": worshipper.name,
-                    "author_type": "worshipper",
-                    "content": content,
-                    "post_type": postType,
-                    "is_important": false,
-                    "is_pinned": false,
-                    "like_count": 0,
-                    "created_at": ISO8601DateFormatter().string(from: Date())
-                ]).execute()
+                try await client.from("posts").insert(PostInsert(
+                    author_id: worshipper.userId.uuidString,
+                    author_name: worshipper.name,
+                    author_type: "worshipper",
+                    content: content,
+                    photo_url: nil,
+                    video_url: nil,
+                    post_type: postType,
+                    is_important: false,
+                    is_pinned: false,
+                    send_notification: false,
+                    highlight_in_feed: false
+                )).execute()
             }
         }
 
         print("  ✓ Sample posts created")
     }
+}
+
+// MARK: - Insert payload structs
+
+private struct ProfileInsert: Encodable {
+    let id: String
+    let full_name: String
+    let role: String
+    let bio: String
+    let city: String
+    let denomination: String
+}
+
+private struct ChurchSubmissionInsert: Encodable {
+    let id: String
+    let user_id: String
+    let church_name: String
+    let denomination: String
+    let phone: String
+    let website: String
+    let service_times: String
+    let about: String
+    let is_live: Bool
+    let status: String
+}
+
+private struct FollowInsert: Encodable {
+    let follower_id: String
+    let following_id: String
+    let following_type: String
+}
+
+private struct PostInsert: Encodable {
+    let author_id: String
+    let author_name: String
+    let author_type: String
+    let content: String?
+    let photo_url: String?
+    let video_url: String?
+    let post_type: String
+    let is_important: Bool
+    let is_pinned: Bool
+    let send_notification: Bool
+    let highlight_in_feed: Bool
 }
 
 struct ChurchData {
