@@ -23,6 +23,7 @@ struct PostDetailView: View {
     @State private var newCommentText = ""
     @State private var isLoadingComments = false
     @State private var isPostingComment = false
+    @State private var commentError: String?
     @State private var selectedEditPhoto: PhotosPickerItem?
     @State private var editedImageData: Data?
 
@@ -128,8 +129,12 @@ struct PostDetailView: View {
             // Reload comments
             await loadComments()
         } catch {
+            let errorMsg = "Failed to post comment: \(error.localizedDescription)"
             print("Error posting comment: \(error)")
-            await MainActor.run { isPostingComment = false }
+            await MainActor.run {
+                commentError = errorMsg
+                isPostingComment = false
+            }
         }
     }
 
@@ -315,6 +320,14 @@ struct PostDetailView: View {
                 // Add comment input
                 if appState.currentUserId != nil {
                     VStack(spacing: 8) {
+                        if let error = commentError {
+                            Text(error)
+                                .font(.system(size: 12))
+                                .foregroundColor(.red)
+                                .padding(8)
+                                .background(Color.red.opacity(0.1))
+                                .cornerRadius(6)
+                        }
                         TextEditor(text: $newCommentText)
                             .frame(minHeight: 60)
                             .font(.system(size: 12))

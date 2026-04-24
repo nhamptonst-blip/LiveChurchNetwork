@@ -686,7 +686,11 @@ private struct ProfileCoverUpdate: Encodable {
              .order("created_at", ascending: false)
              .execute()
 
-         return try JSONDecoder().decode([Comment].self, from: JSONSerialization.data(withJSONObject: response.value as Any))
+         if let data = response.value as? [[String: Any]] {
+             let jsonData = try JSONSerialization.data(withJSONObject: data)
+             return try JSONDecoder().decode([Comment].self, from: jsonData)
+         }
+         return []
      }
 
      func postComment(postId: UUID, userId: UUID, authorName: String, authorPhotoUrl: String?, content: String) async throws {
