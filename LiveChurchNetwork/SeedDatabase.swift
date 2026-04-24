@@ -26,16 +26,17 @@ class DatabaseSeeder {
     }
 
     private func cleanDatabase() async throws {
-        try await client.from("comments").delete().execute()
-        try await client.from("likes").delete().execute()
-        try await client.from("notifications").delete().execute()
-        try await client.from("follows").delete().execute()
-        try await client.from("saved_churches").delete().execute()
-        try await client.from("church_inquiries").delete().execute()
-        try await client.from("posts").delete().execute()
-        try await client.from("events").delete().execute()
-        try await client.from("church_submissions").delete().execute()
-        try await client.from("profiles").delete().execute()
+        // Delete in order of foreign key dependencies using gt filter to match all records
+        try await client.from("comments").delete().gt("id", value: "").execute()
+        try await client.from("likes").delete().gt("id", value: "").execute()
+        try await client.from("notifications").delete().gt("id", value: "").execute()
+        try await client.from("follows").delete().gt("id", value: "").execute()
+        try await client.from("saved_churches").delete().gt("id", value: "").execute()
+        try await client.from("church_inquiries").delete().gt("id", value: "").execute()
+        try await client.from("posts").delete().gt("id", value: "").execute()
+        try await client.from("events").delete().gt("id", value: "").execute()
+        try await client.from("church_submissions").delete().gt("id", value: "").execute()
+        try await client.from("profiles").delete().gt("id", value: "").execute()
         print("  ✓ Database cleaned")
     }
 
