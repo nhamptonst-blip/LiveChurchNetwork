@@ -6,6 +6,7 @@ struct PostCard: View {
 
     @EnvironmentObject var appState: AppState
     @State private var isLiking = false
+    @State private var showPostDetail = false
 
     private var timeAgo: String {
         let diff = Date().timeIntervalSince(post.createdAt)
@@ -18,7 +19,7 @@ struct PostCard: View {
     }
 
     var body: some View {
-        NavigationLink(destination: PostDetailView(post: post)) {
+        ZStack {
             VStack(alignment: .leading, spacing: 0) {
                 header
 
@@ -58,8 +59,17 @@ struct PostCard: View {
                     .stroke(post.isImportant ? Color.yellow.opacity(0.7) : Color.clear, lineWidth: 1.5)
             )
             .padding(.vertical, 2)
+
+            NavigationLink(isActive: $showPostDetail) {
+                PostDetailView(post: post)
+            } label: {
+                EmptyView()
+            }
+            .hidden()
         }
-        .buttonStyle(.plain)
+        .onTapGesture {
+            showPostDetail = true
+        }
     }
 
     // MARK: Header helpers
