@@ -3,13 +3,15 @@ import Supabase
 
 class DatabaseSeeder {
     let client: SupabaseClient
+    let adminUserId: UUID?
 
-    init(client: SupabaseClient) {
+    init(client: SupabaseClient, adminUserId: UUID? = nil) {
         self.client = client
+        self.adminUserId = adminUserId
     }
 
     func cleanAndSeed() async throws {
-        print("🧹 Cleaning database...")
+        print("🧹 Cleaning database (preserving admin account)...")
         try await cleanDatabase()
 
         print("🌱 Seeding test data...")
@@ -22,24 +24,38 @@ class DatabaseSeeder {
         print("📝 Creating sample posts...")
         try await createSamplePosts(churches: churches, worshippers: worshippers)
 
-        print("✅ Database seeding complete!")
+        print("✅ Database seeding complete! Admin account preserved.")
     }
 
     private func cleanDatabase() async throws {
-        // Fetch and delete all records (workaround for Supabase requiring WHERE clause)
         let nilUUID = "00000000-0000-0000-0000-000000000000"
 
+        // Delete non-admin data (preserve admin user)
         try await client.from("comments").delete().gte("id", value: nilUUID).execute()
         try await client.from("likes").delete().gte("id", value: nilUUID).execute()
         try await client.from("notifications").delete().gte("id", value: nilUUID).execute()
-        try await client.from("follows").delete().gte("id", value: nilUUID).execute()
+
+        // Delete follows, but preserve admin's follows
+        if let adminId = adminUserId?.uuidString {
+            try await client.from("follows").delete().neq("follower_id", value: adminId).gte("id", value: nilUUID).execute()
+        } else {
+            try await client.from("follows").delete().gte("id", value: nilUUID).execute()
+        }
+
         try await client.from("saved_churches").delete().gte("id", value: nilUUID).execute()
         try await client.from("church_inquiries").delete().gte("id", value: nilUUID).execute()
         try await client.from("posts").delete().gte("id", value: nilUUID).execute()
         try await client.from("events").delete().gte("id", value: nilUUID).execute()
         try await client.from("church_submissions").delete().gte("id", value: nilUUID).execute()
-        try await client.from("profiles").delete().gte("id", value: nilUUID).execute()
-        print("  ✓ Database cleaned")
+
+        // Delete non-admin profiles
+        if let adminId = adminUserId?.uuidString {
+            try await client.from("profiles").delete().neq("id", value: adminId).gte("id", value: nilUUID).execute()
+        } else {
+            try await client.from("profiles").delete().gte("id", value: nilUUID).execute()
+        }
+
+        print("  ✓ Database cleaned (admin preserved)")
     }
 
     private func createChurches() async throws -> [ChurchData] {

@@ -709,8 +709,8 @@ private struct ProfileCoverUpdate: Encodable {
 
      // MARK: Database seeding (testing only)
 
-     func cleanAndSeedDatabase() async throws {
-         let seeder = DatabaseSeeder(client: client)
+     func cleanAndSeedDatabase(adminUserId: UUID? = nil) async throws {
+         let seeder = DatabaseSeeder(client: client, adminUserId: adminUserId)
          try await seeder.cleanAndSeed()
      }
  }

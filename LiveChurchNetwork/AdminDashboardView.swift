@@ -76,9 +76,9 @@ struct AdminDashboardView: View {
                 isSeeding = true
                 Task {
                     do {
-                        try await SupabaseService.shared.cleanAndSeedDatabase()
+                        try await SupabaseService.shared.cleanAndSeedDatabase(adminUserId: appState.currentUserId)
                         await loadAll()
-                        actionError = "✅ Database seeded with 10 churches and 10 worshippers!"
+                        actionError = "✅ Database seeded! Your admin account preserved."
                     } catch {
                         actionError = "❌ Seeding failed: \(error.localizedDescription)"
                     }
