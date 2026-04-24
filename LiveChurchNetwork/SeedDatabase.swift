@@ -26,17 +26,19 @@ class DatabaseSeeder {
     }
 
     private func cleanDatabase() async throws {
-        // Delete in order of foreign key dependencies using gt filter to match all records
-        try await client.from("comments").delete().gt("id", value: "").execute()
-        try await client.from("likes").delete().gt("id", value: "").execute()
-        try await client.from("notifications").delete().gt("id", value: "").execute()
-        try await client.from("follows").delete().gt("id", value: "").execute()
-        try await client.from("saved_churches").delete().gt("id", value: "").execute()
-        try await client.from("church_inquiries").delete().gt("id", value: "").execute()
-        try await client.from("posts").delete().gt("id", value: "").execute()
-        try await client.from("events").delete().gt("id", value: "").execute()
-        try await client.from("church_submissions").delete().gt("id", value: "").execute()
-        try await client.from("profiles").delete().gt("id", value: "").execute()
+        // Fetch and delete all records (workaround for Supabase requiring WHERE clause)
+        let nilUUID = "00000000-0000-0000-0000-000000000000"
+
+        try await client.from("comments").delete().gte("id", value: nilUUID).execute()
+        try await client.from("likes").delete().gte("id", value: nilUUID).execute()
+        try await client.from("notifications").delete().gte("id", value: nilUUID).execute()
+        try await client.from("follows").delete().gte("id", value: nilUUID).execute()
+        try await client.from("saved_churches").delete().gte("id", value: nilUUID).execute()
+        try await client.from("church_inquiries").delete().gte("id", value: nilUUID).execute()
+        try await client.from("posts").delete().gte("id", value: nilUUID).execute()
+        try await client.from("events").delete().gte("id", value: nilUUID).execute()
+        try await client.from("church_submissions").delete().gte("id", value: nilUUID).execute()
+        try await client.from("profiles").delete().gte("id", value: nilUUID).execute()
         print("  ✓ Database cleaned")
     }
 
