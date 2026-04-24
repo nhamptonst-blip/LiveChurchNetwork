@@ -18,45 +18,48 @@ struct PostCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            header
+        NavigationLink(destination: PostDetailView(post: post)) {
+            VStack(alignment: .leading, spacing: 0) {
+                header
 
-            // Type-specific content rendering
-            switch post.postType {
-            case "verse":
-                verseCard
-            case "announcement":
-                announcementCard
-                if let photoUrl = post.photoUrl, !photoUrl.isEmpty {
-                    photoView(photoUrl)
+                // Type-specific content rendering
+                switch post.postType {
+                case "verse":
+                    verseCard
+                case "announcement":
+                    announcementCard
+                    if let photoUrl = post.photoUrl, !photoUrl.isEmpty {
+                        photoView(photoUrl)
+                    }
+                case "prayer":
+                    prayerCard
+                default:
+                    if let content = post.content, !content.isEmpty {
+                        Text(content)
+                            .font(.system(size: 15))
+                            .foregroundColor(.lcText)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 10)
+                    }
+                    if let photoUrl = post.photoUrl, !photoUrl.isEmpty {
+                        photoView(photoUrl)
+                    }
+                    if let videoUrl = post.videoUrl, !videoUrl.isEmpty {
+                        videoLinkView(videoUrl)
+                    }
                 }
-            case "prayer":
-                prayerCard
-            default:
-                if let content = post.content, !content.isEmpty {
-                    Text(content)
-                        .font(.system(size: 15))
-                        .foregroundColor(.lcText)
-                        .padding(.horizontal, 16)
-                        .padding(.top, 10)
-                }
-                if let photoUrl = post.photoUrl, !photoUrl.isEmpty {
-                    photoView(photoUrl)
-                }
-                if let videoUrl = post.videoUrl, !videoUrl.isEmpty {
-                    videoLinkView(videoUrl)
-                }
+
+                actions
             }
-
-            actions
+            .background(Color.white)
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(post.isImportant ? Color.yellow.opacity(0.7) : Color.clear, lineWidth: 1.5)
+            )
+            .padding(.vertical, 2)
         }
-        .background(Color.white)
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(post.isImportant ? Color.yellow.opacity(0.7) : Color.clear, lineWidth: 1.5)
-        )
-        .padding(.vertical, 2)
+        .buttonStyle(.plain)
     }
 
     // MARK: Header helpers

@@ -9,6 +9,9 @@ struct UserProfileView: View {
     @State private var viewerFollows = false
     @State private var userPosts: [Post] = []
     @State private var isLoadingPosts = false
+    @State private var editingPostId: UUID?
+    @State private var editedContent: String = ""
+    @State private var isSavingPost = false
 
     private var isOwnProfile: Bool {
         appState.currentUserId == userId
@@ -32,13 +35,19 @@ struct UserProfileView: View {
             .background(Color.lcCream)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: Post.self) { post in
+                PostDetailView(post: post).environmentObject(appState)
+            }
             .task {
+                print("[UserProfileView] Task starting - userId=\(userId)")
                 await loadProfile()
                 // Debug: List all loaded posts
                 print("[UserProfileView] Task completed - loaded \(userPosts.count) posts")
+                print("[UserProfileView] Current user ID: \(appState.currentUserId ?? UUID())")
+                print("[UserProfileView] Is own profile: \(isOwnProfile)")
                 for (idx, post) in userPosts.enumerated() {
                     let contentLen = post.content?.count ?? 0
-                    print("[UserProfileView] Post \(idx): type=\(post.postType), contentLen=\(contentLen), hasPhoto=\(post.photoUrl != nil)")
+                    print("[UserProfileView] Post \(idx): id=\(post.id), author=\(post.authorId), type=\(post.postType), contentLen=\(contentLen), hasPhoto=\(post.photoUrl != nil)")
                 }
             }
         }
@@ -195,6 +204,8 @@ struct UserProfileView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 24)
 
+                let _ = print("[ProfileView] Posts section: isOwnProfile=\(isOwnProfile), isLoadingPosts=\(isLoadingPosts), postCount=\(userPosts.count)")
+
                 if isLoadingPosts {
                     ProgressView()
                         .frame(maxWidth: .infinity)
@@ -217,10 +228,41 @@ struct UserProfileView: View {
                 } else {
                     VStack(spacing: 12) {
                         ForEach(userPosts, id: \.id) { post in
-                            NavigationLink(destination: PostDetailView(post: post).environmentObject(appState)) {
-                                postRow(post)
+                            let isOwnPost = post.authorId == appState.currentUserId
+                            let _ = print("[MyPosts] Post: \(post.id), Author: \(post.authorId), Current: \(appState.currentUserId ?? UUID()), isOwn: \(isOwnPost)")
+
+                            VStack(alignment: .leading, spacing: 12) {
+                                postRowContent(post)
+
+                                // Edit button for own posts
+                                if isOwnPost {
+                                    Button(action: {
+                                        editedContent = post.content ?? ""
+                                        editingPostId = post.id
+                                    }) {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "pencil.circle.fill")
+                                                .font(.system(size: 14))
+                                            Text("Edit Post")
+                                                .font(.system(size: 13, weight: .semibold))
+                                        }
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: 40)
+                                        .background(Color.lcNavy)
+                                        .cornerRadius(8)
+                                    }
+                                }
                             }
-                            .buttonStyle(.plain)
+                            .padding(16)
+                            .background(Color.white)
+                            .cornerRadius(8)
+                            .border(Color.lcBorder, width: 1)
+                            .sheet(isPresented: .constant(editingPostId == post.id)) {
+                                if let post = userPosts.first(where: { $0.id == editingPostId }) {
+                                    editPostSheet(post)
+                                }
+                            }
                         }
                     }
                     .padding(.horizontal, 24)
@@ -229,6 +271,192 @@ struct UserProfileView: View {
             .background(Color.white)
 
             Spacer()
+        }
+    }
+
+    private func postRowWithEdit(_ post: Post, isOwnPost: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            postRowContent(post)
+
+            // Debug logging
+            let _ = print("[postRowWithEdit] Post: \(post.id), Author: \(post.authorId), Current User: \(appState.currentUserId ?? UUID()), isOwnPost: \(isOwnPost)")
+
+            if isOwnPost {
+                Button(action: {
+                    editedContent = post.content ?? ""
+                    editingPostId = post.id
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "pencil.circle.fill")
+                            .font(.system(size: 14))
+                        Text("Edit Post")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 40)
+                    .background(Color.lcNavy)
+                    .cornerRadius(8)
+                }
+            }
+        }
+        .padding(16)
+        .background(Color.white)
+        .cornerRadius(8)
+        .border(Color.lcBorder, width: 1)
+        .sheet(isPresented: .constant(editingPostId == post.id)) {
+            if let post = userPosts.first(where: { $0.id == editingPostId }) {
+                editPostSheet(post)
+            }
+        }
+    }
+
+    private func postRowContent(_ post: Post) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Post header
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(post.postType.uppercased())
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.lcNavy)
+                        .tracking(0.5)
+                    Text(formatRelativeTime(post.createdAt))
+                        .font(.system(size: 11))
+                        .foregroundColor(.lcText3)
+                }
+                Spacer()
+                HStack(spacing: 6) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.red)
+                    Text("\(post.likeCount)")
+                        .font(.system(size: 11))
+                        .foregroundColor(.lcText2)
+                }
+            }
+
+            // Post content
+            if let content = post.content, !content.isEmpty {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(content)
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundColor(.lcText)
+                        .lineSpacing(5)
+                        .lineLimit(nil)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            // Post photo
+            if let photoUrl = post.photoUrl, !photoUrl.isEmpty, let url = URL(string: photoUrl) {
+                AsyncImage(url: url) { phase in
+                    if case .success(let img) = phase {
+                        img.resizable()
+                            .scaledToFill()
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 220)
+                            .clipped()
+                            .cornerRadius(8)
+                    } else {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.lcBorder)
+                            .frame(height: 220)
+                            .overlay(ProgressView().tint(.lcNavy))
+                    }
+                }
+            }
+        }
+    }
+
+    private func editPostSheet(_ post: Post) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Edit Post")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.lcText)
+                Spacer()
+                Button("Done") {
+                    editingPostId = nil
+                }
+                .foregroundColor(.lcNavy)
+            }
+
+            TextEditor(text: $editedContent)
+                .frame(minHeight: 120)
+                .font(.system(size: 14))
+                .foregroundColor(.lcText)
+                .padding(8)
+                .background(Color.lcCream)
+                .cornerRadius(8)
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.lcBorder, lineWidth: 1))
+
+            if let photoUrl = post.photoUrl, !photoUrl.isEmpty {
+                AsyncImage(url: URL(string: photoUrl)) { phase in
+                    if case .success(let img) = phase {
+                        img.resizable()
+                            .scaledToFill()
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 200)
+                            .clipped()
+                            .cornerRadius(8)
+                    }
+                }
+            }
+
+            HStack(spacing: 12) {
+                Button("Cancel") {
+                    editingPostId = nil
+                }
+                .foregroundColor(.lcNavy)
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+                .background(Color.white)
+                .cornerRadius(8)
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.lcNavy, lineWidth: 1.5))
+
+                Button(action: {
+                    Task { await savePost(post) }
+                }) {
+                    if isSavingPost {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Text("Save Changes")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+                .background(Color.lcNavy)
+                .cornerRadius(8)
+                .disabled(isSavingPost)
+            }
+
+            Spacer()
+        }
+        .padding(24)
+        .background(Color.lcCream)
+    }
+
+    private func savePost(_ post: Post) async {
+        await MainActor.run { isSavingPost = true }
+        do {
+            try await SupabaseService.shared.updatePost(
+                postId: post.id,
+                content: editedContent,
+                photoUrl: post.photoUrl
+            )
+            await MainActor.run {
+                editingPostId = nil
+                isSavingPost = false
+                HapticEngine.impact(.light)
+            }
+            // Reload posts to reflect changes
+            await loadUserPosts()
+        } catch {
+            print("Error saving post: \(error)")
+            await MainActor.run { isSavingPost = false }
         }
     }
 
@@ -294,6 +522,7 @@ struct UserProfileView: View {
         .background(Color.white)
         .cornerRadius(8)
         .border(Color.lcBorder, width: 1)
+        .contentShape(Rectangle())
     }
 
     private func formatRelativeTime(_ date: Date) -> String {

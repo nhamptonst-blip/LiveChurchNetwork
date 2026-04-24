@@ -15,7 +15,6 @@ import Foundation
       private var churchesBySlug: [String: ChurchSubmission] = [:]
 
       init() {
-          Task { await checkSession() }
           Task { await listenForAuthChanges() }
           Task { await loadApprovedChurches() }
       }

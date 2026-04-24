@@ -316,7 +316,7 @@ let denominationOptions: [String] = [
 
   // MARK: - Feed / Social
 
-  struct Post: Codable, Identifiable {
+  struct Post: Codable, Identifiable, Hashable {
       let id: UUID
       let authorId: UUID
       let authorName: String
@@ -427,6 +427,27 @@ let denominationOptions: [String] = [
           case eventId     = "event_id"
           case isRead      = "is_read"
           case createdAt   = "created_at"
+      }
+  }
+
+  struct Comment: Codable, Identifiable {
+      let id: UUID
+      let postId: UUID
+      let userId: UUID
+      let authorName: String
+      let authorType: String
+      let authorPhotoUrl: String?
+      let content: String
+      let createdAt: Date
+
+      enum CodingKeys: String, CodingKey {
+          case id, content
+          case postId         = "post_id"
+          case userId         = "user_id"
+          case authorName     = "author_name"
+          case authorType     = "author_type"
+          case authorPhotoUrl = "author_photo_url"
+          case createdAt      = "created_at"
       }
   }
 

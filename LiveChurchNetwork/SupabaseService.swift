@@ -675,5 +675,32 @@ private struct ProfileCoverUpdate: Encodable {
              .eq("id", value: id.uuidString)
              .execute()
      }
+
+     // MARK: Comments
+
+     func getComments(postId: UUID) async throws -> [Comment] {
+         let response = try await client
+             .from("comments")
+             .select()
+             .eq("post_id", value: postId.uuidString)
+             .order("created_at", ascending: false)
+             .execute()
+
+         return try JSONDecoder().decode([Comment].self, from: JSONSerialization.data(withJSONObject: response.value as Any))
+     }
+
+     func postComment(postId: UUID, userId: UUID, authorName: String, authorPhotoUrl: String?, content: String) async throws {
+         try await client
+             .from("comments")
+             .insert([
+                 "post_id": postId.uuidString,
+                 "user_id": userId.uuidString,
+                 "author_name": authorName,
+                 "author_type": "worshipper",
+                 "author_photo_url": authorPhotoUrl,
+                 "content": content
+             ])
+             .execute()
+     }
  }
        

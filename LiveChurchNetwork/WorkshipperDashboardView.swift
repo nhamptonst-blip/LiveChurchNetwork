@@ -6,6 +6,9 @@ struct WorkshipperDashboardView: View {
     @State private var followingCount = 0
     @State private var showEditProfile = false
     @State private var userPosts: [Post] = []
+    @State private var editingPostId: UUID?
+    @State private var editedContent: String = ""
+    @State private var isSavingPost = false
 
     var body: some View {
         ScrollView {
@@ -186,7 +189,7 @@ struct WorkshipperDashboardView: View {
                         .padding(32)
                     } else {
                         ForEach(userPosts, id: \.id) { post in
-                            NavigationLink(destination: PostDetailView(post: post).environmentObject(appState)) {
+                            VStack(alignment: .leading, spacing: 12) {
                                 VStack(alignment: .leading, spacing: 8) {
                                     HStack(spacing: 8) {
                                         Image(systemName: "square.and.pencil")
@@ -213,12 +216,31 @@ struct WorkshipperDashboardView: View {
                                         Spacer()
                                     }
                                 }
-                                .padding(12)
-                                .background(Color.white)
-                                .cornerRadius(8)
-                                .border(Color.lcBorder, width: 1)
+
+                                Button(action: {
+                                    editedContent = post.content ?? ""
+                                    editingPostId = post.id
+                                }) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "pencil.circle.fill")
+                                            .font(.system(size: 14))
+                                        Text("Edit Post")
+                                            .font(.system(size: 13, weight: .semibold))
+                                    }
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 36)
+                                    .background(Color.lcNavy)
+                                    .cornerRadius(8)
+                                }
                             }
-                            .buttonStyle(.plain)
+                            .padding(12)
+                            .background(Color.white)
+                            .cornerRadius(8)
+                            .border(Color.lcBorder, width: 1)
+                            .sheet(isPresented: .constant(editingPostId == post.id)) {
+                                editPostSheet(post)
+                            }
                         }
                     }
                 }
@@ -273,6 +295,97 @@ struct WorkshipperDashboardView: View {
             await MainActor.run { userPosts = posts }
         } catch {
             print("Error loading stats: \(error)")
+        }
+    }
+
+    private func editPostSheet(_ post: Post) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Edit Post")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.lcText)
+                Spacer()
+                Button("Done") {
+                    editingPostId = nil
+                }
+                .foregroundColor(.lcNavy)
+            }
+
+            TextEditor(text: $editedContent)
+                .frame(minHeight: 120)
+                .font(.system(size: 14))
+                .foregroundColor(.lcText)
+                .padding(8)
+                .background(Color.lcCream)
+                .cornerRadius(8)
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.lcBorder, lineWidth: 1))
+
+            if let photoUrl = post.photoUrl, !photoUrl.isEmpty {
+                AsyncImage(url: URL(string: photoUrl)) { phase in
+                    if case .success(let img) = phase {
+                        img.resizable()
+                            .scaledToFill()
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 200)
+                            .clipped()
+                            .cornerRadius(8)
+                    }
+                }
+            }
+
+            HStack(spacing: 12) {
+                Button("Cancel") {
+                    editingPostId = nil
+                }
+                .foregroundColor(.lcNavy)
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+                .background(Color.white)
+                .cornerRadius(8)
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.lcNavy, lineWidth: 1.5))
+
+                Button(action: {
+                    Task { await savePost(post) }
+                }) {
+                    if isSavingPost {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Text("Save Changes")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+                .background(Color.lcNavy)
+                .cornerRadius(8)
+                .disabled(isSavingPost)
+            }
+
+            Spacer()
+        }
+        .padding(24)
+        .background(Color.lcCream)
+    }
+
+    private func savePost(_ post: Post) async {
+        await MainActor.run { isSavingPost = true }
+        do {
+            try await SupabaseService.shared.updatePost(
+                postId: post.id,
+                content: editedContent,
+                photoUrl: post.photoUrl
+            )
+            await MainActor.run {
+                editingPostId = nil
+                isSavingPost = false
+                HapticEngine.impact(.light)
+            }
+            await loadStats()
+        } catch {
+            print("Error saving post: \(error)")
+            await MainActor.run { isSavingPost = false }
         }
     }
 }
