@@ -184,7 +184,8 @@ struct DirectoryView: View {
                         }
                         .padding(.horizontal, 20)
                     }
-                    .padding(.vertical, 20)
+                    .padding(.top, 20)
+                    .padding(.bottom, 100)
                 }
             } else if filteredChurches.isEmpty {
                 churchEmptyState
@@ -251,7 +252,8 @@ struct DirectoryView: View {
                         }
                         .padding(.horizontal, 20)
                     }
-                    .padding(.vertical, 20)
+                    .padding(.top, 20)
+                    .padding(.bottom, 100)
                 }
             }
         }
@@ -461,7 +463,8 @@ struct DirectoryView: View {
                         }
                     }
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 20)
+                    .padding(.top, 20)
+                    .padding(.bottom, 100)
                 }
                 .background(Color(red: 0.98, green: 0.98, blue: 0.97))
             } else {
@@ -509,7 +512,9 @@ struct DirectoryView: View {
                             }
                         }
                     }
-                    .padding(.vertical, 20)
+                    .padding(.horizontal, 0)
+                    .padding(.top, 20)
+                    .padding(.bottom, 100)
                 }
                 .background(Color(red: 0.98, green: 0.98, blue: 0.97))
             }
