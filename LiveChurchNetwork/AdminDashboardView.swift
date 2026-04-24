@@ -9,6 +9,7 @@ struct AdminDashboardView: View {
     @State private var selectedTab = 0
     @State private var showSignOutAlert = false
     @State private var actionError: String?
+    @State private var isSeeding = false
 
     var body: some View {
         NavigationStack {
@@ -59,11 +60,47 @@ struct AdminDashboardView: View {
         ScrollView {
             VStack(spacing: 20) {
                 statsRow
+                debugSection
                 pendingChurchesSection
                 allUsersSection
                 liveChurchesSection
             }
             .padding(16)
+        }
+    }
+
+    private var debugSection: some View {
+        VStack(spacing: 12) {
+            Text("Debug Tools").font(.system(size: 14, weight: .bold)).foregroundColor(.lcText3)
+            Button {
+                isSeeding = true
+                Task {
+                    do {
+                        try await SupabaseService.shared.cleanAndSeedDatabase()
+                        await loadAll()
+                        actionError = "✅ Database seeded with 10 churches and 10 worshippers!"
+                    } catch {
+                        actionError = "❌ Seeding failed: \(error.localizedDescription)"
+                    }
+                    isSeeding = false
+                }
+            } label: {
+                HStack {
+                    if isSeeding {
+                        ProgressView().tint(.orange)
+                    } else {
+                        Image(systemName: "wand.and.stars")
+                    }
+                    Text(isSeeding ? "Seeding..." : "Clean & Seed Database")
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(12)
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(8)
+                .foregroundColor(.orange)
+            }
+            .disabled(isSeeding)
         }
     }
 

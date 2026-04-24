@@ -706,5 +706,12 @@ private struct ProfileCoverUpdate: Encodable {
              ])
              .execute()
      }
+
+     // MARK: Database seeding (testing only)
+
+     func cleanAndSeedDatabase() async throws {
+         let seeder = DatabaseSeeder(client: client)
+         try await seeder.cleanAndSeed()
+     }
  }
        
