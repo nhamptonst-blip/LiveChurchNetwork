@@ -173,11 +173,7 @@ struct DirectoryView: View {
             if isLoading {
                 ScrollView {
                     VStack(spacing: 16) {
-                        LazyVGrid(
-                            columns: [GridItem(.flexible(), spacing: 16),
-                                      GridItem(.flexible(), spacing: 16)],
-                            spacing: 16
-                        ) {
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                             ForEach(0..<6, id: \.self) { _ in
                                 ChurchCardSkeleton()
                             }
@@ -210,11 +206,7 @@ struct DirectoryView: View {
                         }
 
                         // Church grid
-                        LazyVGrid(
-                            columns: [GridItem(.flexible(), spacing: 16),
-                                      GridItem(.flexible(), spacing: 16)],
-                            spacing: 16
-                        ) {
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                             ForEach(filteredChurches, id: \.slug) { church in
                                 ZStack(alignment: .topTrailing) {
                                     NavigationLink(destination: ChurchDetailView(church: church)) {
@@ -269,11 +261,7 @@ struct DirectoryView: View {
                 .foregroundColor(.lcText)
                 .padding(.horizontal, 20)
 
-            LazyVGrid(
-                columns: [GridItem(.flexible(), spacing: 16),
-                          GridItem(.flexible(), spacing: 16)],
-                spacing: 16
-            ) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                 ForEach(suggestedChurches.prefix(4), id: \.slug) { church in
                     ZStack(alignment: .topTrailing) {
                         NavigationLink(destination: ChurchDetailView(church: church)) {
