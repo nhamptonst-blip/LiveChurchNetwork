@@ -831,7 +831,7 @@ struct UserDiscoveryCard: View {
                 }
             }
             .padding(12)
-            .frame(maxWidth: .infinity, height: 160)
+            .frame(maxWidth: .infinity, minHeight: 160, maxHeight: 160)
         }
         .background(Color.white)
         .cornerRadius(16)
