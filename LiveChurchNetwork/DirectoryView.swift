@@ -873,11 +873,12 @@ struct UserDiscoveryCard: View {
                 }
             }
             .padding(14)
-            .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
+            .frame(maxWidth: .infinity, minHeight: 160, maxHeight: 160, alignment: .topLeading)
         }
         .background(Color.white)
         .cornerRadius(16)
         .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 3)
+        .frame(height: 300)
     }
 
     private var userInitialCircle: some View {
