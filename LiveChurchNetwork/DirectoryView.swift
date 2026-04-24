@@ -773,51 +773,29 @@ struct UserDiscoveryCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // Image section - FIXED 140px
             ZStack(alignment: .bottomLeading) {
-                // Cover image or gradient
                 if let coverUrl = user.coverImageUrl, !coverUrl.isEmpty, let url = URL(string: coverUrl) {
                     AsyncImage(url: url) { phase in
                         switch phase {
                         case .success(let img):
                             img.resizable()
                                 .scaledToFill()
-                                .overlay(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.2)]),
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
+                                .overlay(LinearGradient(gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.2)]), startPoint: .topLeading, endPoint: .bottomTrailing))
                         default:
-                            LinearGradient(
-                                gradient: Gradient(colors: [gradientColors.top, gradientColors.bottom]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                            LinearGradient(gradient: Gradient(colors: [gradientColors.top, gradientColors.bottom]), startPoint: .topLeading, endPoint: .bottomTrailing)
                         }
                     }
                 } else {
-                    LinearGradient(
-                        gradient: Gradient(colors: [gradientColors.top, gradientColors.bottom]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
+                    LinearGradient(gradient: Gradient(colors: [gradientColors.top, gradientColors.bottom]), startPoint: .topLeading, endPoint: .bottomTrailing)
                 }
 
-                // Overlapping circular avatar
                 ZStack {
-                    Circle()
-                        .fill(Color.white)
-                        .frame(width: 70, height: 70)
-                        .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
-
+                    Circle().fill(Color.white).frame(width: 70, height: 70).shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
                     if let photoUrl = user.photoUrl, !photoUrl.isEmpty, let url = URL(string: photoUrl) {
                         AsyncImage(url: url) { phase in
                             if case .success(let img) = phase {
-                                img.resizable()
-                                    .scaledToFill()
-                                    .frame(width: 64, height: 64)
-                                    .clipShape(Circle())
+                                img.resizable().scaledToFill().frame(width: 64, height: 64).clipShape(Circle())
                             } else {
                                 userInitialCircle
                             }
@@ -831,49 +809,41 @@ struct UserDiscoveryCard: View {
             .frame(height: 140)
             .clipped()
 
-            // Content area
-            VStack(alignment: .leading, spacing: 8) {
-                // Top spacing for overlapping avatar
-                Spacer().frame(height: 20)
+            // Content section - FIXED 160px with constrained content
+            VStack(alignment: .leading, spacing: 6) {
+                Spacer().frame(height: 12)
 
-                // User name
                 Text(user.name)
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 15, weight: .bold))
                     .foregroundColor(.lcText)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(1)
 
-                // Denomination badge
                 if let denomination = user.denomination, !denomination.isEmpty {
                     Text(denomination)
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 10, weight: .semibold))
                         .foregroundColor(.lcNavy)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
                         .background(Color.lcNavy.opacity(0.08))
-                        .cornerRadius(6)
+                        .cornerRadius(4)
                 }
 
-                // Bio/Description
                 if let bio = user.bio, !bio.isEmpty {
                     Text(bio)
-                        .font(.system(size: 12, weight: .regular))
+                        .font(.system(size: 11, weight: .regular))
                         .foregroundColor(.lcText2)
-                        .lineLimit(2)
+                        .lineLimit(1)
                 }
 
                 Spacer()
 
-                // Follow button
                 if appState.currentUserId != nil {
-                    FollowButton(
-                        followingId: user.id.uuidString,
-                        followingType: "worshipper"
-                    )
+                    FollowButton(followingId: user.id.uuidString, followingType: "worshipper")
+                        .frame(height: 32)
                 }
             }
-            .padding(14)
-            .frame(maxWidth: .infinity, minHeight: 160, maxHeight: 160, alignment: .topLeading)
+            .padding(12)
+            .frame(maxWidth: .infinity, height: 160, alignment: .topLeading)
         }
         .background(Color.white)
         .cornerRadius(16)
