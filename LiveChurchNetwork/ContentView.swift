@@ -91,13 +91,13 @@ struct MainTabView: View {
                     }
                     .tag(0)
 
-                // Tab 1: Find a Church
+                // Tab 1: Find
                 DirectoryView()
                     .tabItem {
                         VStack(spacing: 4) {
                             Image(systemName: "magnifyingglass")
                                 .font(.system(size: 24, weight: .semibold))
-                            Text("Find a Church")
+                            Text("Find")
                                 .font(.system(size: 12, weight: selectedTab == 1 ? .bold : .medium))
                         }
                     }
@@ -234,42 +234,35 @@ struct MainTabView: View {
     private func configureTabBarAppearance() {
         let appearance = UITabBarAppearance()
 
-        // Phase 1 styling
-        // Background: rgba(255,255,255,0.94) with blur
+        // Phase 1: Navigation + Product Structure
+        // Height: 78px, Background: rgba(255,255,255,0.94) with blur
         appearance.configureWithTransparentBackground()
         appearance.backgroundColor = UIColor(red: 1, green: 1, blue: 1, alpha: 0.94)
 
-        // Add blur effect (20px)
-        let blurEffect = UIBlurEffect(style: .extraLight)
-        let blurView = UIVisualEffectView(effect: blurEffect)
-        appearance.backgroundImage = UIImage()
-        appearance.backgroundImageContentMode = .scaleAspectFill
-
         // Top border: 1px solid rgba(31,60,136,0.08)
+        let borderImage = UIImage()
+        appearance.shadowImage = borderImage
         appearance.shadowColor = UIColor(red: 31/255, green: 60/255, blue: 136/255, alpha: 0.08)
-        appearance.shadowImage = UIImage()
 
-        // Active item styling
-        // Color: #1F3C88, Font: 12px, weight 700
+        // Active item styling: #1F3C88, Font 12px, weight 700
         let activeAttrs: [NSAttributedString.Key: Any] = [
             .foregroundColor: UIColor(red: 31/255, green: 60/255, blue: 136/255, alpha: 1),
             .font: UIFont.systemFont(ofSize: 12, weight: .bold)
         ]
 
-        // Inactive item styling
-        // Color: #6B7280, Font: 12px, weight 500
+        // Inactive item styling: #6B7280, Font 12px, weight 500
         let inactiveAttrs: [NSAttributedString.Key: Any] = [
             .foregroundColor: UIColor(red: 107/255, green: 114/255, blue: 128/255, alpha: 1),
             .font: UIFont.systemFont(ofSize: 12, weight: .medium)
         ]
 
-        // Icon size: 24px
+        // Icon size: 24px (set via stacked layout)
         appearance.stackedLayoutAppearance.selected.titleTextAttributes = activeAttrs
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = inactiveAttrs
         appearance.stackedLayoutAppearance.selected.iconColor = UIColor(red: 31/255, green: 60/255, blue: 136/255, alpha: 1)
         appearance.stackedLayoutAppearance.normal.iconColor = UIColor(red: 107/255, green: 114/255, blue: 128/255, alpha: 1)
 
-        // iPad / landscape inline layout — same treatment
+        // iPad / landscape inline layout
         appearance.inlineLayoutAppearance.selected.titleTextAttributes = activeAttrs
         appearance.inlineLayoutAppearance.normal.titleTextAttributes = inactiveAttrs
         appearance.inlineLayoutAppearance.selected.iconColor = UIColor(red: 31/255, green: 60/255, blue: 136/255, alpha: 1)

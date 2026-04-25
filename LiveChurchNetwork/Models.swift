@@ -53,10 +53,10 @@ let denominationOptions: [String] = [
       let denomination: String
       let permalink: String
       let phone: String
-      let email: String = ""
-      let address: String = ""
+      var email: String = ""
+      var address: String = ""
       let website: String
-      let donationUrl: String = ""
+      var donationUrl: String = ""
       let serviceTimes: String
       let about: String
       var isLive: Bool = false
@@ -79,6 +79,7 @@ let denominationOptions: [String] = [
       var hasDonationUrl: Bool { !donationUrl.isEmpty }
       var hasLivestream: Bool { !livestreamUrl.isEmpty }
       var hasLocation: Bool { !city.isEmpty }
+      var hasAddress: Bool { !address.isEmpty && address != "No address on file" }
   }
 
   // MARK: - Supabase models

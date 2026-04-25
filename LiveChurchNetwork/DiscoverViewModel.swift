@@ -74,6 +74,10 @@ final class DiscoverViewModel: ObservableObject {
         return result
     }
 
+    var mapViewChurches: [Church] {
+        filteredBrowseChurches.filter { $0.hasAddress }
+    }
+
     // MARK: - Data Loading
 
     func loadInitialData(appState: AppState) async {
@@ -180,7 +184,13 @@ final class DiscoverViewModel: ObservableObject {
 
     private func toChurch(_ submission: ChurchSubmission, photoUrl: String?) -> Church {
         let name = submission.churchName ?? "Unknown Church"
-        return Church(
+        let addressParts = [
+            submission.addressLine,
+            [submission.city, submission.state, submission.postalCode]
+                .compactMap { $0 }.joined(separator: ", ")
+        ].compactMap { $0 }.joined(separator: ", ")
+
+        var church = Church(
             name: name,
             slug: name.lowercased().replacingOccurrences(of: " ", with: "-"),
             image: photoUrl ?? "",
@@ -189,14 +199,16 @@ final class DiscoverViewModel: ObservableObject {
             phone: submission.phone ?? "",
             website: submission.website ?? "",
             serviceTimes: submission.serviceTimes ?? "",
-            about: submission.about ?? "",
-            isLive: submission.isLive,
-            city: submission.city ?? "",
-            coverImage: photoUrl ?? "",
-            pastorName: submission.pastorName ?? "",
-            followerCount: 0,
-            livestreamUrl: submission.livestreamUrl ?? ""
+            about: submission.about ?? ""
         )
+        church.address = addressParts
+        church.isLive = submission.isLive
+        church.city = submission.city ?? ""
+        church.coverImage = photoUrl ?? ""
+        church.pastorName = submission.pastorName ?? ""
+        church.followerCount = 0
+        church.livestreamUrl = submission.livestreamUrl ?? ""
+        return church
     }
 
     private func toDiscoverableUser(_ profile: Profile) -> DiscoverableUser {

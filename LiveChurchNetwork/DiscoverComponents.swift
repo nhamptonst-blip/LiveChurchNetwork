@@ -109,3 +109,63 @@ struct ChurchDiscoveryCardSkeleton: View {
         }
     }
 }
+
+// MARK: - People Card Skeleton
+
+struct PeopleDiscoveryCardSkeleton: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Cover image placeholder
+            RoundedRectangle(cornerRadius: 0)
+                .fill(DesignSystem.Colors.border.opacity(0.5))
+                .frame(height: 100)
+
+            // Avatar overlap zone
+            ZStack {
+                Color.clear.frame(height: 30)
+                HStack {
+                    Spacer()
+                    Circle()
+                        .fill(DesignSystem.Colors.border.opacity(0.5))
+                        .frame(width: 60, height: 60)
+                    Spacer()
+                }
+            }
+            .frame(height: 60)
+
+            // Content placeholders
+            VStack(spacing: 8) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(DesignSystem.Colors.border.opacity(0.5))
+                    .frame(height: 12)
+                    .frame(maxWidth: 120)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(DesignSystem.Colors.border.opacity(0.5))
+                    .frame(height: 10)
+                    .frame(maxWidth: 80)
+
+                Spacer()
+
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(DesignSystem.Colors.border.opacity(0.5))
+                    .frame(height: 32)
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 8)
+            .padding(.bottom, 12)
+        }
+        .frame(height: 250)
+        .background(DesignSystem.Colors.surface)
+        .cornerRadius(DesignSystem.CornerRadius.large)
+        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 3)
+        .opacity(isAnimating ? 0.6 : 1.0)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                isAnimating = true
+            }
+        }
+    }
+}
