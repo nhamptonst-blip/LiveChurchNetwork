@@ -1,0 +1,568 @@
+{
+  "source": "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/ChurchAdminDashboardView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Sign Out",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 96
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete Post",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 104
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete Event",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 117
+        }
+      },
+      {
+        "comment": "",
+        "key": "Loading your church...",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 72
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 97
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sign Out",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 98
+        }
+      },
+      {
+        "comment": "",
+        "key": "Are you sure you want to sign out?",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 102
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 108
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 109
+        }
+      },
+      {
+        "comment": "",
+        "key": "This can't be undone.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 115
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 121
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 122
+        }
+      },
+      {
+        "comment": "",
+        "key": "This can't be undone.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 128
+        }
+      },
+      {
+        "comment": "",
+        "key": "Preview",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 194
+        }
+      },
+      {
+        "comment": "",
+        "key": "Settings",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 203
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Profile",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 206
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sign Out",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 209
+        }
+      },
+      {
+        "comment": "",
+        "key": "·",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 242
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld %@",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 243
+        }
+      },
+      {
+        "comment": "",
+        "key": "LIVE",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 254
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 322
+        }
+      },
+      {
+        "comment": "",
+        "key": "See All →",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 358
+        }
+      },
+      {
+        "comment": "",
+        "key": "See All →",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 387
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld total likes",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 484
+        }
+      },
+      {
+        "comment": "",
+        "key": "across all your posts",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 487
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 532
+        }
+      },
+      {
+        "comment": "",
+        "key": "New Post",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 551
+        }
+      },
+      {
+        "comment": "",
+        "key": "New Event",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 575
+        }
+      },
+      {
+        "comment": "",
+        "key": "PINNED",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 609
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 639
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld %@",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 722
+        }
+      },
+      {
+        "comment": "",
+        "key": "People who've discovered your church",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 725
+        }
+      },
+      {
+        "comment": "",
+        "key": "Copy Church Profile Link",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 743
+        }
+      },
+      {
+        "comment": "",
+        "key": "Your church must be approved before going live.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 878
+        }
+      },
+      {
+        "comment": "",
+        "key": "You are LIVE",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 847
+        }
+      },
+      {
+        "comment": "",
+        "key": "Not currently streaming",
+        "location": {
+          "startingColumn": 48,
+          "startingLine": 847
+        }
+      },
+      {
+        "comment": "",
+        "key": "Followers can watch your stream right now.",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 852
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tap Go Live when you're ready to stream your service.",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 853
+        }
+      },
+      {
+        "comment": "",
+        "key": "End Livestream",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 866
+        }
+      },
+      {
+        "comment": "",
+        "key": "Go Live Now",
+        "location": {
+          "startingColumn": 58,
+          "startingLine": 866
+        }
+      },
+      {
+        "comment": "",
+        "key": "Configure your stream URL",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 899
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add your YouTube or Vimeo URL in Settings → Edit Church Info → About",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 902
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 929
+        }
+      },
+      {
+        "comment": "",
+        "key": "Notify followers when I go live",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 921
+        }
+      },
+      {
+        "comment": "",
+        "key": "Coming soon",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 924
+        }
+      },
+      {
+        "comment": "",
+        "key": "Uploading...",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 970
+        }
+      },
+      {
+        "comment": "",
+        "key": "Change Cover Photo",
+        "location": {
+          "startingColumn": 66,
+          "startingLine": 970
+        }
+      },
+      {
+        "comment": "",
+        "key": "Uploading...",
+        "location": {
+          "startingColumn": 48,
+          "startingLine": 1018
+        }
+      },
+      {
+        "comment": "",
+        "key": "Change Logo",
+        "location": {
+          "startingColumn": 65,
+          "startingLine": 1018
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Church Info",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 1057
+        }
+      },
+      {
+        "comment": "",
+        "key": "Name, denomination, contact, services, about",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 1060
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sign Out",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 1081
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1115
+        }
+      },
+      {
+        "comment": "",
+        "key": "No church profile found",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 1156
+        }
+      },
+      {
+        "comment": "",
+        "key": "Contact support to set up your church profile.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 1159
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Profile",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 1412
+        }
+      },
+      {
+        "comment": "",
+        "key": "Church Info",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 1375
+        }
+      },
+      {
+        "comment": "",
+        "key": "Contact",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 1385
+        }
+      },
+      {
+        "comment": "",
+        "key": "Services",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 1398
+        }
+      },
+      {
+        "comment": "",
+        "key": "About",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 1402
+        }
+      },
+      {
+        "comment": "",
+        "key": "Name",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 1376
+        }
+      },
+      {
+        "comment": "",
+        "key": "Denomination",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 1380
+        }
+      },
+      {
+        "comment": "",
+        "key": "Church name",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 1377
+        }
+      },
+      {
+        "comment": "",
+        "key": "e.g. Baptist",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 1381
+        }
+      },
+      {
+        "comment": "",
+        "key": "Phone",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 1386
+        }
+      },
+      {
+        "comment": "",
+        "key": "Website",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 1391
+        }
+      },
+      {
+        "comment": "",
+        "key": "(555) 000-0000",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 1387
+        }
+      },
+      {
+        "comment": "",
+        "key": "https://...",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 1392
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 1416
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 1419
+        }
+      }
+    ]
+  },
+  "version": 1
+}

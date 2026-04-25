@@ -232,6 +232,7 @@ struct FeedView: View {
         do {
         // 1. Fetch following list first (needed to filter posts)
         var followedChurchSlugs: Set<String> = []
+        var followedChurchUserIds: Set<UUID> = []  // New: church creator user IDs
         var followedUserIds: Set<UUID> = []
 
         if let userId = appState.currentUserId {
@@ -242,6 +243,15 @@ struct FeedView: View {
             }
             followedChurchSlugs = Set(follows.filter { $0.followingType == "church" }.map { $0.followingId })
             followedUserIds = Set(follows.filter { $0.followingType == "worshipper" }.compactMap { UUID(uuidString: $0.followingId) })
+
+            // Also extract church user IDs from followed church slugs
+            // (for matching posts by authorId instead of name slug)
+            if !followedChurchSlugs.isEmpty {
+                let churchSubmissions = (try? await SupabaseService.shared.getChurchSubmissionsBySlug(Array(followedChurchSlugs))) ?? []
+                followedChurchUserIds = Set(churchSubmissions.map { $0.userId })
+                print("[FeedView] Resolved \(followedChurchUserIds.count) church user IDs from slugs")
+            }
+
             print("[FeedView] Followed churches: \(followedChurchSlugs.count), Followed worshippers: \(followedUserIds.count)")
         }
 
@@ -267,10 +277,14 @@ struct FeedView: View {
             }
 
             if post.authorType == "church" {
+                // Check if following by slug OR by authorId (more reliable)
                 let authorSlug = post.authorName.lowercased().replacingOccurrences(of: " ", with: "-")
-                let isFollowed = followedChurchSlugs.contains(authorSlug)
+                let isFollowedBySlug = followedChurchSlugs.contains(authorSlug)
+                let isFollowedByUserId = followedChurchUserIds.contains(post.authorId)
+                let isFollowed = isFollowedBySlug || isFollowedByUserId
+
                 if !isFollowed {
-                    print("[FeedView] Filtering out church post: \(post.authorName) (slug: \(authorSlug))")
+                    print("[FeedView] Filtering out church post: \(post.authorName) (slug: \(authorSlug), authorId: \(post.authorId))")
                 }
                 return isFollowed
             } else if post.authorType == "worshipper" {
@@ -285,6 +299,7 @@ struct FeedView: View {
         print("[FeedView] Filtered posts: \(unfilteredCount) -> \(rawPosts.count)")
 
         // 5. Fetch liked post IDs now that all other data is in hand
+        // and determine post-like state
         if let userId = appState.currentUserId {
             let liked = (try? await SupabaseService.shared.getLikedPostIds(userId: userId)) ?? []
             for i in rawPosts.indices {

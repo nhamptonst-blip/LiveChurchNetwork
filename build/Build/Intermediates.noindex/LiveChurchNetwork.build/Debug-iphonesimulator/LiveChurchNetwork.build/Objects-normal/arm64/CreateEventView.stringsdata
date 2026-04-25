@@ -1,0 +1,64 @@
+{
+  "source": "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/CreateEventView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "New Event",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 94
+        }
+      },
+      {
+        "comment": "",
+        "key": "e.g. Sunday Morning Worship",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 25
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 30
+        }
+      },
+      {
+        "comment": "",
+        "key": "e.g. Main Sanctuary or Online",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 39
+        }
+      },
+      {
+        "comment": "",
+        "key": "A brief description of the event…",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 46
+        }
+      },
+      {
+        "comment": "",
+        "key": "Create Event",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 78
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 98
+        }
+      }
+    ]
+  },
+  "version": 1
+}

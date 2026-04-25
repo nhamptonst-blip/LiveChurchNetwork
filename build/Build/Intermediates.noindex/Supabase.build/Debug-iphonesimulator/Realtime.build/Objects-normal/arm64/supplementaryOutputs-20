@@ -1,0 +1,23 @@
+{
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/SourcePackages/checkouts/supabase-swift/Sources/Realtime/Exports.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/Exports.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/Exports.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/Exports.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/Exports.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/Exports.swiftdeps"
+  },
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/SourcePackages/checkouts/supabase-swift/Sources/Realtime/PostgresAction.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PostgresAction.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PostgresAction.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PostgresAction.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PostgresAction.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PostgresAction.swiftdeps"
+  },
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/SourcePackages/checkouts/supabase-swift/Sources/Realtime/PostgresActionData.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PostgresActionData.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PostgresActionData.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PostgresActionData.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PostgresActionData.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PostgresActionData.swiftdeps"
+  }
+}

@@ -212,9 +212,9 @@ struct PostCard: View {
             if post.authorType == "church" {
                 // Use church slug from appState if available, otherwise generate from name
                 let churchSlug = authorChurch?.slug ?? post.authorName.lowercased().replacingOccurrences(of: " ", with: "-")
-                FollowButton(followingId: churchSlug, followingType: "church")
+                FollowButton(followingId: churchSlug, followingType: "church", initialIsFollowing: false)
             } else if post.authorType == "worshipper" && post.authorId != appState.currentUserId {
-                FollowButton(followingId: post.authorId.uuidString, followingType: "worshipper")
+                FollowButton(followingId: post.authorId.uuidString, followingType: "worshipper", initialIsFollowing: false)
             }
         }
         .padding(.horizontal, 16)

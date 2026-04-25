@@ -1,0 +1,152 @@
+{
+  "source": "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/AdminDashboardView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "God Mode",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 24
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sign Out",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 37
+        }
+      },
+      {
+        "comment": "",
+        "key": "Action Failed",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 45
+        }
+      },
+      {
+        "comment": "",
+        "key": "Loading...",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 18
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sign Out",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 30
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 38
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sign Out",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 39
+        }
+      },
+      {
+        "comment": "",
+        "key": "Are you sure you want to sign out?",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 43
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 49
+        }
+      },
+      {
+        "comment": "",
+        "key": "Debug Tools",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 74
+        }
+      },
+      {
+        "comment": "",
+        "key": "Seeding...",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 94
+        }
+      },
+      {
+        "comment": "",
+        "key": "Clean & Seed Database",
+        "location": {
+          "startingColumn": 53,
+          "startingLine": 94
+        }
+      },
+      {
+        "comment": "",
+        "key": "No pending churches",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 129
+        }
+      },
+      {
+        "comment": "",
+        "key": "Church not found",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 201
+        }
+      },
+      {
+        "comment": "",
+        "key": "No churches are live right now",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 219
+        }
+      },
+      {
+        "comment": "",
+        "key": "PENDING",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 301
+        }
+      },
+      {
+        "comment": "",
+        "key": "Approve",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 319
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reject",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 332
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,200 @@
+{
+  "source": "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/UserProfileView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 36
+        }
+      },
+      {
+        "comment": "",
+        "key": "User not found",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 30
+        }
+      },
+      {
+        "comment": "",
+        "key": "Member",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 97
+        }
+      },
+      {
+        "comment": "",
+        "key": "DENOMINATION",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 122
+        }
+      },
+      {
+        "comment": "",
+        "key": "CHURCH I ATTEND",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 133
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 147
+        }
+      },
+      {
+        "comment": "",
+        "key": "follower",
+        "location": {
+          "startingColumn": 51,
+          "startingLine": 150
+        }
+      },
+      {
+        "comment": "",
+        "key": "followers",
+        "location": {
+          "startingColumn": 64,
+          "startingLine": 150
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Profile",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 171
+        }
+      },
+      {
+        "comment": "",
+        "key": "Following",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 183
+        }
+      },
+      {
+        "comment": "",
+        "key": "Follow",
+        "location": {
+          "startingColumn": 60,
+          "startingLine": 183
+        }
+      },
+      {
+        "comment": "",
+        "key": "My Posts",
+        "location": {
+          "startingColumn": 41,
+          "startingLine": 199
+        }
+      },
+      {
+        "comment": "",
+        "key": "Posts",
+        "location": {
+          "startingColumn": 54,
+          "startingLine": 199
+        }
+      },
+      {
+        "comment": "",
+        "key": "No posts yet",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 218
+        }
+      },
+      {
+        "comment": "",
+        "key": "Create your first post to share with followers",
+        "location": {
+          "startingColumn": 45,
+          "startingLine": 221
+        }
+      },
+      {
+        "comment": "",
+        "key": "This user hasn't posted yet",
+        "location": {
+          "startingColumn": 96,
+          "startingLine": 221
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Post",
+        "location": {
+          "startingColumn": 50,
+          "startingLine": 246
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Post",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 292
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 332
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Post",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 374
+        }
+      },
+      {
+        "comment": "",
+        "key": "Done",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 378
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 407
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save Changes",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 424
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 481
+        }
+      }
+    ]
+  },
+  "version": 1
+}

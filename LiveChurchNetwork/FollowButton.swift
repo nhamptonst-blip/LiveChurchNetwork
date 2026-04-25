@@ -3,19 +3,16 @@ import SwiftUI
 struct FollowButton: View {
     let followingId: String
     let followingType: String   // "church" | "worshipper"
+    let initialIsFollowing: Bool
 
     @EnvironmentObject var appState: AppState
     @State private var isFollowing = false
-    @State private var isLoading = true
     @State private var isToggling = false
 
     var body: some View {
         Group {
             if appState.currentUserId == nil {
                 EmptyView()
-            } else if isLoading {
-                ProgressView().tint(.lcNavy).scaleEffect(0.7)
-                    .frame(width: 72, height: 28)
             } else {
                 Button {
                     print("[FollowButton] Clicked for \(followingType) \(followingId), isFollowing=\(isFollowing), isToggling=\(isToggling)")
@@ -36,19 +33,10 @@ struct FollowButton: View {
                 .disabled(isToggling)
             }
         }
-        .task { await checkFollowing() }
-        .onAppear { print("[FollowButton] Appeared with followingId=\(followingId), followingType=\(followingType)") }
-    }
-
-    private func checkFollowing() async {
-        guard let userId = appState.currentUserId else { isLoading = false; return }
-        do {
-            let follows = try await SupabaseService.shared.getFollowing(followerId: userId)
-            isFollowing = follows.contains { $0.followingId == followingId }
-        } catch {
-            print("Check follow error: \(error)")
+        .onAppear {
+            isFollowing = initialIsFollowing
+            print("[FollowButton] Appeared with followingId=\(followingId), followingType=\(followingType), initialIsFollowing=\(initialIsFollowing)")
         }
-        isLoading = false
     }
 
     private func toggleFollow() async {

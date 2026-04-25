@@ -1,0 +1,56 @@
+{
+  "source": "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/ChurchInboxView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Inbox",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 54
+        }
+      },
+      {
+        "comment": "",
+        "key": "Inquiries from members will appear here.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 157
+        }
+      },
+      {
+        "comment": "",
+        "key": "No new inquiries",
+        "location": {
+          "startingColumn": 41,
+          "startingLine": 154
+        }
+      },
+      {
+        "comment": "",
+        "key": "Nothing here",
+        "location": {
+          "startingColumn": 62,
+          "startingLine": 154
+        }
+      },
+      {
+        "comment": "",
+        "key": "Inquiry",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 347
+        }
+      },
+      {
+        "comment": "",
+        "key": "Done",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 351
+        }
+      }
+    ]
+  },
+  "version": 1
+}

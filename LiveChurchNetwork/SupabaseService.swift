@@ -199,12 +199,13 @@ private struct ProfileCoverUpdate: Encodable {
 
     func getProfiles(ids: [UUID]) async throws -> [Profile] {
         guard !ids.isEmpty else { return [] }
-        let all: [Profile] = try await client
+        let idStrings = ids.map { $0.uuidString }
+        return try await client
             .from("profiles")
             .select()
+            .in("id", values: idStrings)
             .execute()
             .value
-        return all.filter { ids.contains($0.id) }
     }
 
     func getFollowers(userId: UUID) async throws -> [Follow] {
@@ -377,6 +378,99 @@ private struct ProfileCoverUpdate: Encodable {
              .from("church_submissions")
              .select()
              .eq("status", value: "approved")
+             .execute()
+             .value
+     }
+
+     func getChurchSubmissionsBySlug(_ slugs: [String]) async throws -> [ChurchSubmission] {
+         guard !slugs.isEmpty else { return [] }
+         let churchNames = slugs.map { $0.replacingOccurrences(of: "-", with: " ").capitalized }
+         var allChurches: [ChurchSubmission] = []
+         for name in churchNames {
+             let churches: [ChurchSubmission] = try await client
+                 .from("church_submissions")
+                 .select()
+                 .ilike("church_name", value: name)
+                 .execute()
+                 .value
+             allChurches.append(contentsOf: churches)
+         }
+         return allChurches
+     }
+
+     // MARK: - Discover (Paginated)
+
+     func getLiveNowChurches(limit: Int = 10) async throws -> [ChurchSubmission] {
+         return try await client
+             .from("church_submissions")
+             .select()
+             .eq("is_live", value: true)
+             .eq("status", value: "approved")
+             .limit(limit)
+             .execute()
+             .value
+     }
+
+     func getRecentlyAddedChurches(limit: Int = 8) async throws -> [ChurchSubmission] {
+         return try await client
+             .from("church_submissions")
+             .select()
+             .eq("status", value: "approved")
+             .order("created_at", ascending: false)
+             .limit(limit)
+             .execute()
+             .value
+     }
+
+     func getApprovedChurchesPaged(offset: Int, limit: Int = 20) async throws -> [ChurchSubmission] {
+         return try await client
+             .from("church_submissions")
+             .select()
+             .eq("status", value: "approved")
+             .order("church_name", ascending: true)
+             .range(from: offset, to: offset + limit - 1)
+             .execute()
+             .value
+     }
+
+     func searchChurches(
+         query: String?,
+         denomination: String?,
+         liveOnly: Bool,
+         offset: Int,
+         limit: Int = 20
+     ) async throws -> [ChurchSubmission] {
+         var request = client
+             .from("church_submissions")
+             .select()
+             .eq("status", value: "approved")
+
+         if let query = query, !query.isEmpty {
+             request = request.ilike("church_name", value: "%\(query)%")
+         }
+
+         if let denomination = denomination, !denomination.isEmpty {
+             request = request.eq("denomination", value: denomination)
+         }
+
+         if liveOnly {
+             request = request.eq("is_live", value: true)
+         }
+
+         return try await request
+             .order("church_name", ascending: true)
+             .range(from: offset, to: offset + limit - 1)
+             .execute()
+             .value
+     }
+
+     func getDiscoverableWorshippersPaged(offset: Int, limit: Int = 20) async throws -> [Profile] {
+         return try await client
+             .from("profiles")
+             .select()
+             .eq("role", value: "worshipper")
+             .neq("activity_visibility", value: "private")
+             .range(from: offset, to: offset + limit - 1)
              .execute()
              .value
      }

@@ -1,0 +1,88 @@
+{
+  "source": "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/FeedView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Feed",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 52
+        }
+      },
+      {
+        "comment": "",
+        "key": "Something went wrong",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 21
+        }
+      },
+      {
+        "comment": "",
+        "key": "Try Again",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 31
+        }
+      },
+      {
+        "comment": "",
+        "key": "Post",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 65
+        }
+      },
+      {
+        "comment": "",
+        "key": "LIVE",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 118
+        }
+      },
+      {
+        "comment": "",
+        "key": "Upcoming Events",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 153
+        }
+      },
+      {
+        "comment": "",
+        "key": "Your feed is empty",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 181
+        }
+      },
+      {
+        "comment": "",
+        "key": "Follow churches and worshippers to see their posts here.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 184
+        }
+      },
+      {
+        "comment": "",
+        "key": "Discover Churches",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 197
+        }
+      },
+      {
+        "comment": "",
+        "key": "Live Church Network",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 220
+        }
+      }
+    ]
+  },
+  "version": 1
+}

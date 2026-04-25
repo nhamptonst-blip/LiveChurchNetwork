@@ -1,0 +1,23 @@
+{
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/SourcePackages/checkouts/supabase-swift/Sources/Realtime/RealtimeJoinConfig.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeJoinConfig.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeJoinConfig.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeJoinConfig.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeJoinConfig.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeJoinConfig.swiftdeps"
+  },
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/SourcePackages/checkouts/supabase-swift/Sources/Realtime/RealtimeMessageV2.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeMessageV2.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeMessageV2.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeMessageV2.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeMessageV2.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeMessageV2.swiftdeps"
+  },
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/SourcePackages/checkouts/supabase-swift/Sources/Realtime/RealtimePostgresFilter.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimePostgresFilter.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimePostgresFilter.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimePostgresFilter.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimePostgresFilter.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimePostgresFilter.swiftdeps"
+  }
+}

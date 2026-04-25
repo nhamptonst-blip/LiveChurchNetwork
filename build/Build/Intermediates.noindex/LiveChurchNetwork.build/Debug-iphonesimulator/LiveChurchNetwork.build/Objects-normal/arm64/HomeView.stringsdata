@@ -1,0 +1,48 @@
+{
+  "source": "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/HomeView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "View all %lld churches →",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 74
+        }
+      },
+      {
+        "comment": "",
+        "key": "Find Your\nChurch Home",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 126
+        }
+      },
+      {
+        "comment": "",
+        "key": "Discover %lld+ churches streaming worldwide.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 131
+        }
+      },
+      {
+        "comment": "",
+        "key": "Live Church Network",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 116
+        }
+      },
+      {
+        "comment": "",
+        "key": "Bringing Churches and People Together",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 119
+        }
+      }
+    ]
+  },
+  "version": 1
+}

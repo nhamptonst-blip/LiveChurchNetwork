@@ -1,0 +1,16 @@
+{
+  "source": "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/LiveBadge.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "LIVE",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 9
+        }
+      }
+    ]
+  },
+  "version": 1
+}

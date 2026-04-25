@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PeopleDiscoveryCard: View {
     let user: DiscoverableUser
+    let initialIsFollowing: Bool
     @EnvironmentObject var appState: AppState
 
     private var defaultGradient: LinearGradient {
@@ -20,7 +21,6 @@ struct PeopleDiscoveryCard: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Cover image - exactly 100px
             ZStack {
                 if let coverUrl = user.coverImageUrl, !coverUrl.isEmpty, let url = URL(string: coverUrl) {
                     AsyncImage(url: url) { phase in
@@ -42,12 +42,9 @@ struct PeopleDiscoveryCard: View {
             .frame(height: 100)
             .clipped()
 
-            // Profile photo overlap zone - 60px height for spacing
             ZStack(alignment: .top) {
-                // Spacer to push profile down
                 Color.clear.frame(height: 30)
 
-                // Profile photo (overlaps cover and body)
                 VStack(spacing: 0) {
                     HStack {
                         Spacer()
@@ -60,14 +57,14 @@ struct PeopleDiscoveryCard: View {
             }
             .frame(height: 60)
 
-            // Body content - exactly 90px
             VStack(spacing: 8) {
                 Text(user.name)
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.lcText)
                     .lineLimit(1)
 
-                Text(user.denomination ?? "Worshipper")
+                let subtitle = user.homeChurchName ?? user.denomination ?? "Worshipper"
+                Text(subtitle)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.lcText3)
                     .lineLimit(1)
@@ -75,7 +72,7 @@ struct PeopleDiscoveryCard: View {
                 Spacer()
 
                 if appState.currentUserId != nil {
-                    FollowButton(followingId: user.id.uuidString, followingType: "worshipper")
+                    FollowButton(followingId: user.id.uuidString, followingType: "worshipper", initialIsFollowing: initialIsFollowing)
                         .frame(height: 32)
                 }
             }
@@ -126,66 +123,5 @@ struct PeopleDiscoveryCard: View {
                 .foregroundColor(.lcGold)
         }
         .frame(width: 56, height: 56)
-    }
-}
-
-// Skeleton loading card
-struct PeopleDiscoveryCardSkeleton: View {
-    @State private var isAnimating = false
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // Cover skeleton
-            RoundedRectangle(cornerRadius: 0)
-                .fill(Color.lcBorder.opacity(0.5))
-                .frame(height: 100)
-
-            // Profile zone
-            ZStack {
-                Color.clear.frame(height: 30)
-                HStack {
-                    Spacer()
-                    Circle()
-                        .fill(Color.lcBorder.opacity(0.5))
-                        .frame(width: 60, height: 60)
-                    Spacer()
-                }
-                .frame(height: 60)
-            }
-            .frame(height: 60)
-
-            // Body skeleton
-            VStack(spacing: 8) {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.lcBorder.opacity(0.5))
-                    .frame(height: 12)
-                    .frame(maxWidth: 120)
-
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.lcBorder.opacity(0.5))
-                    .frame(height: 10)
-                    .frame(maxWidth: 80)
-
-                Spacer()
-
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.lcBorder.opacity(0.5))
-                    .frame(height: 32)
-            }
-            .padding(.horizontal, 12)
-            .padding(.top, 8)
-            .padding(.bottom, 12)
-            .frame(height: 90)
-        }
-        .frame(height: 250)
-        .background(Color.white)
-        .cornerRadius(14)
-        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 3)
-        .opacity(isAnimating ? 0.6 : 1.0)
-        .onAppear {
-            withAnimation(.easeInOut(duration: 1.5).repeatForever()) {
-                isAnimating = true
-            }
-        }
     }
 }

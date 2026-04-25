@@ -1,0 +1,144 @@
+{
+  "source": "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/ChurchDetailView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "● LIVE NOW",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 85
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld %@",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 119
+        }
+      },
+      {
+        "comment": "",
+        "key": "LIVE",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 134
+        }
+      },
+      {
+        "comment": "",
+        "key": "Following",
+        "location": {
+          "startingColumn": 44,
+          "startingLine": 183
+        }
+      },
+      {
+        "comment": "",
+        "key": "Follow",
+        "location": {
+          "startingColumn": 58,
+          "startingLine": 183
+        }
+      },
+      {
+        "comment": "",
+        "key": "Streaming Now",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 217
+        }
+      },
+      {
+        "comment": "",
+        "key": "Next Service",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 205
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ is currently streaming live.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 422
+        }
+      },
+      {
+        "comment": "",
+        "key": "LIVE NOW",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 407
+        }
+      },
+      {
+        "comment": "",
+        "key": "Watch →",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 413
+        }
+      },
+      {
+        "comment": "",
+        "key": "UPCOMING EVENTS",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 656
+        }
+      },
+      {
+        "comment": "",
+        "key": "Latest Stream",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 683
+        }
+      },
+      {
+        "comment": "",
+        "key": "LIVE NOW",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 703
+        }
+      },
+      {
+        "comment": "",
+        "key": "This church is currently streaming live.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 710
+        }
+      },
+      {
+        "comment": "",
+        "key": "Watch Live Stream",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 717
+        }
+      },
+      {
+        "comment": "",
+        "key": "›",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 781
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ · %@",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 929
+        }
+      }
+    ]
+  },
+  "version": 1
+}

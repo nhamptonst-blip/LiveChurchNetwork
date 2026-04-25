@@ -3,6 +3,7 @@ import SwiftUI
 struct DirectoryView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var vm = DiscoverViewModel()
+    @State private var viewMode: ViewMode = .grid
 
     private var isInBrowseMode: Bool {
         !vm.churchSearch.isEmpty || !vm.activeFilters.isEmpty
@@ -92,8 +93,12 @@ struct DirectoryView: View {
                     .padding(.vertical, 12)
             }
 
-            // Filter pills
+            // Filter pills (Phase 5)
             FilterPillRow(activeFilters: $vm.activeFilters)
+                .padding(.vertical, 12)
+
+            // View toggle (Phase 6)
+            ViewToggleControl(viewMode: $viewMode)
                 .padding(.vertical, 12)
 
             // Curated or browse content
@@ -107,31 +112,31 @@ struct DirectoryView: View {
         }
     }
 
-    // MARK: - Curated Sections
+    // MARK: - Curated Sections (Phase 7)
     private var curatedSections: some View {
         VStack(spacing: 0) {
             // Live Now
             if !vm.liveNowChurches.isEmpty {
-                churchGrid("🔴 Live Now", churches: vm.liveNowChurches)
+                churchGrid("Live Now", churches: vm.liveNowChurches)
             }
 
-            // Trending
+            // Featured Churches (mapped to Trending for now)
             if !vm.trendingChurches.isEmpty {
-                churchGrid("🔥 Trending This Week", churches: vm.trendingChurches)
+                churchGrid("Featured Churches", churches: vm.trendingChurches)
             }
 
-            // New This Week
-            if !vm.newThisWeek.isEmpty {
-                churchGrid("✨ New This Week", churches: vm.newThisWeek)
+            // Churches Near You (mapped to Recently Added)
+            if !vm.recentlyAdded.isEmpty {
+                churchGrid("Churches Near You", churches: vm.recentlyAdded)
             }
 
-            // Recommended
+            // Recommended For You
             if !vm.recommendedChurches.isEmpty {
-                churchGrid("⭐ Recommended For You", churches: vm.recommendedChurches)
+                churchGrid("Recommended For You", churches: vm.recommendedChurches)
             }
 
-            // All Churches
-            browseSection("All Churches", churches: vm.browseChurches)
+            // Browse All Churches
+            browseSection("Browse All Churches", churches: vm.browseChurches)
         }
     }
 
@@ -148,7 +153,11 @@ struct DirectoryView: View {
                 )
                 .padding(.vertical, 40)
             } else {
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 14) {
+                // Phase 7: 2-column grid with 14px column spacing, 18px row spacing
+                LazyVGrid(
+                    columns: [GridItem(.flexible()), GridItem(.flexible())],
+                    spacing: 18
+                ) {
                     ForEach(churches, id: \.slug) { church in
                         NavigationLink(destination: ChurchDetailView(church: church)) {
                             PremiumChurchCard(
@@ -168,7 +177,7 @@ struct DirectoryView: View {
 
                 if vm.isLoadingMore {
                     ProgressView()
-                        .tint(.lcNavy)
+                        .tint(Color(red: 31/255, green: 60/255, blue: 136/255))
                         .padding(.vertical, 20)
                 }
             }
@@ -181,7 +190,11 @@ struct DirectoryView: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionLabel(title)
 
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 14) {
+            // Phase 7: 2-column grid with 14px column spacing, 18px row spacing
+            LazyVGrid(
+                columns: [GridItem(.flexible()), GridItem(.flexible())],
+                spacing: 18
+            ) {
                 ForEach(churches, id: \.slug) { church in
                     NavigationLink(destination: ChurchDetailView(church: church)) {
                         PremiumChurchCard(
@@ -201,7 +214,7 @@ struct DirectoryView: View {
     private var loadingGrid: some View {
         VStack(alignment: .leading, spacing: 12) {
             sectionLabel("Loading...")
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 14) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 18) {
                 ForEach(0..<6, id: \.self) { _ in
                     ChurchDiscoveryCardSkeleton()
                         .frame(height: 240)
@@ -216,8 +229,8 @@ struct DirectoryView: View {
     // MARK: - Section Label Helper
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 20, weight: .black))
-            .foregroundColor(.lcText)
+            .font(.system(size: 22, weight: .heavy))
+            .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 20)
     }

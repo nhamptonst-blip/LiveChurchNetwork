@@ -654,3 +654,194 @@ enum MockDataProvider {
         ))
     }
 }
+
+// MARK: - Discover Seeded Content
+
+struct MockDiscoverData {
+    static let seedChurches: [Church] = [
+        Church(
+            name: "Bethel Community Church",
+            slug: "bethel-community-church",
+            image: "https://images.unsplash.com/photo-1438183972690-6d4ee67f3995?w=400&h=300&fit=crop",
+            denomination: "Non-Denominational",
+            permalink: "",
+            phone: "(323) 555-0101",
+            website: "bethelcommunity.church",
+            serviceTimes: "Sun 9am, 11am, Wed 7pm",
+            about: "A welcoming community dedicated to building disciples and reaching Los Angeles",
+            isLive: true,
+            city: "Los Angeles, CA",
+            coverImage: "https://images.unsplash.com/photo-1438183972690-6d4ee67f3995?w=600&h=400&fit=crop",
+            pastorName: "Pastor Marcus Johnson",
+            followerCount: 2400,
+            livestreamUrl: "https://youtube.com/live"
+        ),
+        Church(
+            name: "Grace Cathedral",
+            slug: "grace-cathedral",
+            image: "https://images.unsplash.com/photo-1469022563149-aa64dbd37dae?w=400&h=300&fit=crop",
+            denomination: "Episcopal",
+            permalink: "",
+            phone: "(415) 555-0202",
+            website: "gracecathedral.org",
+            serviceTimes: "Sun 8am, 10:30am, Sat 5pm",
+            about: "Historic cathedral in the heart of San Francisco. All are welcome.",
+            isLive: false,
+            city: "San Francisco, CA",
+            coverImage: "https://images.unsplash.com/photo-1469022563149-aa64dbd37dae?w=600&h=400&fit=crop",
+            pastorName: "Rev. Patricia Williams",
+            followerCount: 1800,
+            livestreamUrl: ""
+        ),
+        Church(
+            name: "Mosaic Church",
+            slug: "mosaic-church",
+            image: "https://images.unsplash.com/photo-1464207687429-7505649dae38?w=400&h=300&fit=crop",
+            denomination: "Baptist",
+            permalink: "",
+            phone: "(615) 555-0303",
+            website: "mosaicnashville.com",
+            serviceTimes: "Sun 8:30am, 10:45am, Wed 6:30pm",
+            about: "Multiethnic, multi-generational church in Nashville celebrating God's creativity",
+            isLive: true,
+            city: "Nashville, TN",
+            coverImage: "https://images.unsplash.com/photo-1464207687429-7505649dae38?w=600&h=400&fit=crop",
+            pastorName: "Pastor David Chen",
+            followerCount: 3100,
+            livestreamUrl: "https://youtube.com/live/mosaic"
+        ),
+        Church(
+            name: "New Life Church",
+            slug: "new-life-church",
+            image: "https://images.unsplash.com/photo-1516904591209-fdf61d97e95e?w=400&h=300&fit=crop",
+            denomination: "Pentecostal",
+            permalink: "",
+            phone: "(404) 555-0404",
+            website: "newlifeatl.org",
+            serviceTimes: "Sun 10am, Fri 7pm",
+            about: "Spirit-filled community in Atlanta experiencing God's power and presence",
+            isLive: false,
+            city: "Atlanta, GA",
+            coverImage: "https://images.unsplash.com/photo-1516904591209-fdf61d97e95e?w=600&h=400&fit=crop",
+            pastorName: "Apostle James Thompson",
+            followerCount: 950,
+            livestreamUrl: ""
+        ),
+        Church(
+            name: "Hillside Community",
+            slug: "hillside-community",
+            image: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&h=300&fit=crop",
+            denomination: "Non-Denominational",
+            permalink: "",
+            phone: "(512) 555-0505",
+            website: "hillsideaustin.com",
+            serviceTimes: "Sun 9am, 11am, 6pm",
+            about: "Austin community focused on authentic faith, biblical teaching, and social impact",
+            isLive: false,
+            city: "Austin, TX",
+            coverImage: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=400&fit=crop",
+            pastorName: "Pastor Sarah Mitchell",
+            followerCount: 1200,
+            livestreamUrl: ""
+        ),
+        Church(
+            name: "Harbor Church",
+            slug: "harbor-church",
+            image: "https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=400&h=300&fit=crop",
+            denomination: "Methodist",
+            permalink: "",
+            phone: "(305) 555-0606",
+            website: "harbormiami.church",
+            serviceTimes: "Sun 9:30am, 11am, Thur 7pm",
+            about: "Welcoming harbor for spiritual seekers in vibrant Miami community",
+            isLive: false,
+            city: "Miami, FL",
+            coverImage: "https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=600&h=400&fit=crop",
+            pastorName: "Rev. Michael Rodriguez",
+            followerCount: 780,
+            livestreamUrl: ""
+        )
+    ]
+
+    static let seedPeople: [DiscoverableUser] = [
+        DiscoverableUser(
+            id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440001") ?? UUID(),
+            name: "Sarah Johnson",
+            bio: "Worship leader and faith explorer",
+            denomination: "Baptist",
+            city: "Nashville, TN",
+            photoUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop",
+            coverImageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=200&fit=crop",
+            homeChurchName: "Hillside Church",
+            followerCount: 145,
+            followingCount: 87,
+            activityPrivacy: .public,
+            churchesPrivacy: .public
+        ),
+        DiscoverableUser(
+            id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440002") ?? UUID(),
+            name: "James Liu",
+            bio: "Pastor, teacher, lifelong learner",
+            denomination: "Non-Denominational",
+            city: "Los Angeles, CA",
+            photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop",
+            homeChurchName: "Grace Community",
+            followerCount: 312,
+            followingCount: 156,
+            activityPrivacy: .public,
+            churchesPrivacy: .public
+        ),
+        DiscoverableUser(
+            id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440003") ?? UUID(),
+            name: "Maria Gonzalez",
+            bio: "Youth ministry leader passionate about reaching Gen Z",
+            denomination: "Catholic",
+            city: "San Antonio, TX",
+            photoUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop",
+            homeChurchName: "St. Mary's Parish",
+            followerCount: 89,
+            followingCount: 203,
+            activityPrivacy: .public,
+            churchesPrivacy: .public
+        ),
+        DiscoverableUser(
+            id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440004") ?? UUID(),
+            name: "David Kim",
+            bio: "Missions enthusiast, coffee lover",
+            denomination: "Presbyterian",
+            city: "Chicago, IL",
+            photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop",
+            homeChurchName: "Downtown Church",
+            followerCount: 234,
+            followingCount: 412,
+            activityPrivacy: .public,
+            churchesPrivacy: .public
+        ),
+        DiscoverableUser(
+            id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440005") ?? UUID(),
+            name: "Jennifer Martinez",
+            bio: "Small group leader, writer, mom of three",
+            denomination: "Pentecostal",
+            city: "Phoenix, AZ",
+            photoUrl: "https://images.unsplash.com/photo-1516114712202-28819b6e2e55?w=150&h=150&fit=crop",
+            homeChurchName: "Faith Assembly",
+            followerCount: 156,
+            followingCount: 289,
+            activityPrivacy: .public,
+            churchesPrivacy: .public
+        ),
+        DiscoverableUser(
+            id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440006") ?? UUID(),
+            name: "Robert Thompson",
+            bio: "Deacon, community volunteer, marathon runner",
+            denomination: "Methodist",
+            city: "Seattle, WA",
+            photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop",
+            homeChurchName: "Cascade Community",
+            followerCount: 201,
+            followingCount: 178,
+            activityPrivacy: .public,
+            churchesPrivacy: .public
+        )
+    ]
+}

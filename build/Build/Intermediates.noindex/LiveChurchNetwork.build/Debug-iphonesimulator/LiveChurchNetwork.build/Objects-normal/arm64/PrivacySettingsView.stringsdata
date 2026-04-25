@@ -1,0 +1,56 @@
+{
+  "source": "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/PrivacySettingsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Privacy Settings",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 48
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 52
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 58
+        }
+      },
+      {
+        "comment": "",
+        "key": "Control your privacy",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 84
+        }
+      },
+      {
+        "comment": "",
+        "key": "Choose who can see each part of your profile.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 87
+        }
+      },
+      {
+        "comment": "",
+        "key": "These settings only affect what others see. You always have full access to your own profile.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 215
+        }
+      }
+    ]
+  },
+  "version": 1
+}
