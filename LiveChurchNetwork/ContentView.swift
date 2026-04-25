@@ -79,36 +79,92 @@ struct MainTabView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             TabView(selection: $selectedTab) {
+                // Tab 0: Feed
                 FeedView(selectedTab: $selectedTab)
-                    .tabItem { Label("Feed", systemImage: "house.fill") }
+                    .tabItem {
+                        VStack(spacing: 4) {
+                            Image(systemName: "house.fill")
+                                .font(.system(size: 24, weight: .semibold))
+                            Text("Feed")
+                                .font(.system(size: 12, weight: selectedTab == 0 ? .bold : .medium))
+                        }
+                    }
                     .tag(0)
 
+                // Tab 1: Find a Church
                 DirectoryView()
-                    .tabItem { Label("Discover", systemImage: "magnifyingglass") }
+                    .tabItem {
+                        VStack(spacing: 4) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 24, weight: .semibold))
+                            Text("Find a Church")
+                                .font(.system(size: 12, weight: selectedTab == 1 ? .bold : .medium))
+                        }
+                    }
                     .tag(1)
 
-                NotificationsView()
+                // Tab 2: Live
+                LiveView()
                     .tabItem {
-                        Label("Notifications", systemImage: unreadCount > 0 ? "bell.badge.fill" : "bell.fill")
+                        VStack(spacing: 4) {
+                            Image(systemName: "play.circle.fill")
+                                .font(.system(size: 24, weight: .semibold))
+                            Text("Live")
+                                .font(.system(size: 12, weight: selectedTab == 2 ? .bold : .medium))
+                        }
                     }
-                    .badge(unreadCount > 0 ? unreadCount : 0)
                     .tag(2)
 
+                // Tab 3: Notifications
+                NotificationsView()
+                    .tabItem {
+                        VStack(spacing: 4) {
+                            Image(systemName: unreadCount > 0 ? "bell.badge.fill" : "bell.fill")
+                                .font(.system(size: 24, weight: .semibold))
+                            Text("Notifications")
+                                .font(.system(size: 12, weight: selectedTab == 3 ? .bold : .medium))
+                        }
+                    }
+                    .badge(unreadCount > 0 ? unreadCount : 0)
+                    .tag(3)
+
+                // Tab 4: Profile
                 if appState.profile?.role == "admin" {
                     AdminDashboardView()
-                        .tabItem { Label("Profile", systemImage: "person.fill") }
-                        .tag(3)
+                        .tabItem {
+                            VStack(spacing: 4) {
+                                Image(systemName: "person.fill")
+                                    .font(.system(size: 24, weight: .semibold))
+                                Text("Profile")
+                                    .font(.system(size: 12, weight: selectedTab == 4 ? .bold : .medium))
+                            }
+                        }
+                        .tag(4)
                 } else if appState.profile?.role == "church_admin" {
                     ChurchAdminDashboardView()
-                        .tabItem { Label("Profile", systemImage: "person.fill") }
-                        .tag(3)
+                        .tabItem {
+                            VStack(spacing: 4) {
+                                Image(systemName: "person.fill")
+                                    .font(.system(size: 24, weight: .semibold))
+                                Text("Profile")
+                                    .font(.system(size: 12, weight: selectedTab == 4 ? .bold : .medium))
+                            }
+                        }
+                        .tag(4)
                 } else {
                     WorkshipperDashboardView()
-                        .tabItem { Label("Profile", systemImage: "person.fill") }
-                        .tag(3)
+                        .tabItem {
+                            VStack(spacing: 4) {
+                                Image(systemName: "person.fill")
+                                    .font(.system(size: 24, weight: .semibold))
+                                Text("Profile")
+                                    .font(.system(size: 12, weight: selectedTab == 4 ? .bold : .medium))
+                            }
+                        }
+                        .tag(4)
                 }
             }
-            .tint(.lcGold)
+            .tint(.lcNavy)
             .task { await loadUnreadCount() }
             .onAppear {
                 if pendingTab > 0 {
@@ -135,7 +191,7 @@ struct MainTabView: View {
                 .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 3)
             }
             .padding(.trailing, 16)
-            .padding(.bottom, 65)
+            .padding(.bottom, 90)
         }
         .sheet(isPresented: $showFeedback) {
             FeedbackSheet()
@@ -177,39 +233,52 @@ struct MainTabView: View {
 
     private func configureTabBarAppearance() {
         let appearance = UITabBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = .white
-        appearance.backgroundEffect = nil   // disable any translucent material so content can't bleed through
 
-        // Top border shadow
-        appearance.shadowColor = UIColor(red: 226/255, green: 222/255, blue: 216/255, alpha: 1)
+        // Phase 1 styling
+        // Background: rgba(255,255,255,0.94) with blur
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = UIColor(red: 1, green: 1, blue: 1, alpha: 0.94)
 
-        // Active item — gold + heavy weight for unmistakable selection
+        // Add blur effect (20px)
+        let blurEffect = UIBlurEffect(style: .extraLight)
+        let blurView = UIVisualEffectView(effect: blurEffect)
+        appearance.backgroundImage = UIImage()
+        appearance.backgroundImageContentMode = .scaleAspectFill
+
+        // Top border: 1px solid rgba(31,60,136,0.08)
+        appearance.shadowColor = UIColor(red: 31/255, green: 60/255, blue: 136/255, alpha: 0.08)
+        appearance.shadowImage = UIImage()
+
+        // Active item styling
+        // Color: #1F3C88, Font: 12px, weight 700
         let activeAttrs: [NSAttributedString.Key: Any] = [
-            .foregroundColor: UIColor.lcGold,
-            .font: UIFont.systemFont(ofSize: 10, weight: .heavy)
-        ]
-        // Inactive item — muted gray
-        let inactiveAttrs: [NSAttributedString.Key: Any] = [
-            .foregroundColor: UIColor.lcText3,
-            .font: UIFont.systemFont(ofSize: 10, weight: .regular)
+            .foregroundColor: UIColor(red: 31/255, green: 60/255, blue: 136/255, alpha: 1),
+            .font: UIFont.systemFont(ofSize: 12, weight: .bold)
         ]
 
-        appearance.stackedLayoutAppearance.selected.titleTextAttributes    = activeAttrs
-        appearance.stackedLayoutAppearance.normal.titleTextAttributes      = inactiveAttrs
-        appearance.stackedLayoutAppearance.selected.iconColor              = .lcGold
-        appearance.stackedLayoutAppearance.normal.iconColor                = .lcText3
+        // Inactive item styling
+        // Color: #6B7280, Font: 12px, weight 500
+        let inactiveAttrs: [NSAttributedString.Key: Any] = [
+            .foregroundColor: UIColor(red: 107/255, green: 114/255, blue: 128/255, alpha: 1),
+            .font: UIFont.systemFont(ofSize: 12, weight: .medium)
+        ]
+
+        // Icon size: 24px
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = activeAttrs
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = inactiveAttrs
+        appearance.stackedLayoutAppearance.selected.iconColor = UIColor(red: 31/255, green: 60/255, blue: 136/255, alpha: 1)
+        appearance.stackedLayoutAppearance.normal.iconColor = UIColor(red: 107/255, green: 114/255, blue: 128/255, alpha: 1)
 
         // iPad / landscape inline layout — same treatment
-        appearance.inlineLayoutAppearance.selected.titleTextAttributes     = activeAttrs
-        appearance.inlineLayoutAppearance.normal.titleTextAttributes       = inactiveAttrs
-        appearance.inlineLayoutAppearance.selected.iconColor               = .lcGold
-        appearance.inlineLayoutAppearance.normal.iconColor                 = .lcText3
+        appearance.inlineLayoutAppearance.selected.titleTextAttributes = activeAttrs
+        appearance.inlineLayoutAppearance.normal.titleTextAttributes = inactiveAttrs
+        appearance.inlineLayoutAppearance.selected.iconColor = UIColor(red: 31/255, green: 60/255, blue: 136/255, alpha: 1)
+        appearance.inlineLayoutAppearance.normal.iconColor = UIColor(red: 107/255, green: 114/255, blue: 128/255, alpha: 1)
 
-        UITabBar.appearance().standardAppearance      = appearance
-        UITabBar.appearance().scrollEdgeAppearance    = appearance
-        UITabBar.appearance().tintColor               = .lcGold
-        UITabBar.appearance().unselectedItemTintColor = .lcText3
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
+        UITabBar.appearance().tintColor = UIColor(red: 31/255, green: 60/255, blue: 136/255, alpha: 1)
+        UITabBar.appearance().unselectedItemTintColor = UIColor(red: 107/255, green: 114/255, blue: 128/255, alpha: 1)
     }
 }
 
