@@ -87,55 +87,57 @@ struct FilterChip: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 // Icon based on filter type
                 if showBadge {
                     Image(systemName: "play.circle.fill")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold))
                 } else if label == "Near Me" {
                     Image(systemName: "location.fill")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold))
                 } else if label == "Trending" {
                     Image(systemName: "flame.fill")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold))
                 } else if label == "More" {
                     Image(systemName: "slider.horizontal.3")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold))
                 }
 
                 Text(label)
-                    .font(.system(size: 14, weight: .semibold))
-                    .tracking(0.3)
+                    .font(.system(size: 13, weight: .semibold))
+                    .tracking(0.2)
+                    .lineLimit(1)
 
                 if showBadge && isActive {
                     Circle()
                         .fill(badgeColor)
-                        .frame(width: 7, height: 7)
+                        .frame(width: 6, height: 6)
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .frame(minHeight: 32)
             .background(
                 isActive
                     ? Color(red: 31/255, green: 60/255, blue: 136/255)
                     : Color.white
             )
             .foregroundColor(isActive ? .white : Color(red: 31/255, green: 60/255, blue: 136/255))
-            .cornerRadius(20)
+            .cornerRadius(16)
             .overlay(
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: 16)
                     .stroke(
                         isActive
                             ? Color.clear
                             : Color(red: 229/255, green: 231/255, blue: 235/255),
-                        lineWidth: 1.5
+                        lineWidth: 1
                     )
             )
             .shadow(
-                color: isActive ? Color(red: 31/255, green: 60/255, blue: 136/255).opacity(0.15) : Color.clear,
-                radius: isActive ? 8 : 0,
+                color: isActive ? Color(red: 31/255, green: 60/255, blue: 136/255).opacity(0.12) : Color.clear,
+                radius: isActive ? 4 : 0,
                 x: 0,
-                y: isActive ? 4 : 0
+                y: isActive ? 2 : 0
             )
         }
     }
