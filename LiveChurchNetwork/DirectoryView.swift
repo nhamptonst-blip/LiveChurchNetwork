@@ -289,32 +289,53 @@ struct DirectoryView: View {
                 }
                 .padding(.vertical, 20)
 
-                // MARK: - 6. Browse All Churches (Filtered)
+                // MARK: - 6. Browse All Churches Directory
                 let filteredByDenomination = selectedDenomination.map { denom in
                     vm.browseChurches.filter { $0.denomination == denom }
                 } ?? vm.browseChurches
 
-                if !filteredByDenomination.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(alignment: .center, spacing: 8) {
-                            Text(selectedDenomination.map { "\($0) Churches" } ?? "Browse All Churches")
-                                .font(.system(size: 22, weight: .heavy))
-                                .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(alignment: .center, spacing: 8) {
+                        Text(selectedDenomination.map { "\($0) Churches" } ?? "Browse All Churches")
+                            .font(.system(size: 22, weight: .heavy))
+                            .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
+                            .frame(maxWidth: .infinity, alignment: .leading)
 
-                            if selectedDenomination != nil {
-                                Button(action: { selectedDenomination = nil }) {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .font(.system(size: 20, weight: .regular))
-                                        .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
-                                }
+                        if selectedDenomination != nil {
+                            Button(action: { selectedDenomination = nil }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 20, weight: .regular))
+                                    .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
                             }
                         }
-                        .padding(.horizontal, 20)
-
-                        churchGrid(filteredByDenomination)
                     }
+                    .padding(.horizontal, 20)
                     .padding(.vertical, 20)
+
+                    if !filteredByDenomination.isEmpty {
+                        ScrollView {
+                            LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 18) {
+                                ForEach(filteredByDenomination, id: \.slug) { church in
+                                    NavigationLink(destination: ChurchDetailView(church: church)) {
+                                        DirectoryChurchCard(
+                                            church: church,
+                                            initialIsFollowing: vm.followedChurchSlugs.contains(church.slug)
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 20)
+                        }
+                    } else if !vm.browseChurches.isEmpty {
+                        DiscoverEmptyState(
+                            icon: "building.2",
+                            title: "No churches in this category",
+                            subtitle: "Try selecting a different denomination"
+                        )
+                        .padding(.vertical, 40)
+                    }
                 }
 
                 if vm.browseChurches.isEmpty {
