@@ -10,8 +10,8 @@ struct FilterPillRow: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Top row: Quick filters (non-scrolling)
-            HStack(spacing: 8) {
+            // Top row: Quick filters (non-scrolling) - Premium layout
+            HStack(spacing: 10) {
                 // Live Now
                 FilterChip(
                     label: "Live Now",
@@ -52,12 +52,12 @@ struct FilterPillRow: View {
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.vertical, 16)
 
-            // Scrollable denomination chips (if needed)
+            // Scrollable denomination chips
             if !denominationOptions.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 10) {
                         ForEach(denominationOptions, id: \.self) { denom in
                             FilterChip(
                                 label: denom,
@@ -67,12 +67,14 @@ struct FilterPillRow: View {
                                 toggleFilter(.denomination(denom))
                             }
                         }
+                        Spacer().frame(width: 0)
                     }
                     .padding(.horizontal, 20)
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, 12)
             }
         }
+        .background(Color.white)
         .sheet(isPresented: $showFilterDrawer) {
             FilterDrawerView(activeFilters: $activeFilters)
                 .presentationDetents([.fraction(0.85)])
@@ -108,25 +110,56 @@ struct FilterChip: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {
+                // Icon based on filter type
+                if showBadge {
+                    Image(systemName: "play.circle.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                } else if label == "Near Me" {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                } else if label == "Trending" {
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                } else if label == "More" {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+
                 Text(label)
                     .font(.system(size: 14, weight: .semibold))
+                    .tracking(0.3)
 
                 if showBadge && isActive {
                     Circle()
                         .fill(badgeColor)
-                        .frame(width: 8, height: 8)
+                        .frame(width: 7, height: 7)
                 }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
-            .background(isActive ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
-            .foregroundColor(isActive ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
-            .border(
-                isActive ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color(red: 229/255, green: 231/255, blue: 235/255),
-                width: 1
+            .background(
+                isActive
+                    ? Color(red: 31/255, green: 60/255, blue: 136/255)
+                    : Color.white
             )
-            .cornerRadius(999)
+            .foregroundColor(isActive ? .white : Color(red: 31/255, green: 60/255, blue: 136/255))
+            .cornerRadius(20)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(
+                        isActive
+                            ? Color.clear
+                            : Color(red: 229/255, green: 231/255, blue: 235/255),
+                        lineWidth: 1.5
+                    )
+            )
+            .shadow(
+                color: isActive ? Color(red: 31/255, green: 60/255, blue: 136/255).opacity(0.15) : Color.clear,
+                radius: isActive ? 8 : 0,
+                x: 0,
+                y: isActive ? 4 : 0
+            )
         }
     }
 }
