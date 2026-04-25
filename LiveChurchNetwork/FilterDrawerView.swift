@@ -223,8 +223,7 @@ struct FilterSection<Content: View>: View {
 }
 
 #Preview {
-    @State var filters: Set<DiscoverViewModel.DiscoverFilter> = []
-    return FilterDrawerView(activeFilters: $filters)
+    FilterDrawerView(activeFilters: .constant(Set()), vm: DiscoverViewModel())
         .presentationDetents([.fraction(0.85)])
         .presentationDragIndicator(.visible)
 }
