@@ -5,8 +5,23 @@ struct DirectoryView: View {
     @StateObject private var vm = DiscoverViewModel()
     @State private var viewMode: ViewMode = .grid
 
+    private var hasQuickFilters: Bool {
+        vm.activeFilters.contains(.liveNow) ||
+        vm.activeFilters.contains(.trending) ||
+        vm.activeFilters.contains(.nearMe)
+    }
+
+    private var hasDrawerFilters: Bool {
+        vm.activeFilters.contains { filter in
+            if case .denomination = filter {
+                return true
+            }
+            return false
+        }
+    }
+
     private var isInBrowseMode: Bool {
-        !vm.churchSearch.isEmpty || !vm.activeFilters.isEmpty
+        !vm.churchSearch.isEmpty || hasDrawerFilters
     }
 
     var body: some View {
@@ -109,8 +124,17 @@ struct DirectoryView: View {
             // Curated or browse content
             if vm.isCuratedLoading {
                 loadingGrid
+            } else if hasQuickFilters {
+                // Show filtered curated content based on selected quick filter
+                if vm.activeFilters.contains(.liveNow) {
+                    browseSection("Live Now", churches: vm.filteredBrowseChurches)
+                } else if vm.activeFilters.contains(.trending) {
+                    browseSection("Trending", churches: vm.filteredBrowseChurches)
+                } else if vm.activeFilters.contains(.nearMe) {
+                    browseSection("Near Me", churches: vm.filteredBrowseChurches)
+                }
             } else if isInBrowseMode {
-                browseSection("All Churches", churches: vm.browseChurches)
+                browseSection("All Churches", churches: vm.filteredBrowseChurches)
             } else {
                 curatedSections
             }

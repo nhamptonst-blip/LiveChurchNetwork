@@ -49,6 +49,31 @@ final class DiscoverViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Computed Properties for Filtered Results
+
+    var filteredBrowseChurches: [Church] {
+        var result = browseChurches
+
+        // Apply quick filters
+        if activeFilters.contains(.liveNow) {
+            result = result.filter { $0.isLive }
+        }
+
+        if activeFilters.contains(.trending) {
+            result = result.filter { $0.followerCount > 500 }
+        }
+
+        // Filter by denomination if selected
+        for filter in activeFilters {
+            if case .denomination(let denom) = filter {
+                result = result.filter { $0.denomination == denom }
+                break
+            }
+        }
+
+        return result
+    }
+
     // MARK: - Data Loading
 
     func loadInitialData(appState: AppState) async {
