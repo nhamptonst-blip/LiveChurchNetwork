@@ -244,8 +244,8 @@ extension View {
 
 // MARK: - Animation Helpers
 
-extension SwiftUI.Animation {
-    static let appStandard = DesignSystem.Animation.standard
-    static let appQuick = DesignSystem.Animation.quick
-    static let appSlow = DesignSystem.Animation.slow
-}
+/// Use DesignSystem.Animation directly in code:
+/// .animation(DesignSystem.Animation.standard, value: someValue)
+///
+/// Or create custom animations with duration:
+/// .animation(SwiftUI.Animation.easeInOut(duration: 0.3), value: someValue)
