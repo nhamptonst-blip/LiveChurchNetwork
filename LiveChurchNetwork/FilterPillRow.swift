@@ -2,6 +2,7 @@ import SwiftUI
 
 struct FilterPillRow: View {
     @Binding var activeFilters: Set<DiscoverViewModel.DiscoverFilter>
+    @State private var showFilterDrawer = false
 
     private let denominationOptions = [
         "Non-Denominational", "Baptist", "Catholic", "Pentecostal"
@@ -56,10 +57,15 @@ struct FilterPillRow: View {
                     showBadge: false,
                     isAction: true
                 ) {
-                    // Open filter drawer (will be implemented in Phase 8)
+                    showFilterDrawer = true
                 }
             }
             .padding(.horizontal, 20)
+        }
+        .sheet(isPresented: $showFilterDrawer) {
+            FilterDrawerView(activeFilters: $activeFilters)
+                .presentationDetents([.fraction(0.85)])
+                .presentationDragIndicator(.visible)
         }
     }
 
