@@ -3,6 +3,7 @@ import SwiftUI
 struct FilterDrawerView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var activeFilters: Set<DiscoverViewModel.DiscoverFilter>
+    var vm: DiscoverViewModel
 
     @State private var selectedDenominations: Set<String> = []
     @State private var selectedServices: Set<String> = []
@@ -184,9 +185,22 @@ struct FilterDrawerView: View {
     }
 
     private func applyFilters() {
+        // Clear existing filters
+        activeFilters.removeAll()
+
         // Add selected denomination filters
         for denom in selectedDenominations {
             activeFilters.insert(.denomination(denom))
+        }
+
+        // Add nearMe filter if selected
+        if nearMe {
+            activeFilters.insert(.nearMe)
+        }
+
+        // Reload churches with applied filters
+        Task {
+            await vm.reloadChurchesWithFilters()
         }
 
         dismiss()

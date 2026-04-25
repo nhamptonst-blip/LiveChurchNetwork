@@ -2,6 +2,7 @@ import SwiftUI
 
 struct FilterPillRow: View {
     @Binding var activeFilters: Set<DiscoverViewModel.DiscoverFilter>
+    var vm: DiscoverViewModel
     @State private var showFilterDrawer = false
 
     private let denominationOptions = [
@@ -58,7 +59,7 @@ struct FilterPillRow: View {
         .padding(.vertical, 16)
         .background(Color.white)
         .sheet(isPresented: $showFilterDrawer) {
-            FilterDrawerView(activeFilters: $activeFilters)
+            FilterDrawerView(activeFilters: $activeFilters, vm: vm)
                 .presentationDetents([.fraction(0.85)])
                 .presentationDragIndicator(.visible)
         }

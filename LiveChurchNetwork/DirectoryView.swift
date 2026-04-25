@@ -99,7 +99,7 @@ struct DirectoryView: View {
             }
 
             // Filter pills (Phase 5)
-            FilterPillRow(activeFilters: $vm.activeFilters)
+            FilterPillRow(activeFilters: $vm.activeFilters, vm: vm)
                 .padding(.vertical, 12)
 
             // View toggle (Phase 6)
