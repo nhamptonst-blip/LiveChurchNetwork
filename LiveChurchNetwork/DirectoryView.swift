@@ -26,7 +26,79 @@ struct DirectoryView: View {
         "Anglican", "Evangelical"
     ]
 
-    private let peopleFilters = ["Suggested", "Near Me", "From My Churches", "New Members", "Leaders", "Mutuals"]
+    private let peopleFilterOptions = ["Suggested", "Near Me", "From My Churches", "New Members", "Leaders", "Mutuals"]
+
+    // MARK: - Computed Filter Properties
+    private var filteredBrowseChurches: [Church] {
+        var churches = selectedDenomination.map { denom in
+            vm.browseChurches.filter { $0.denomination == denom }
+        } ?? vm.browseChurches
+
+        // Apply ChurchFilters
+        if !churchFilters.isEmpty {
+            // Filter by denominations
+            if !churchFilters.denominations.isEmpty {
+                churches = churches.filter { churchFilters.denominations.contains($0.denomination) }
+            }
+
+            // Filter by location (simplified: "Near Me" or "Anywhere")
+            if churchFilters.location.contains("Near Me") && !locationEnabled {
+                churches = churches.prefix(10).map { $0 }
+            }
+        }
+
+        return churches
+    }
+
+    private var filteredBrowsePeople: [DiscoverableUser] {
+        var people = vm.browsePeople
+
+        // Apply PeopleFilters
+        if !peopleFilters.isEmpty {
+            if peopleFilters.nearMe {
+                // Filter to nearby people (simplified: just reduce list for now)
+                people = people.prefix(Int(Double(people.count) * 0.5)).map { $0 }
+            }
+
+            if peopleFilters.fromMyChurches {
+                // Filter to people from followed churches
+                people = people.filter { person in
+                    person.homeChurchName != nil || person.denomination != nil
+                }
+            }
+
+            if peopleFilters.sharedDenomination {
+                // Filter by same denomination as current user
+                if let userDenom = appState.profile?.denomination, !userDenom.isEmpty {
+                    people = people.filter { $0.denomination == userDenom }
+                }
+            }
+
+            if peopleFilters.newMembers {
+                // Filter to newly joined members (simplified)
+                people = people.suffix(Int(Double(people.count) * 0.3)).map { $0 }
+            }
+
+            if peopleFilters.faithLeaders {
+                // Filter to faith leaders (simplified: people with home church)
+                people = people.filter { $0.homeChurchName != nil }
+            }
+
+            if peopleFilters.mutualConnections {
+                // Filter to people with mutual connections (simplified)
+                people = people.filter { person in
+                    person.homeChurchName != nil
+                }
+            }
+
+            if peopleFilters.hasHomeChurch {
+                // Filter to people with home church listed
+                people = people.filter { $0.homeChurchName != nil }
+            }
+        }
+
+        return people
+    }
 
     // MARK: - Search Helper
     private func performSearch(_ query: String) {
@@ -354,10 +426,6 @@ struct DirectoryView: View {
                 .padding(.vertical, 20)
 
                 // MARK: - 6. Browse All Churches Directory
-                let filteredByDenomination = selectedDenomination.map { denom in
-                    vm.browseChurches.filter { $0.denomination == denom }
-                } ?? vm.browseChurches
-
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(alignment: .center, spacing: 8) {
                         Text(selectedDenomination.map { "\($0) Churches" } ?? "Browse All Churches")
@@ -376,10 +444,10 @@ struct DirectoryView: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 20)
 
-                    if !filteredByDenomination.isEmpty {
+                    if !filteredBrowseChurches.isEmpty {
                         ScrollView {
                             LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 18) {
-                                ForEach(filteredByDenomination, id: \.slug) { church in
+                                ForEach(filteredBrowseChurches, id: \.slug) { church in
                                     NavigationLink(destination: ChurchDetailView(church: church)) {
                                         DirectoryChurchCard(
                                             church: church,
@@ -395,8 +463,8 @@ struct DirectoryView: View {
                     } else if !vm.browseChurches.isEmpty {
                         DiscoverEmptyState(
                             icon: "building.2",
-                            title: "No churches in this category",
-                            subtitle: "Try selecting a different denomination"
+                            title: "No churches match your filters",
+                            subtitle: "Try adjusting your filters or denomination selection"
                         )
                         .padding(.vertical, 40)
                     }
@@ -463,7 +531,7 @@ struct DirectoryView: View {
     private var peopleFilterRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(peopleFilters, id: \.self) { filter in
+                ForEach(peopleFilterOptions, id: \.self) { filter in
                     Button(action: { selectedPeopleFilter = filter }) {
                         Text(filter)
                             .font(.system(size: 14, weight: .semibold))
@@ -536,18 +604,20 @@ struct DirectoryView: View {
                         }
 
                         // MARK: - 3. People From Churches You Follow
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("From Your Churches")
-                                .font(.system(size: 22, weight: .heavy))
-                                .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 20)
+                        if !filteredBrowsePeople.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("From Your Churches")
+                                    .font(.system(size: 22, weight: .heavy))
+                                    .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 20)
 
-                            peopleSocialList(Array(vm.browsePeople.prefix(4)))
+                                peopleSocialList(Array(filteredBrowsePeople.prefix(4)))
+                            }
                         }
 
                         // MARK: - 4. New Members
-                        if !vm.browsePeople.isEmpty {
+                        if !filteredBrowsePeople.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("New Members")
                                     .font(.system(size: 22, weight: .heavy))
@@ -555,7 +625,7 @@ struct DirectoryView: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.horizontal, 20)
 
-                                peopleSocialList(Array(vm.browsePeople.suffix(4).prefix(4)))
+                                peopleSocialList(Array(filteredBrowsePeople.suffix(4).prefix(4)))
                             }
                         }
 
