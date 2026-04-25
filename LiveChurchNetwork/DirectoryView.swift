@@ -190,22 +190,90 @@ struct DirectoryView: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionLabel(title)
 
-            // Phase 7: 2-column grid with 14px column spacing, 18px row spacing
-            LazyVGrid(
-                columns: [GridItem(.flexible()), GridItem(.flexible())],
-                spacing: 18
-            ) {
-                ForEach(churches, id: \.slug) { church in
-                    NavigationLink(destination: ChurchDetailView(church: church)) {
-                        PremiumChurchCard(
-                            church: church,
-                            initialIsFollowing: vm.followedChurchSlugs.contains(church.slug)
-                        )
+            if viewMode == .grid {
+                // Phase 7: 2-column grid with 18px row spacing
+                LazyVGrid(
+                    columns: [GridItem(.flexible()), GridItem(.flexible())],
+                    spacing: 18
+                ) {
+                    ForEach(churches, id: \.slug) { church in
+                        NavigationLink(destination: ChurchDetailView(church: church)) {
+                            PremiumChurchCard(
+                                church: church,
+                                initialIsFollowing: vm.followedChurchSlugs.contains(church.slug)
+                            )
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
+                .padding(.horizontal, 20)
+            } else if viewMode == .list {
+                // List view
+                VStack(spacing: 12) {
+                    ForEach(churches, id: \.slug) { church in
+                        NavigationLink(destination: ChurchDetailView(church: church)) {
+                            HStack(spacing: 12) {
+                                AsyncImage(url: URL(string: church.image)) { phase in
+                                    switch phase {
+                                    case .success(let image):
+                                        image
+                                            .resizable()
+                                            .scaledToFill()
+                                    default:
+                                        Color.gray.opacity(0.3)
+                                    }
+                                }
+                                .frame(width: 60, height: 60)
+                                .cornerRadius(12)
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(church.name)
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
+
+                                    Text(church.denomination)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+
+                                    Text(church.city)
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundColor(Color(red: 156/255, green: 163/255, blue: 175/255))
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                                if church.isLive {
+                                    Label("Live", systemImage: "dot.radiowaves.left.and.right")
+                                        .font(.system(size: 11, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color(red: 239/255, green: 68/255, blue: 68/255))
+                                        .cornerRadius(6)
+                                }
+                            }
+                            .padding(12)
+                            .background(Color.white)
+                            .border(Color(red: 229/255, green: 231/255, blue: 235/255), width: 1)
+                            .cornerRadius(12)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 20)
+            } else {
+                // Map view (placeholder)
+                VStack(spacing: 12) {
+                    Image(systemName: "map.fill")
+                        .font(.system(size: 48))
+                        .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+
+                    Text("Map View Coming Soon")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
             }
-            .padding(.horizontal, 20)
         }
         .padding(.vertical, 20)
     }

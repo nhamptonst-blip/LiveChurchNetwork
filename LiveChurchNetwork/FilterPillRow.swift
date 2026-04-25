@@ -9,8 +9,9 @@ struct FilterPillRow: View {
     ]
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
+        VStack(spacing: 0) {
+            // Top row: Quick filters (non-scrolling)
+            HStack(spacing: 8) {
                 // Live Now
                 FilterChip(
                     label: "Live Now",
@@ -39,20 +40,10 @@ struct FilterPillRow: View {
                     toggleFilter(.trending)
                 }
 
-                // Denomination chips
-                ForEach(denominationOptions, id: \.self) { denom in
-                    FilterChip(
-                        label: denom,
-                        isActive: activeFilters.contains(.denomination(denom)),
-                        showBadge: false
-                    ) {
-                        toggleFilter(.denomination(denom))
-                    }
-                }
-
-                // More Filters
+                // More Filters (right side)
+                Spacer()
                 FilterChip(
-                    label: "More Filters",
+                    label: "More",
                     isActive: false,
                     showBadge: false,
                     isAction: true
@@ -61,6 +52,26 @@ struct FilterPillRow: View {
                 }
             }
             .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+
+            // Scrollable denomination chips (if needed)
+            if !denominationOptions.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(denominationOptions, id: \.self) { denom in
+                            FilterChip(
+                                label: denom,
+                                isActive: activeFilters.contains(.denomination(denom)),
+                                showBadge: false
+                            ) {
+                                toggleFilter(.denomination(denom))
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                }
+                .padding(.vertical, 8)
+            }
         }
         .sheet(isPresented: $showFilterDrawer) {
             FilterDrawerView(activeFilters: $activeFilters)
