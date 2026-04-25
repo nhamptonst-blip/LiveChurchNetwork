@@ -9,71 +9,48 @@ struct FilterPillRow: View {
     ]
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Top row: Quick filters (non-scrolling) - Premium layout
-            HStack(spacing: 10) {
-                // Live Now
-                FilterChip(
-                    label: "Live Now",
-                    isActive: activeFilters.contains(.liveNow),
-                    showBadge: true,
-                    badgeColor: Color(red: 239/255, green: 68/255, blue: 68/255)
-                ) {
-                    toggleFilter(.liveNow)
-                }
-
-                // Near Me
-                FilterChip(
-                    label: "Near Me",
-                    isActive: activeFilters.contains(.nearMe),
-                    showBadge: false
-                ) {
-                    toggleFilter(.nearMe)
-                }
-
-                // Trending
-                FilterChip(
-                    label: "Trending",
-                    isActive: activeFilters.contains(.trending),
-                    showBadge: false
-                ) {
-                    toggleFilter(.trending)
-                }
-
-                // More Filters (right side)
-                Spacer()
-                FilterChip(
-                    label: "More",
-                    isActive: false,
-                    showBadge: false,
-                    isAction: true
-                ) {
-                    showFilterDrawer = true
-                }
+        HStack(spacing: 10) {
+            // Live Now
+            FilterChip(
+                label: "Live Now",
+                isActive: activeFilters.contains(.liveNow),
+                showBadge: true,
+                badgeColor: Color(red: 239/255, green: 68/255, blue: 68/255)
+            ) {
+                toggleFilter(.liveNow)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
 
-            // Scrollable denomination chips
-            if !denominationOptions.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
-                        ForEach(denominationOptions, id: \.self) { denom in
-                            FilterChip(
-                                label: denom,
-                                isActive: activeFilters.contains(.denomination(denom)),
-                                showBadge: false
-                            ) {
-                                toggleFilter(.denomination(denom))
-                            }
-                        }
-                        Spacer().frame(width: 0)
-                    }
-                    .padding(.horizontal, 20)
-                }
-                .padding(.vertical, 12)
+            // Near Me
+            FilterChip(
+                label: "Near Me",
+                isActive: activeFilters.contains(.nearMe),
+                showBadge: false
+            ) {
+                toggleFilter(.nearMe)
+            }
+
+            // Trending
+            FilterChip(
+                label: "Trending",
+                isActive: activeFilters.contains(.trending),
+                showBadge: false
+            ) {
+                toggleFilter(.trending)
+            }
+
+            // More Filters (right side)
+            Spacer()
+            FilterChip(
+                label: "More",
+                isActive: false,
+                showBadge: false,
+                isAction: true
+            ) {
+                showFilterDrawer = true
             }
         }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
         .background(Color.white)
         .sheet(isPresented: $showFilterDrawer) {
             FilterDrawerView(activeFilters: $activeFilters)

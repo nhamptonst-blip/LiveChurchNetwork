@@ -21,7 +21,6 @@ final class DiscoverViewModel: ObservableObject {
     @Published var selectedDenomination = "All"
     @Published var showLiveOnly = false
     @Published var churchSort: ChurchSort = .recommended
-    @Published var viewMode: ViewMode = .grid
     @Published var activeFilters: Set<DiscoverFilter> = []
 
     @Published var followedChurchSlugs: Set<String> = []
@@ -32,11 +31,6 @@ final class DiscoverViewModel: ObservableObject {
         case recommended = "Recommended"
         case recentlyAdded = "Recently Added"
         case alphabetical = "A–Z"
-    }
-
-    enum ViewMode {
-        case grid
-        case list
     }
 
     enum DiscoverFilter: Hashable {
