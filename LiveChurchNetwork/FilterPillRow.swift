@@ -150,6 +150,6 @@ struct FilterChip: View {
 }
 
 #Preview {
-    @State var filters: Set<DiscoverViewModel.DiscoverFilter> = []
-    return FilterPillRow(activeFilters: $filters)
+    let vm = DiscoverViewModel()
+    return FilterPillRow(activeFilters: .constant(Set()), vm: vm)
 }
