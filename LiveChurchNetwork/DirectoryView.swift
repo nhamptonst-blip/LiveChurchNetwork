@@ -14,18 +14,23 @@ struct DirectoryView: View {
             ZStack {
                 Color.white.ignoresSafeArea()
 
-                ScrollView {
-                    LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                        // MARK: - Header & Search
-                        headerSection
-                            .padding(.vertical, 16)
-                            .background(Color.white)
+                // Show search results view if searching
+                if !vm.churchSearch.isEmpty {
+                    SearchResultsView(searchQuery: vm.churchSearch, vm: vm)
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                            // MARK: - Header & Search
+                            headerSection
+                                .padding(.vertical, 16)
+                                .background(Color.white)
 
-                        // MARK: - Churches Content
-                        churchesSection
+                            // MARK: - Churches Content
+                            churchesSection
+                        }
                     }
+                    .background(Color.white)
                 }
-                .background(Color.white)
             }
         }
         .task { await vm.loadInitialData(appState: appState) }
