@@ -15,6 +15,10 @@ struct DirectoryView: View {
     @State private var searchResultsPeople: [DiscoverableUser] = []
     @State private var selectedSearchTab: String = "All"
     @State private var isSearching: Bool = false
+    @State private var showChurchFilterSheet: Bool = false
+    @State private var showPeopleFilterSheet: Bool = false
+    @State private var churchFilters: ChurchFilters = ChurchFilters()
+    @State private var peopleFilters: PeopleFilters = PeopleFilters()
 
     private let denominationCategories = [
         "Non-Denominational", "Baptist", "Catholic", "Pentecostal",
@@ -427,8 +431,31 @@ struct DirectoryView: View {
                         }
                     }
                 }
+
+                // More Filters button
+                Button(action: { showChurchFilterSheet = true }) {
+                    Text("More Filters")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(!churchFilters.isEmpty ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
+                        .frame(height: 38)
+                        .padding(.horizontal, 14)
+                        .background(!churchFilters.isEmpty ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
+                        .border(
+                            !churchFilters.isEmpty
+                                ? Color(red: 31/255, green: 60/255, blue: 136/255)
+                                : Color(red: 229/255, green: 231/255, blue: 235/255),
+                            width: 1
+                        )
+                        .cornerRadius(999)
+                }
+                .buttonStyle(.plain)
             }
             .padding(.vertical, 4)
+        }
+        .sheet(isPresented: $showChurchFilterSheet) {
+            ChurchFilterSheet(selectedFilters: $churchFilters)
+                .presentationDetents([.fraction(0.85)])
+                .presentationCornerRadius(28)
         }
     }
 
@@ -454,8 +481,31 @@ struct DirectoryView: View {
                     }
                     .buttonStyle(.plain)
                 }
+
+                // More Filters button
+                Button(action: { showPeopleFilterSheet = true }) {
+                    Text("More Filters")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(!peopleFilters.isEmpty ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
+                        .frame(height: 38)
+                        .padding(.horizontal, 14)
+                        .background(!peopleFilters.isEmpty ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
+                        .border(
+                            !peopleFilters.isEmpty
+                                ? Color(red: 31/255, green: 60/255, blue: 136/255)
+                                : Color(red: 229/255, green: 231/255, blue: 235/255),
+                            width: 1
+                        )
+                        .cornerRadius(999)
+                }
+                .buttonStyle(.plain)
             }
             .padding(.vertical, 4)
+        }
+        .sheet(isPresented: $showPeopleFilterSheet) {
+            PeopleFilterSheet(selectedFilters: $peopleFilters)
+                .presentationDetents([.fraction(0.85)])
+                .presentationCornerRadius(28)
         }
     }
 
