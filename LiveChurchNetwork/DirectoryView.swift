@@ -8,6 +8,13 @@ struct DirectoryView: View {
     @State private var isSearchFocused = false
     @State private var activeFilters: Set<String> = []
     @State private var locationEnabled = false
+    @State private var selectedDenomination: String? = nil
+
+    private let denominationCategories = [
+        "Non-Denominational", "Baptist", "Catholic", "Pentecostal",
+        "Methodist", "Lutheran", "Presbyterian", "Orthodox",
+        "Anglican", "Evangelical"
+    ]
 
     enum DiscoverTab {
         case churches
@@ -229,30 +236,83 @@ struct DirectoryView: View {
                 }
                 .padding(.vertical, 20)
 
-                // MARK: - 5. Browse by Denomination
-                if !vm.browseChurches.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
+                // MARK: - 5. Browse by Denomination Categories
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text("Browse by Denomination")
-                            .font(.system(size: 22, weight: .heavy))
+                            .font(.system(size: 22, weight: .black))
                             .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 20)
 
-                        churchGrid(vm.browseChurches.prefix(4).map { $0 })
+                        Text("Explore churches by tradition and worship style")
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
                     }
-                    .padding(.vertical, 20)
+                    .padding(.horizontal, 20)
+
+                    VStack(spacing: 14) {
+                        ForEach(0..<((denominationCategories.count + 1) / 2), id: \.self) { rowIndex in
+                            let leftIndex = rowIndex * 2
+                            let rightIndex = leftIndex + 1
+
+                            HStack(spacing: 14) {
+                                DenominationCategoryCard(
+                                    denomination: denominationCategories[leftIndex],
+                                    count: vm.denominationCounts[denominationCategories[leftIndex]] ?? 0,
+                                    isSelected: selectedDenomination == denominationCategories[leftIndex]
+                                ) {
+                                    if selectedDenomination == denominationCategories[leftIndex] {
+                                        selectedDenomination = nil
+                                    } else {
+                                        selectedDenomination = denominationCategories[leftIndex]
+                                    }
+                                }
+
+                                if rightIndex < denominationCategories.count {
+                                    DenominationCategoryCard(
+                                        denomination: denominationCategories[rightIndex],
+                                        count: vm.denominationCounts[denominationCategories[rightIndex]] ?? 0,
+                                        isSelected: selectedDenomination == denominationCategories[rightIndex]
+                                    ) {
+                                        if selectedDenomination == denominationCategories[rightIndex] {
+                                            selectedDenomination = nil
+                                        } else {
+                                            selectedDenomination = denominationCategories[rightIndex]
+                                        }
+                                    }
+                                } else {
+                                    Spacer()
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
                 }
+                .padding(.vertical, 20)
 
-                // MARK: - 6. Browse All Churches
-                if !vm.browseChurches.isEmpty {
+                // MARK: - 6. Browse All Churches (Filtered)
+                let filteredByDenomination = selectedDenomination.map { denom in
+                    vm.browseChurches.filter { $0.denomination == denom }
+                } ?? vm.browseChurches
+
+                if !filteredByDenomination.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Browse All Churches")
-                            .font(.system(size: 22, weight: .heavy))
-                            .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 20)
+                        HStack(alignment: .center, spacing: 8) {
+                            Text(selectedDenomination.map { "\($0) Churches" } ?? "Browse All Churches")
+                                .font(.system(size: 22, weight: .heavy))
+                                .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
+                                .frame(maxWidth: .infinity, alignment: .leading)
 
-                        churchGrid(vm.browseChurches)
+                            if selectedDenomination != nil {
+                                Button(action: { selectedDenomination = nil }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 20, weight: .regular))
+                                        .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 20)
+
+                        churchGrid(filteredByDenomination)
                     }
                     .padding(.vertical, 20)
                 }

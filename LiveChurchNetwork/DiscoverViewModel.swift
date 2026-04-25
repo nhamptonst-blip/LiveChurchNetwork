@@ -78,6 +78,14 @@ final class DiscoverViewModel: ObservableObject {
         filteredBrowseChurches.filter { $0.hasAddress }
     }
 
+    var denominationCounts: [String: Int] {
+        var counts: [String: Int] = [:]
+        for church in browseChurches {
+            counts[church.denomination, default: 0] += 1
+        }
+        return counts
+    }
+
     // MARK: - Data Loading
 
     func loadInitialData(appState: AppState) async {
