@@ -7,6 +7,7 @@ struct DirectoryView: View {
     @State private var selectedTab: DiscoverTab = .churches
     @State private var isSearchFocused = false
     @State private var activeFilters: Set<String> = []
+    @State private var locationEnabled = false
 
     enum DiscoverTab {
         case churches
@@ -187,18 +188,46 @@ struct DirectoryView: View {
                 }
 
                 // MARK: - 4. Churches Near You
-                if !vm.recentlyAdded.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text("Churches Near You")
-                            .font(.system(size: 22, weight: .heavy))
+                            .font(.system(size: 22, weight: .black))
                             .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 20)
 
-                        churchGrid(vm.recentlyAdded.prefix(2).map { $0 })
+                        Text(locationEnabled ? "Based on your location" : "Turn on location to find nearby churches")
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
                     }
-                    .padding(.vertical, 20)
+                    .padding(.horizontal, 20)
+
+                    if locationEnabled && !vm.recentlyAdded.isEmpty {
+                        VStack(spacing: 12) {
+                            ForEach(vm.recentlyAdded.prefix(6), id: \.slug) { church in
+                                NavigationLink(destination: ChurchDetailView(church: church)) {
+                                    NearbyChurchCard(
+                                        church: church,
+                                        distance: Double.random(in: 0.5...10.0),
+                                        initialIsFollowing: vm.followedChurchSlugs.contains(church.slug)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                    } else if !locationEnabled {
+                        Button(action: { locationEnabled = true }) {
+                            Text("Enable Location")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 48)
+                                .background(Color(red: 31/255, green: 60/255, blue: 136/255))
+                                .cornerRadius(12)
+                        }
+                        .padding(.horizontal, 20)
+                    }
                 }
+                .padding(.vertical, 20)
 
                 // MARK: - 5. Browse by Denomination
                 if !vm.browseChurches.isEmpty {
