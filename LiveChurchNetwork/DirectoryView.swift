@@ -10,6 +10,11 @@ struct DirectoryView: View {
     @State private var locationEnabled = false
     @State private var selectedDenomination: String? = nil
     @State private var selectedPeopleFilter: String = "Suggested"
+    @State private var searchQuery: String = ""
+    @State private var searchResultsChurches: [Church] = []
+    @State private var searchResultsPeople: [DiscoverableUser] = []
+    @State private var selectedSearchTab: String = "All"
+    @State private var isSearching: Bool = false
 
     private let denominationCategories = [
         "Non-Denominational", "Baptist", "Catholic", "Pentecostal",
@@ -18,6 +23,46 @@ struct DirectoryView: View {
     ]
 
     private let peopleFilters = ["Suggested", "Near Me", "From My Churches", "New Members", "Leaders", "Mutuals"]
+
+    // MARK: - Search Helper
+    private func performSearch(_ query: String) {
+        let lowercaseQuery = query.lowercased()
+
+        // Search churches with ordering: exact matches first, then related, then location
+        var orderedChurches: [Church] = []
+
+        // Exact matches
+        orderedChurches += vm.browseChurches.filter { $0.name.lowercased().contains(lowercaseQuery) }
+
+        // Related matches (denomination)
+        orderedChurches += vm.browseChurches.filter { church in
+            !church.name.lowercased().contains(lowercaseQuery) &&
+            church.denomination.lowercased().contains(lowercaseQuery)
+        }
+
+        // Location/other matches
+        orderedChurches += vm.browseChurches.filter { church in
+            !church.name.lowercased().contains(lowercaseQuery) &&
+            !church.denomination.lowercased().contains(lowercaseQuery) &&
+            church.city.lowercased().contains(lowercaseQuery)
+        }
+
+        // Remove duplicates while preserving order
+        var seen = Set<String>()
+        searchResultsChurches = orderedChurches.filter { church in
+            if seen.contains(church.slug) { return false }
+            seen.insert(church.slug)
+            return true
+        }
+
+        // Search people
+        searchResultsPeople = vm.browsePeople.filter { person in
+            person.name.lowercased().contains(lowercaseQuery) ||
+            (person.homeChurchName?.lowercased().contains(lowercaseQuery) ?? false) ||
+            (person.denomination?.lowercased().contains(lowercaseQuery) ?? false) ||
+            (person.bio?.lowercased().contains(lowercaseQuery) ?? false)
+        }
+    }
 
     enum DiscoverTab {
         case churches
@@ -56,17 +101,25 @@ struct DirectoryView: View {
                             .font(.system(size: 22, weight: .regular))
                             .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
 
-                        TextField("Search churches, people, pastors, cities...", text: $vm.churchSearch)
+                        TextField("Search churches, people, pastors, cities...", text: $searchQuery)
                             .font(.system(size: 16, weight: .regular))
                             .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                             .submitLabel(.search)
-                            .onSubmit {
-                                Task { await vm.reloadChurchesWithFilters() }
+                            .onChange(of: searchQuery) { newValue in
+                                // Simple search without debouncing for now
+                                if newValue.isEmpty {
+                                    searchResultsChurches = []
+                                    searchResultsPeople = []
+                                } else {
+                                    performSearch(newValue)
+                                }
                             }
 
-                        if !vm.churchSearch.isEmpty {
+                        if !searchQuery.isEmpty {
                             Button {
-                                vm.churchSearch = ""
+                                searchQuery = ""
+                                searchResultsChurches = []
+                                searchResultsPeople = []
                             } label: {
                                 Image(systemName: "xmark.circle.fill")
                                     .font(.system(size: 20, weight: .regular))
@@ -124,14 +177,18 @@ struct DirectoryView: View {
                     }
 
                     // MARK: - Content
-                    ScrollView {
-                        if selectedTab == .churches {
-                            churchesContent
-                        } else {
-                            peopleContent
+                    if !searchQuery.isEmpty {
+                        searchResultsView
+                    } else {
+                        ScrollView {
+                            if selectedTab == .churches {
+                                churchesContent
+                            } else {
+                                peopleContent
+                            }
                         }
+                        .background(Color.white)
                     }
-                    .background(Color.white)
                 }
             }
         }
@@ -574,6 +631,101 @@ struct DirectoryView: View {
             }
         }
         .padding(.horizontal, 20)
+    }
+
+    // MARK: - Search Results View
+    private var searchResultsView: some View {
+        VStack(spacing: 0) {
+            // Search tabs
+            HStack(spacing: 0) {
+                ForEach(["All", "Churches", "People"], id: \.self) { tab in
+                    Button(action: { selectedSearchTab = tab }) {
+                        Text(tab)
+                            .font(.system(size: 14, weight: selectedSearchTab == tab ? .bold : .medium))
+                            .foregroundColor(selectedSearchTab == tab ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color(red: 107/255, green: 114/255, blue: 128/255))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.plain)
+
+                    if tab != "People" {
+                        Divider()
+                    }
+                }
+            }
+            .background(Color.white)
+
+            Divider()
+
+            ScrollView {
+                VStack(spacing: 12) {
+                    if selectedSearchTab == "All" || selectedSearchTab == "Churches" {
+                        // Churches results
+                        if !searchResultsChurches.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                if selectedSearchTab == "All" {
+                                    Text("Churches")
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+                                        .padding(.horizontal, 20)
+                                }
+
+                                VStack(spacing: 12) {
+                                    ForEach(searchResultsChurches.prefix(selectedSearchTab == "All" ? 3 : 10), id: \.slug) { church in
+                                        NavigationLink(destination: ChurchDetailView(church: church)) {
+                                            ChurchSearchResultCard(
+                                                church: church,
+                                                initialIsFollowing: vm.followedChurchSlugs.contains(church.slug)
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                .padding(.horizontal, 20)
+                            }
+                        }
+                    }
+
+                    if selectedSearchTab == "All" || selectedSearchTab == "People" {
+                        // People results
+                        if !searchResultsPeople.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                if selectedSearchTab == "All" {
+                                    Text("People")
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+                                        .padding(.horizontal, 20)
+                                }
+
+                                VStack(spacing: 12) {
+                                    ForEach(searchResultsPeople.prefix(selectedSearchTab == "All" ? 3 : 10), id: \.id) { person in
+                                        NavigationLink(destination: UserProfileView(userId: person.id)) {
+                                            PeopleSearchResultRow(
+                                                user: person,
+                                                initialIsFollowing: vm.followedUserIds.contains(person.id.uuidString)
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                .padding(.horizontal, 20)
+                            }
+                        }
+                    }
+
+                    if searchResultsChurches.isEmpty && searchResultsPeople.isEmpty {
+                        DiscoverEmptyState(
+                            icon: "magnifyingglass",
+                            title: "No results found",
+                            subtitle: "Try a different search term"
+                        )
+                        .padding(.vertical, 40)
+                    }
+                }
+                .padding(.vertical, 20)
+            }
+        }
     }
 
     // MARK: - Loading States
