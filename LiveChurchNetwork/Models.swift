@@ -60,6 +60,11 @@ let denominationOptions: [String] = [
       let serviceTimes: String
       let about: String
       var isLive: Bool = false
+      var city: String = ""
+      var coverImage: String = ""
+      var pastorName: String = ""
+      var followerCount: Int = 0
+      var livestreamUrl: String = ""
   }
 
   // MARK: - Supabase models
