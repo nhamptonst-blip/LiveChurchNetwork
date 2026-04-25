@@ -138,7 +138,41 @@ struct DirectoryView: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
 
-                // MARK: - 2. Live Now
+                // MARK: - 2. Featured Churches (Premium Horizontal Scroll)
+                if !vm.trendingChurches.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Featured Churches")
+                                .font(.system(size: 22, weight: .black))
+                                .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
+
+                            Text("Handpicked communities to explore")
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+                        }
+                        .padding(.horizontal, 20)
+
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 14) {
+                                ForEach(vm.trendingChurches.prefix(8), id: \.slug) { church in
+                                    NavigationLink(destination: ChurchDetailView(church: church)) {
+                                        FeaturedChurchCard(
+                                            church: church,
+                                            initialIsFollowing: vm.followedChurchSlugs.contains(church.slug)
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                Spacer()
+                                    .frame(width: 0)
+                            }
+                            .padding(.horizontal, 20)
+                        }
+                    }
+                    .padding(.vertical, 20)
+                }
+
+                // MARK: - 3. Live Now
                 if !vm.liveNowChurches.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Live Now")
@@ -148,20 +182,6 @@ struct DirectoryView: View {
                             .padding(.horizontal, 20)
 
                         churchGrid(vm.liveNowChurches.prefix(2).map { $0 })
-                    }
-                    .padding(.vertical, 20)
-                }
-
-                // MARK: - 3. Featured Churches
-                if !vm.trendingChurches.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Featured Churches")
-                            .font(.system(size: 22, weight: .heavy))
-                            .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 20)
-
-                        churchGrid(vm.trendingChurches.prefix(2).map { $0 })
                     }
                     .padding(.vertical, 20)
                 }
