@@ -424,7 +424,7 @@ struct DirectoryView: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.horizontal, 20)
 
-                                peopleGrid(Array(vm.suggestedPeople.prefix(6)))
+                                peopleSocialList(Array(vm.suggestedPeople.prefix(6)))
                             }
                         }
 
@@ -436,7 +436,7 @@ struct DirectoryView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 20)
 
-                            peopleGrid(Array(vm.browsePeople.prefix(4)))
+                            peopleSocialList(Array(vm.browsePeople.prefix(4)))
                         }
 
                         // MARK: - 4. New Members
@@ -448,7 +448,7 @@ struct DirectoryView: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.horizontal, 20)
 
-                                peopleGrid(Array(vm.browsePeople.suffix(4).prefix(4)))
+                                peopleSocialList(Array(vm.browsePeople.suffix(4).prefix(4)))
                             }
                         }
 
@@ -461,7 +461,7 @@ struct DirectoryView: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.horizontal, 20)
 
-                                peopleGrid(Array(vm.suggestedPeople.suffix(4).prefix(4)))
+                                peopleSocialList(Array(vm.suggestedPeople.suffix(4).prefix(4)))
                             }
                         }
 
@@ -520,7 +520,23 @@ struct DirectoryView: View {
         .padding(.horizontal, 20)
     }
 
-    // MARK: - People Grid
+    // MARK: - People Social List (1-column)
+    private func peopleSocialList(_ people: [DiscoverableUser]) -> some View {
+        VStack(spacing: 12) {
+            ForEach(people, id: \.id) { person in
+                NavigationLink(destination: UserProfileView(userId: person.id)) {
+                    PeopleSocialCard(
+                        user: person,
+                        initialIsFollowing: vm.followedUserIds.contains(person.id.uuidString)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 20)
+    }
+
+    // MARK: - People Grid (legacy 2-column)
     private func peopleGrid(_ people: [DiscoverableUser]) -> some View {
         VStack(spacing: 14) {
             ForEach(0..<((people.count + 1) / 2), id: \.self) { rowIndex in
