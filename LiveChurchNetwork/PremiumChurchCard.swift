@@ -241,9 +241,7 @@ struct NewBadge: View {
             website: "gracechurch.com",
             serviceTimes: "Sun 9am, 11am",
             about: "A welcoming community",
-            isLive: true,
             city: "Los Angeles, CA",
-            coverImage: "",
             pastorName: "Pastor John",
             followerCount: 2400,
             livestreamUrl: ""
