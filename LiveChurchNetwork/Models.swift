@@ -65,6 +65,20 @@ let denominationOptions: [String] = [
       var pastorName: String = ""
       var followerCount: Int = 0
       var livestreamUrl: String = ""
+
+      var followerCountDisplay: String {
+          if followerCount >= 1000 {
+              return String(format: "%.1fk", Double(followerCount) / 1000).replacingOccurrences(of: ".0k", with: "k")
+          }
+          return String(followerCount)
+      }
+
+      var hasWebsite: Bool { !website.isEmpty }
+      var hasPhone: Bool { !phone.isEmpty }
+      var hasEmail: Bool { !email.isEmpty }
+      var hasDonationUrl: Bool { !donationUrl.isEmpty }
+      var hasLivestream: Bool { !livestreamUrl.isEmpty }
+      var hasLocation: Bool { !city.isEmpty }
   }
 
   // MARK: - Supabase models
@@ -103,6 +117,14 @@ let denominationOptions: [String] = [
       var followingPrivacy: PrivacySetting { PrivacySetting(rawValue: followingVisibility ?? "") ?? .public }
       var churchesPrivacy:  PrivacySetting { PrivacySetting(rawValue: churchesVisibility  ?? "") ?? .public }
 
+      var displayName: String {
+          fullName?.isEmpty == false ? fullName! : "Worshipper"
+      }
+
+      var hasProfilePhoto: Bool { photoUrl != nil && !photoUrl!.isEmpty }
+      var hasCoverPhoto: Bool { coverUrl != nil && !coverUrl!.isEmpty }
+      var hasHomeChurch: Bool { homeChurchSlug != nil || homeChurchName != nil }
+
       enum CodingKeys: String, CodingKey {
           case id, role, city, denomination, bio, languages
           case fullName            = "full_name"
@@ -136,6 +158,24 @@ let denominationOptions: [String] = [
       var followersPrivacy: PrivacySetting = .public
       var followingPrivacy: PrivacySetting = .public
       var churchesPrivacy:  PrivacySetting = .public
+
+      var hasProfilePhoto: Bool { photoUrl != nil && !photoUrl!.isEmpty }
+      var hasCoverImage: Bool { coverImageUrl != nil && !coverImageUrl!.isEmpty }
+      var hasBio: Bool { bio != nil && !bio!.isEmpty }
+
+      var followerCountDisplay: String {
+          if followerCount >= 1000 {
+              return String(format: "%.1fk", Double(followerCount) / 1000).replacingOccurrences(of: ".0k", with: "k")
+          }
+          return String(followerCount)
+      }
+
+      var followingCountDisplay: String {
+          if followingCount >= 1000 {
+              return String(format: "%.1fk", Double(followingCount) / 1000).replacingOccurrences(of: ".0k", with: "k")
+          }
+          return String(followingCount)
+      }
   }
 
   // MARK: - Church Inquiries (structured church-member communication)
@@ -223,6 +263,16 @@ let denominationOptions: [String] = [
 
       var inquiryType: InquiryType  { InquiryType(rawValue: type)     ?? .general }
       var inquiryStatus: InquiryStatus { InquiryStatus(rawValue: status) ?? .new }
+
+      var isNew: Bool { inquiryStatus == .new }
+      var isReplied: Bool { inquiryStatus == .replied }
+      var isArchived: Bool { inquiryStatus == .archived }
+
+      var createdAtFormatted: String {
+          let formatter = DateFormatter()
+          formatter.dateStyle = .medium
+          return formatter.string(from: createdAt)
+      }
 
       enum CodingKeys: String, CodingKey {
           case id, type, subject, body, status
@@ -338,6 +388,15 @@ let denominationOptions: [String] = [
       let createdAt: Date
       var isLiked: Bool = false
 
+      var isChurchPost: Bool { authorType == "church" }
+      var hasMedia: Bool { photoUrl != nil || videoUrl != nil }
+      var likeCountDisplay: String {
+          if likeCount >= 1000 {
+              return String(format: "%.1fk", Double(likeCount) / 1000).replacingOccurrences(of: ".0k", with: "k")
+          }
+          return String(likeCount)
+      }
+
       enum CodingKeys: String, CodingKey {
           case id, content
           case authorId   = "author_id"
@@ -364,6 +423,17 @@ let denominationOptions: [String] = [
       let eventDate: Date
       let location: String?
       let createdAt: Date
+
+      var isPastEvent: Bool {
+          eventDate < Date()
+      }
+
+      var eventDateFormatted: String {
+          let formatter = DateFormatter()
+          formatter.dateStyle = .medium
+          formatter.timeStyle = .short
+          return formatter.string(from: eventDate)
+      }
 
       enum CodingKeys: String, CodingKey {
           case id, title, description, location
@@ -421,6 +491,29 @@ let denominationOptions: [String] = [
       let eventId: UUID?
       var isRead: Bool
       let createdAt: Date
+
+      var isChurchRelated: Bool { churchSlug != nil }
+      var isPostRelated: Bool { postId != nil }
+      var isEventRelated: Bool { eventId != nil }
+
+      var notificationIcon: String {
+          switch type {
+          case "new_follower":           return "person.badge.plus"
+          case "new_like":               return "heart.fill"
+          case "church_live":            return "play.circle.fill"
+          case "new_post":               return "doc.text"
+          case "new_event":              return "calendar"
+          case "church_inquiry_reply":   return "envelope.open"
+          default:                       return "bell"
+          }
+      }
+
+      var createdAtFormatted: String {
+          let formatter = DateFormatter()
+          formatter.dateStyle = .short
+          formatter.timeStyle = .short
+          return formatter.string(from: createdAt)
+      }
 
       enum CodingKeys: String, CodingKey {
           case id, type, title, body
