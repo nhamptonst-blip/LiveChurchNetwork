@@ -9,12 +9,15 @@ struct DirectoryView: View {
     @State private var activeFilters: Set<String> = []
     @State private var locationEnabled = false
     @State private var selectedDenomination: String? = nil
+    @State private var selectedPeopleFilter: String = "Suggested"
 
     private let denominationCategories = [
         "Non-Denominational", "Baptist", "Catholic", "Pentecostal",
         "Methodist", "Lutheran", "Presbyterian", "Orthodox",
         "Anglican", "Evangelical"
     ]
+
+    private let peopleFilters = ["Suggested", "Near Me", "From My Churches", "New Members", "Leaders", "Mutuals"]
 
     enum DiscoverTab {
         case churches
@@ -350,7 +353,7 @@ struct DirectoryView: View {
         }
     }
 
-    // MARK: - Quick Filter Row
+    // MARK: - Quick Filter Row (Churches)
     private var quickFilterRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
@@ -372,43 +375,107 @@ struct DirectoryView: View {
         }
     }
 
+    // MARK: - People Filter Row
+    private var peopleFilterRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(peopleFilters, id: \.self) { filter in
+                    Button(action: { selectedPeopleFilter = filter }) {
+                        Text(filter)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(selectedPeopleFilter == filter ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
+                            .frame(height: 38)
+                            .padding(.horizontal, 14)
+                            .background(selectedPeopleFilter == filter ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
+                            .border(
+                                selectedPeopleFilter == filter
+                                    ? Color(red: 31/255, green: 60/255, blue: 136/255)
+                                    : Color(red: 229/255, green: 231/255, blue: 235/255),
+                                width: 1
+                            )
+                            .cornerRadius(999)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.vertical, 4)
+        }
+    }
+
     // MARK: - People Content
     private var peopleContent: some View {
         VStack(spacing: 0) {
             if vm.isCuratedLoading {
                 loadingPeopleGrid
-            } else if vm.browsePeople.isEmpty {
-                DiscoverEmptyState(
-                    icon: "person.2",
-                    title: "No worshippers found",
-                    subtitle: "Check back later"
-                )
-                .padding(.vertical, 40)
             } else {
-                VStack(alignment: .leading, spacing: 20) {
-                    if !vm.suggestedPeople.isEmpty {
+                // MARK: - 1. People Filter Row
+                peopleFilterRow
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        // MARK: - 2. Suggested Worshippers
+                        if !vm.suggestedPeople.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Suggested Worshippers")
+                                    .font(.system(size: 22, weight: .heavy))
+                                    .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 20)
+
+                                peopleGrid(Array(vm.suggestedPeople.prefix(6)))
+                            }
+                        }
+
+                        // MARK: - 3. People From Churches You Follow
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Suggested for You")
+                            Text("From Your Churches")
                                 .font(.system(size: 22, weight: .heavy))
                                 .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 20)
 
-                            peopleGrid(Array(vm.suggestedPeople.prefix(6)))
+                            peopleGrid(Array(vm.browsePeople.prefix(4)))
+                        }
+
+                        // MARK: - 4. New Members
+                        if !vm.browsePeople.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("New Members")
+                                    .font(.system(size: 22, weight: .heavy))
+                                    .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 20)
+
+                                peopleGrid(Array(vm.browsePeople.suffix(4).prefix(4)))
+                            }
+                        }
+
+                        // MARK: - 5. Faith Leaders
+                        if !vm.suggestedPeople.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Faith Leaders")
+                                    .font(.system(size: 22, weight: .heavy))
+                                    .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 20)
+
+                                peopleGrid(Array(vm.suggestedPeople.suffix(4).prefix(4)))
+                            }
+                        }
+
+                        if vm.browsePeople.isEmpty && vm.suggestedPeople.isEmpty {
+                            DiscoverEmptyState(
+                                icon: "person.2",
+                                title: "No worshippers found",
+                                subtitle: "Check back later"
+                            )
+                            .padding(.vertical, 40)
                         }
                     }
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("More Worshippers")
-                            .font(.system(size: 22, weight: .heavy))
-                            .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 20)
-
-                        peopleGrid(vm.browsePeople)
-                    }
+                    .padding(.vertical, 20)
                 }
-                .padding(.vertical, 20)
             }
         }
     }
