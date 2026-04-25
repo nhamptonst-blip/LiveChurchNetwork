@@ -86,11 +86,12 @@ struct LiveStoryCircle: View {
             }
 
             // Church name below
-            Text(church.name.prefix(16))
-                .font(.system(size: 10, weight: .semibold))
+            Text(church.name)
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(.lcText)
-                .lineLimit(1)
-                .frame(width: 72, alignment: .center)
+                .lineLimit(2)
+                .frame(width: 90, alignment: .center)
+                .multilineTextAlignment(.center)
         }
         .onAppear { pulsing = true }
     }
