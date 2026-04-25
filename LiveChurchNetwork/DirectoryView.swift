@@ -41,6 +41,22 @@ struct DirectoryView: View {
                 churches = churches.filter { churchFilters.denominations.contains($0.denomination) }
             }
 
+            // Filter by languages
+            if !churchFilters.languages.isEmpty {
+                churches = churches.filter { church in
+                    let churchLangs = church.languages.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+                    return !churchFilters.languages.intersection(Set(churchLangs)).isEmpty
+                }
+            }
+
+            // Filter by ministries
+            if !churchFilters.ministries.isEmpty {
+                churches = churches.filter { church in
+                    let churchMins = church.ministries.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+                    return !churchFilters.ministries.intersection(Set(churchMins)).isEmpty
+                }
+            }
+
             // Filter by location (simplified: "Near Me" or "Anywhere")
             if churchFilters.location.contains("Near Me") && !locationEnabled {
                 churches = churches.prefix(10).map { $0 }
@@ -80,8 +96,8 @@ struct DirectoryView: View {
             }
 
             if peopleFilters.faithLeaders {
-                // Filter to faith leaders (simplified: people with home church)
-                people = people.filter { $0.homeChurchName != nil }
+                // Filter to faith leaders (church admins)
+                people = people.filter { $0.isLeader }
             }
 
             if peopleFilters.mutualConnections {

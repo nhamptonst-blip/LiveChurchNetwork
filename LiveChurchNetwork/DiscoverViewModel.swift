@@ -216,11 +216,15 @@ final class DiscoverViewModel: ObservableObject {
         church.pastorName = submission.pastorName ?? ""
         church.followerCount = 0
         church.livestreamUrl = submission.livestreamUrl ?? ""
+        church.languages = submission.languages ?? ""
+        church.ministries = submission.ministries ?? ""
+        church.latitude = submission.latitude
+        church.longitude = submission.longitude
         return church
     }
 
     private func toDiscoverableUser(_ profile: Profile) -> DiscoverableUser {
-        return DiscoverableUser(
+        var user = DiscoverableUser(
             id: profile.id,
             name: profile.fullName ?? "Unknown",
             bio: profile.bio,
@@ -229,5 +233,8 @@ final class DiscoverViewModel: ObservableObject {
             photoUrl: profile.photoUrl,
             coverImageUrl: profile.coverUrl
         )
+        user.homeChurchName = profile.homeChurchName
+        user.isLeader = profile.role == "church_admin"
+        return user
     }
 }

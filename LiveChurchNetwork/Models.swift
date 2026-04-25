@@ -65,6 +65,10 @@ let denominationOptions: [String] = [
       var pastorName: String = ""
       var followerCount: Int = 0
       var livestreamUrl: String = ""
+      var languages: String = ""
+      var ministries: String = ""
+      var latitude: Double? = nil
+      var longitude: Double? = nil
 
       var followerCountDisplay: String {
           if followerCount >= 1000 {
@@ -154,6 +158,7 @@ let denominationOptions: [String] = [
       var followerCount: Int = 0
       var followingCount: Int = 0
       var churchSlugs: [String] = []
+      var isLeader: Bool = false
       // Privacy settings — what this user has chosen to share with others.
       var activityPrivacy:  PrivacySetting = .public
       var followersPrivacy: PrivacySetting = .public
@@ -328,6 +333,8 @@ let denominationOptions: [String] = [
       var ministries: String?
       var podcastUrl: String?
       var livestreamUrl: String?
+      var latitude: Double?
+      var longitude: Double?
 
       enum CodingKeys: String, CodingKey {
           case id, status, denomination, phone, website, about
@@ -355,6 +362,8 @@ let denominationOptions: [String] = [
           case ministries
           case podcastUrl      = "podcast_url"
           case livestreamUrl   = "livestream_url"
+          case latitude
+          case longitude
       }
   }
 
