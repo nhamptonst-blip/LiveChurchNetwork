@@ -9,44 +9,49 @@ struct FilterPillRow: View {
     ]
 
     var body: some View {
-        HStack(spacing: 10) {
-            // Live Now
-            FilterChip(
-                label: "Live Now",
-                isActive: activeFilters.contains(.liveNow),
-                showBadge: true,
-                badgeColor: Color(red: 239/255, green: 68/255, blue: 68/255)
-            ) {
-                toggleFilter(.liveNow)
+        VStack(spacing: 12) {
+            // First row: Quick filters
+            HStack(spacing: 10) {
+                // Live Now
+                FilterChip(
+                    label: "Live Now",
+                    isActive: activeFilters.contains(.liveNow),
+                    showBadge: true,
+                    badgeColor: Color(red: 239/255, green: 68/255, blue: 68/255)
+                ) {
+                    toggleFilter(.liveNow)
+                }
+
+                // Near Me
+                FilterChip(
+                    label: "Near Me",
+                    isActive: activeFilters.contains(.nearMe),
+                    showBadge: false
+                ) {
+                    toggleFilter(.nearMe)
+                }
+
+                // Trending
+                FilterChip(
+                    label: "Trending",
+                    isActive: activeFilters.contains(.trending),
+                    showBadge: false
+                ) {
+                    toggleFilter(.trending)
+                }
             }
 
-            // Near Me
-            FilterChip(
-                label: "Near Me",
-                isActive: activeFilters.contains(.nearMe),
-                showBadge: false
-            ) {
-                toggleFilter(.nearMe)
-            }
-
-            // Trending
-            FilterChip(
-                label: "Trending",
-                isActive: activeFilters.contains(.trending),
-                showBadge: false
-            ) {
-                toggleFilter(.trending)
-            }
-
-            // More Filters (right side)
-            Spacer()
-            FilterChip(
-                label: "More",
-                isActive: false,
-                showBadge: false,
-                isAction: true
-            ) {
-                showFilterDrawer = true
+            // Second row: More filters button
+            HStack {
+                FilterChip(
+                    label: "More Filters",
+                    isActive: false,
+                    showBadge: false,
+                    isAction: true
+                ) {
+                    showFilterDrawer = true
+                }
+                Spacer()
             }
         }
         .padding(.horizontal, 20)
