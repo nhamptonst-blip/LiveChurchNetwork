@@ -32,24 +32,32 @@ struct DirectoryView: View {
 
     // MARK: - Header Section
     private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 0) {
+            // Title: 34px, weight 800, color #111827, letter-spacing -0.6px
             Text("Find a Church")
-                .font(.system(size: 34, weight: .black))
-                .foregroundColor(.lcText)
+                .font(.system(size: 34, weight: .heavy))
+                .tracking(-0.6)
+                .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
 
+            // Subtitle: 16px, weight 500, color #6B7280, line-height 22px
+            // Top margin: 4px
             Text("Discover churches, livestreams, and faith communities around the world.")
                 .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.lcText2)
+                .lineSpacing(6)
+                .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+                .padding(.top, 4)
 
-            // Search Bar
-            HStack(spacing: 10) {
+            // Search Bar (Phase 4 styling)
+            // Top margin: 20px, Height: 54px, Border radius: 18px
+            HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.lcText3)
-                    .font(.system(size: 16))
+                    .font(.system(size: 22, weight: .regular))
+                    .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
 
                 TextField("Search by church, pastor, city, denomination...",
                          text: $vm.churchSearch)
-                    .font(.system(size: 15))
+                    .font(.system(size: 16, weight: .regular))
+                    .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                     .submitLabel(.search)
                     .onSubmit { Task { await vm.reloadChurchesWithFilters() } }
 
@@ -58,16 +66,21 @@ struct DirectoryView: View {
                         vm.churchSearch = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.lcText3)
+                            .font(.system(size: 20, weight: .regular))
+                            .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
                     }
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(Color(red: 0.96, green: 0.96, blue: 0.96))
-            .cornerRadius(14)
+            .padding(.horizontal, 16)
+            .frame(height: 54)
+            .background(Color.white)
+            .border(Color(red: 229/255, green: 231/255, blue: 235/255), width: 1)
+            .cornerRadius(18)
+            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+            .padding(.top, 20)
         }
         .padding(.horizontal, 20)
+        .padding(.top, 16)
     }
 
     // MARK: - Churches Section
