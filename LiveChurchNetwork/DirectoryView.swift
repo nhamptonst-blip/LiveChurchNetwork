@@ -24,7 +24,6 @@ struct DirectoryView: View {
     @State private var nearbyRadius: Double = 10.0
     @State private var nearbySort: String = "Closest"
     @State private var showNearbyMap: Bool = false
-    @State private var showAllDenominations: Bool = false
     @State private var selectedCollection: ChurchCollection? = nil
     @State private var browseSort: String = "Recommended"
     @State private var viewDensity: String = "Comfortable"
@@ -760,82 +759,11 @@ struct DirectoryView: View {
                 }
 
                 // MARK: - 6. Browse by Denomination (Premium Category Discovery)
-                VStack(alignment: .leading, spacing: 14) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Browse by Denomination")
-                            .font(.system(size: 22, weight: .black))
-                            .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
-
-                        Text("Explore churches by tradition and worship style")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
-                            .lineLimit(2)
-                    }
-                    .padding(.horizontal, 20)
-
-                    let categoriesToShow = showAllDenominations ? denominationCategories : Array(denominationCategories.prefix(6))
-                    let isFeaturedCategory: (String) -> Bool = { category in
-                        category == "Non-Denominational" || category == "Catholic"
-                    }
-
-                    VStack(spacing: 14) {
-                        ForEach(0..<((categoriesToShow.count + 1) / 2), id: \.self) { rowIndex in
-                            let leftIndex = rowIndex * 2
-                            let rightIndex = leftIndex + 1
-
-                            HStack(spacing: 14) {
-                                DenominationCategoryCard(
-                                    denomination: categoriesToShow[leftIndex],
-                                    count: vm.denominationCounts[categoriesToShow[leftIndex]] ?? 0,
-                                    isSelected: selectedDenomination == categoriesToShow[leftIndex],
-                                    isFeatured: isFeaturedCategory(categoriesToShow[leftIndex])
-                                ) {
-                                    selectedDenomination = categoriesToShow[leftIndex]
-                                    HapticEngine.impact(.light)
-                                }
-
-                                if rightIndex < categoriesToShow.count {
-                                    DenominationCategoryCard(
-                                        denomination: categoriesToShow[rightIndex],
-                                        count: vm.denominationCounts[categoriesToShow[rightIndex]] ?? 0,
-                                        isSelected: selectedDenomination == categoriesToShow[rightIndex],
-                                        isFeatured: isFeaturedCategory(categoriesToShow[rightIndex])
-                                    ) {
-                                        selectedDenomination = categoriesToShow[rightIndex]
-                                        HapticEngine.impact(.light)
-                                    }
-                                } else {
-                                    Spacer()
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 20)
-
-                    if denominationCategories.count > 6 {
-                        Button(action: {
-                            withAnimation(.easeInOut(duration: 0.22)) {
-                                showAllDenominations.toggle()
-                            }
-                            HapticEngine.selection()
-                        }) {
-                            Text(showAllDenominations ? "Show Less Denominations" : "Show More Denominations")
-                                .font(.system(size: 14, weight: .black))
-                                .foregroundColor(Color(red: 31/255, green: 60/255, blue: 136/255))
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 42)
-                                .background(Color.white)
-                                .clipShape(RoundedRectangle(cornerRadius: 999))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 999)
-                                        .stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1)
-                                )
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.horizontal, 20)
-                    }
-                }
-                .padding(.vertical, 32)
+                DenominationFilterMenu(
+                    selectedDenomination: $selectedDenomination,
+                    denominationCounts: vm.denominationCounts,
+                    denominationCategories: denominationCategories
+                )
 
                 // MARK: - 7. Explore Collections (Premium Editorial)
                 VStack(alignment: .leading, spacing: 14) {
