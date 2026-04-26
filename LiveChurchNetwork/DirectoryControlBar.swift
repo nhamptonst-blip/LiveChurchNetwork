@@ -6,7 +6,6 @@ struct DirectoryControlBar: View {
     let onFiltersTap: () -> Void
     let sortOptions: [String]
     @State private var showSortMenu = false
-    @State private var showDensityMenu = false
 
     var body: some View {
         HStack(spacing: 8) {
@@ -68,75 +67,6 @@ struct DirectoryControlBar: View {
                 onFiltersTap()
             }) {
                 ControlPillLabel(label: "Filters", isActive: false)
-            }
-
-            // View Density Toggle Button
-            Button(action: {
-                showDensityMenu.toggle()
-                HapticEngine.selection()
-            }) {
-                ControlPillLabel(label: viewDensity == "Comfortable" ? "Grid" : "Compact", isActive: false)
-            }
-            .sheet(isPresented: $showDensityMenu) {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Layout")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 16)
-
-                    Divider()
-
-                    VStack(spacing: 0) {
-                        Button(action: {
-                            viewDensity = "Comfortable"
-                            HapticEngine.selection()
-                            showDensityMenu = false
-                        }) {
-                            HStack {
-                                Text("Grid (Comfortable)")
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
-                                Spacer()
-                                if viewDensity == "Comfortable" {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(Color(red: 31/255, green: 60/255, blue: 136/255))
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                            .frame(height: 48)
-                            .contentShape(Rectangle())
-                        }
-
-                        Divider().padding(.horizontal, 20)
-
-                        Button(action: {
-                            viewDensity = "Compact"
-                            HapticEngine.selection()
-                            showDensityMenu = false
-                        }) {
-                            HStack {
-                                Text("Compact")
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
-                                Spacer()
-                                if viewDensity == "Compact" {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(Color(red: 31/255, green: 60/255, blue: 136/255))
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                            .frame(height: 48)
-                            .contentShape(Rectangle())
-                        }
-                    }
-
-                    Spacer()
-                }
-                .presentationDetents([.fraction(0.35)])
-                .presentationDragIndicator(.visible)
             }
 
             Spacer()
