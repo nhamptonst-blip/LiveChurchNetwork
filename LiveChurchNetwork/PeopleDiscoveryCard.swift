@@ -90,13 +90,6 @@ struct PeopleDiscoveryCard: View {
                 .stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1)
         )
         .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.06), radius: 8, x: 0, y: 2)
-        .scaleEffect(isPressed ? 0.97 : 1.0)
-        .animation(.easeInOut(duration: 0.12), value: isPressed)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
-        )
     }
 
     private var profilePhoto: some View {

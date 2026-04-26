@@ -5,6 +5,7 @@ struct NearbyChurchCard: View {
     let distance: Double? // in miles
     let initialIsFollowing: Bool
     @EnvironmentObject var appState: AppState
+    @State private var isPressed = false
 
     private var defaultGradient: LinearGradient {
         let hash = church.denomination.hashValue % 5
@@ -21,108 +22,82 @@ struct NearbyChurchCard: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Left image — 80px square
-            ZStack {
-                if !church.image.isEmpty, let url = URL(string: church.image) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let img):
-                            img.resizable()
-                                .scaledToFill()
-                                .clipped()
-                        case .empty, .failure:
-                            defaultGradient
-                        @unknown default:
-                            defaultGradient
+        ZStack(alignment: .topTrailing) {
+            HStack(spacing: 12) {
+                // Image — 84px with 18px radius
+                ZStack {
+                    if !church.image.isEmpty, let url = URL(string: church.image) {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let img):
+                                img.resizable()
+                                    .scaledToFill()
+                                    .clipped()
+                            default:
+                                defaultGradient
+                            }
                         }
+                    } else {
+                        defaultGradient
                     }
-                } else {
-                    defaultGradient
                 }
+                .frame(width: 84, height: 84)
+                .clipShape(RoundedRectangle(cornerRadius: 18))
 
-                // Live badge overlay if live
-                if church.isLive {
-                    VStack(alignment: .leading) {
-                        HStack(spacing: 2) {
-                            Circle()
-                                .fill(Color(red: 239/255, green: 68/255, blue: 68/255))
-                                .frame(width: 4, height: 4)
+                // Content
+                VStack(alignment: .leading, spacing: 3) {
+                    // Church name — max 1 line
+                    Text(church.name)
+                        .font(.system(size: 16, weight: .bold, design: .default))
+                        .tracking(-0.2)
+                        .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
+                        .lineLimit(1)
 
-                            Text("LIVE")
-                                .font(.system(size: 9, weight: .black))
-                                .foregroundColor(.white)
-                        }
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 3)
-                        .background(Color(red: 239/255, green: 68/255, blue: 68/255))
-                        .cornerRadius(4)
-                        .padding(6)
+                    // Meta: Denomination • City
+                    Text("\(church.denomination)\(church.city.isEmpty ? "" : " • \(church.city)")")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+                        .lineLimit(1)
 
-                        Spacer()
-                    }
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
-                }
-            }
-            .frame(width: 80, height: 80)
-            .cornerRadius(16)
-
-            // Content
-            VStack(alignment: .leading, spacing: 4) {
-                // Church name
-                Text(church.name)
-                    .font(.system(size: 15, weight: .black))
-                    .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
-                    .lineLimit(1)
-
-                // Denomination
-                Text(church.denomination)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
-                    .lineLimit(1)
-
-                // City and distance
-                HStack(spacing: 4) {
-                    if !church.city.isEmpty {
-                        Text(church.city)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
-                            .lineLimit(1)
-                    }
-
+                    // Distance if available
                     if let distance = distance {
-                        Text("• \(String(format: "%.1f", distance)) mi away")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
-                            .lineLimit(1)
+                        Text(String(format: "%.1f", distance) + " mi away")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(Color(red: 156/255, green: 163/255, blue: 175/255))
                     }
+
+                    Spacer()
                 }
 
-                Spacer()
+                // Follow button
+                VStack(alignment: .trailing, spacing: 0) {
+                    if appState.currentUserId != nil {
+                        FollowButton(
+                            followingId: church.slug,
+                            followingType: "church",
+                            initialIsFollowing: initialIsFollowing
+                        )
+                        .frame(height: 32)
+                    }
+                    Spacer()
+                }
             }
+            .frame(height: 108)
+            .padding(12)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 22))
+            .overlay(
+                RoundedRectangle(cornerRadius: 22)
+                    .stroke(Color(red: 229/255, green: 231/255, blue: 235/255).opacity(0.85), lineWidth: 1)
+            )
+            .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.06), radius: 10, x: 0, y: 5)
 
-            // Follow button
-            VStack {
-                if appState.currentUserId != nil {
-                    FollowButton(
-                        followingId: church.slug,
-                        followingType: "church",
-                        initialIsFollowing: initialIsFollowing
-                    )
-                    .frame(height: 32)
-                }
-                Spacer()
+            // Live badge (top-right)
+            if church.isLive {
+                LiveBadge()
+                    .padding(8)
             }
         }
-        .frame(height: 104)
-        .padding(12)
-        .background(Color.white)
-        .cornerRadius(20)
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1)
-        )
-        .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.05), radius: 8, x: 0, y: 2)
     }
 }
 

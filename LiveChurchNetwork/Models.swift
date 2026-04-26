@@ -60,11 +60,15 @@ let denominationOptions: [String] = [
       let serviceTimes: String
       let about: String
       var isLive: Bool = false
+      var isVerified: Bool = false
+      var isTrending: Bool = false
+      var isNew: Bool = false
       var city: String = ""
       var coverImage: String = ""
       var pastorName: String = ""
       var followerCount: Int = 0
       var livestreamUrl: String = ""
+      var liveViewerCount: Int = 0
       var languages: String = ""
       var ministries: String = ""
       var worshipStyle: String = ""

@@ -57,9 +57,6 @@ struct PostDetailView: View {
                         Button("Edit") {
                             startEditing()
                         }
-                        Button("Delete", role: .destructive) {
-                            // TODO: Implement delete
-                        }
                     } label: {
                         Image(systemName: "ellipsis")
                             .foregroundColor(.lcText3)

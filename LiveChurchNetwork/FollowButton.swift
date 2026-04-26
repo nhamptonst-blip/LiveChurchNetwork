@@ -8,6 +8,7 @@ struct FollowButton: View {
     @EnvironmentObject var appState: AppState
     @State private var isFollowing = false
     @State private var isToggling = false
+    @State private var isPressed = false
 
     var body: some View {
         Group {
@@ -16,7 +17,6 @@ struct FollowButton: View {
             } else {
                 Button {
                     HapticEngine.impact(.light)
-                    print("[FollowButton] Clicked for \(followingType) \(followingId), isFollowing=\(isFollowing), isToggling=\(isToggling)")
                     Task { await toggleFollow() }
                 } label: {
                     Text(isFollowing ? "Following" : "Follow")
@@ -32,36 +32,37 @@ struct FollowButton: View {
                         )
                 }
                 .disabled(isToggling)
+                .scaleEffect(isPressed ? 0.97 : 1.0)
+                .opacity(isPressed ? 0.8 : 1.0)
+                .animation(.easeOut(duration: 0.1), value: isPressed)
                 .contentShape(Rectangle())
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { _ in isPressed = true }
+                        .onEnded { _ in isPressed = false }
+                )
             }
         }
         .onAppear {
             isFollowing = initialIsFollowing
-            print("[FollowButton] Appeared with followingId=\(followingId), followingType=\(followingType), initialIsFollowing=\(initialIsFollowing)")
         }
     }
 
     private func toggleFollow() async {
-        print("[FollowButton.toggleFollow] Starting for \(followingType) \(followingId), currently following: \(isFollowing)")
         guard let userId = appState.currentUserId else {
-            print("[FollowButton.toggleFollow] No user ID")
             return
         }
         isToggling = true
         do {
             if isFollowing {
-                print("[FollowButton.toggleFollow] Unfollowing...")
                 try await SupabaseService.shared.unfollow(followerId: userId, followingId: followingId)
                 isFollowing = false
-                print("[FollowButton.toggleFollow] Unfollow successful")
             } else {
-                print("[FollowButton.toggleFollow] Following...")
                 try await SupabaseService.shared.follow(followerId: userId, followingId: followingId, followingType: followingType)
                 isFollowing = true
-                print("[FollowButton.toggleFollow] Follow successful")
             }
         } catch {
-            print("[FollowButton.toggleFollow] Error: \(error)")
+            // Silent fail with state rollback
         }
         isToggling = false
     }

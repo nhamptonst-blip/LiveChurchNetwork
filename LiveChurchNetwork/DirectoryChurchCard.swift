@@ -4,6 +4,7 @@ struct DirectoryChurchCard: View {
     let church: Church
     let initialIsFollowing: Bool
     @EnvironmentObject var appState: AppState
+    @State private var isPressed = false
 
     private var defaultGradient: LinearGradient {
         let hash = church.denomination.hashValue % 5
@@ -20,130 +21,117 @@ struct DirectoryChurchCard: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Cover image — 112pt
-            ZStack(alignment: .bottom) {
-                if !church.image.isEmpty, let url = URL(string: church.image) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let img):
-                            img.resizable()
-                                .scaledToFill()
-                                .clipped()
-                        case .empty, .failure:
-                            defaultGradient
-                        @unknown default:
-                            defaultGradient
-                        }
-                    }
-                } else {
-                    defaultGradient
-                }
-
-                // Logo overlap — 44pt with 3pt white border
-                ZStack {
-                    Circle()
-                        .fill(Color.white)
-                        .frame(width: 44, height: 44)
-
+        ZStack(alignment: .topLeading) {
+            VStack(spacing: 0) {
+                // Cover image — 118pt
+                ZStack(alignment: .bottom) {
                     if !church.image.isEmpty, let url = URL(string: church.image) {
                         AsyncImage(url: url) { phase in
                             switch phase {
                             case .success(let img):
                                 img.resizable()
                                     .scaledToFill()
-                                    .frame(width: 38, height: 38)
-                                    .clipShape(Circle())
-                            case .empty, .failure:
-                                churchInitial
-                            @unknown default:
-                                churchInitial
+                                    .clipped()
+                            default:
+                                defaultGradient
                             }
                         }
                     } else {
-                        churchInitial
-                    }
-                }
-                .frame(width: 44, height: 44)
-                .overlay(Circle().stroke(Color.white, lineWidth: 3))
-                .offset(y: 22)
-            }
-            .frame(height: 112)
-            .clipped()
-
-            // Content area
-            VStack(alignment: .leading, spacing: 8) {
-                // Top padding for logo overlap
-                Spacer()
-                    .frame(height: 12)
-
-                // Church name — max 2 lines
-                Text(church.name)
-                    .font(.system(size: 15, weight: .black))
-                    .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
-                    .lineLimit(2)
-                    .lineSpacing(0)
-
-                // Denomination
-                Text(church.denomination)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
-                    .lineLimit(1)
-
-                // Location
-                if !church.city.isEmpty {
-                    Text(church.city)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(Color(red: 156/255, green: 163/255, blue: 175/255))
-                        .lineLimit(1)
-                }
-
-                // Stats row
-                HStack(spacing: 8) {
-                    if church.followerCount > 0 {
-                        Text(formatCount(church.followerCount) + " followers")
-                            .font(.system(size: 12, weight: .regular))
-                            .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+                        defaultGradient
                     }
 
-                    if church.isLive {
-                        HStack(spacing: 2) {
-                            Circle()
-                                .fill(Color(red: 239/255, green: 68/255, blue: 68/255))
-                                .frame(width: 4, height: 4)
+                    // Logo overlap — 42pt with 3pt white border
+                    ZStack {
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: 42, height: 42)
 
-                            Text("320 live")
-                                .font(.system(size: 12, weight: .regular))
-                                .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+                        if !church.image.isEmpty, let url = URL(string: church.image) {
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .success(let img):
+                                    img.resizable()
+                                        .scaledToFill()
+                                        .frame(width: 36, height: 36)
+                                        .clipShape(Circle())
+                                default:
+                                    churchInitial
+                                }
+                            }
+                        } else {
+                            churchInitial
                         }
                     }
+                    .overlay(Circle().stroke(Color.white, lineWidth: 3))
+                    .offset(y: 21)
                 }
-                .lineLimit(1)
+                .frame(height: 118)
+                .clipped()
 
-                Spacer()
+                // Content area
+                VStack(alignment: .leading, spacing: 6) {
+                    Spacer().frame(height: 14)
 
-                // Follow button
-                if appState.currentUserId != nil {
-                    FollowButton(
-                        followingId: church.slug,
-                        followingType: "church",
-                        initialIsFollowing: initialIsFollowing
-                    )
-                    .frame(height: 32)
+                    // Church name — max 2 lines
+                    Text(church.name)
+                        .font(.system(size: 15, weight: .bold, design: .default))
+                        .tracking(-0.2)
+                        .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
+                        .lineLimit(2)
+                        .lineSpacing(1)
+
+                    // Meta: Denomination • City
+                    Text("\(church.denomination)\(church.city.isEmpty ? "" : " • \(church.city)")")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+                        .lineLimit(1)
+
+                    // Stats: followers if available
+                    if church.followerCount > 0 {
+                        Text(formatCount(church.followerCount) + " followers")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(Color(red: 156/255, green: 163/255, blue: 175/255))
+                    }
+
+                    Spacer()
+
+                    // Follow button — full width
+                    if appState.currentUserId != nil {
+                        FollowButton(
+                            followingId: church.slug,
+                            followingType: "church",
+                            initialIsFollowing: initialIsFollowing
+                        )
+                        .frame(height: 32)
+                    }
                 }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 12)
             }
-            .padding(.top, 0)
-            .padding(.horizontal, 12)
-            .padding(.bottom, 12)
+            .frame(minHeight: 236)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 24))
+            .overlay(
+                RoundedRectangle(cornerRadius: 24)
+                    .stroke(Color(red: 229/255, green: 231/255, blue: 235/255).opacity(0.85), lineWidth: 1)
+            )
+            .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.07), radius: 10, x: 0, y: 5)
+
+            // Badge (top-left) — max 1 badge
+            if church.isLive {
+                LiveBadge()
+                    .padding(8)
+            } else if church.isVerified {
+                VerifiedBadge(compact: true)
+                    .padding(8)
+            } else if church.isTrending {
+                TrendingBadge(compact: true)
+                    .padding(8)
+            } else if church.isNew {
+                NewBadge(compact: true)
+                    .padding(8)
+            }
         }
-        .frame(minHeight: 230)
-        .background(Color.white)
-        .cornerRadius(22)
-        .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1)
-        )
-        .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.06), radius: 8, x: 0, y: 2)
     }
 
     private var churchInitial: some View {

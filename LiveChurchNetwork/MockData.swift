@@ -670,11 +670,13 @@ struct MockDiscoverData {
             serviceTimes: "Sun 9am, 11am, Wed 7pm",
             about: "A welcoming community dedicated to building disciples and reaching Los Angeles",
             isLive: true,
+            isVerified: true,
             city: "Los Angeles, CA",
             coverImage: "https://images.unsplash.com/photo-1438183972690-6d4ee67f3995?w=600&h=400&fit=crop",
             pastorName: "Pastor Marcus Johnson",
             followerCount: 2400,
-            livestreamUrl: "https://youtube.com/live"
+            livestreamUrl: "https://youtube.com/live",
+            liveViewerCount: 320
         ),
         Church(
             name: "Grace Cathedral",
@@ -704,11 +706,13 @@ struct MockDiscoverData {
             serviceTimes: "Sun 8:30am, 10:45am, Wed 6:30pm",
             about: "Multiethnic, multi-generational church in Nashville celebrating God's creativity",
             isLive: true,
+            isTrending: true,
             city: "Nashville, TN",
             coverImage: "https://images.unsplash.com/photo-1464207687429-7505649dae38?w=600&h=400&fit=crop",
             pastorName: "Pastor David Chen",
             followerCount: 3100,
-            livestreamUrl: "https://youtube.com/live/mosaic"
+            livestreamUrl: "https://youtube.com/live/mosaic",
+            liveViewerCount: 187
         ),
         Church(
             name: "New Life Church",
@@ -721,6 +725,7 @@ struct MockDiscoverData {
             serviceTimes: "Sun 10am, Fri 7pm",
             about: "Spirit-filled community in Atlanta experiencing God's power and presence",
             isLive: false,
+            isNew: true,
             city: "Atlanta, GA",
             coverImage: "https://images.unsplash.com/photo-1516904591209-fdf61d97e95e?w=600&h=400&fit=crop",
             pastorName: "Apostle James Thompson",

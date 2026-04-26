@@ -99,29 +99,53 @@ struct PremiumChurchCard: View {
                             .padding(.horizontal, 12)
                     }
 
-                    // Metadata row: followers + Follow button
-                    HStack(spacing: 10) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "person.2.fill")
-                                .font(.system(size: 10))
-                            Text(formatCount(church.followerCount))
-                                .font(.system(size: 12, weight: .medium))
+                    // Metadata row or Watch Live button
+                    if church.isLive && !church.livestreamUrl.isEmpty {
+                        Button(action: {
+                            HapticEngine.impact(.light)
+                            if let url = URL(string: church.livestreamUrl) {
+                                UIApplication.shared.open(url)
+                            }
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "play.circle.fill")
+                                    .font(.system(size: 12, weight: .semibold))
+                                Text("Watch Live")
+                                    .font(.system(size: 13, weight: .bold))
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 36)
+                            .background(Color(red: 239/255, green: 68/255, blue: 68/255))
+                            .clipShape(RoundedRectangle(cornerRadius: 999))
+                            .shadow(color: Color(red: 239/255, green: 68/255, blue: 68/255).opacity(0.24), radius: 8, x: 0, y: 4)
                         }
-                        .foregroundColor(.lcText3)
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 12)
+                    } else {
+                        HStack(spacing: 10) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "person.2.fill")
+                                    .font(.system(size: 10))
+                                Text(formatCount(church.followerCount))
+                                    .font(.system(size: 12, weight: .medium))
+                            }
+                            .foregroundColor(.lcText3)
 
-                        Spacer()
+                            Spacer()
 
-                        if appState.currentUserId != nil {
-                            FollowButton(
-                                followingId: church.slug,
-                                followingType: "church",
-                                initialIsFollowing: initialIsFollowing
-                            )
-                            .frame(height: 34)
+                            if appState.currentUserId != nil {
+                                FollowButton(
+                                    followingId: church.slug,
+                                    followingType: "church",
+                                    initialIsFollowing: initialIsFollowing
+                                )
+                                .frame(height: 34)
+                            }
                         }
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 12)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 12)
                 }
                 .background(Color.white)
             }
@@ -140,13 +164,6 @@ struct PremiumChurchCard: View {
             }
             .padding(10)
         }
-        .scaleEffect(isPressed ? 0.97 : 1.0)
-        .animation(.easeInOut(duration: 0.12), value: isPressed)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
-        )
     }
 
     private var churchInitialCircle: some View {
@@ -174,66 +191,6 @@ struct PremiumChurchCard: View {
             return String(format: "%.1fk", Double(count) / 1000).replacingOccurrences(of: ".0k", with: "k")
         }
         return String(count)
-    }
-}
-
-// MARK: - Badge Components
-
-struct LiveBadgeAnimated: View {
-    @State private var pulsing = false
-
-    var body: some View {
-        HStack(spacing: 4) {
-            ZStack {
-                Circle()
-                    .fill(Color.red)
-                    .frame(width: 6, height: 6)
-                    .overlay(
-                        Circle()
-                            .stroke(Color.red.opacity(0.4), lineWidth: 2)
-                            .scaleEffect(pulsing ? 1.6 : 1.0)
-                            .opacity(pulsing ? 0 : 1)
-                            .animation(.easeOut(duration: 1.0).repeatForever(autoreverses: false), value: pulsing)
-                    )
-            }
-
-            Text("LIVE")
-                .font(.system(size: 9, weight: .black))
-                .foregroundColor(.white)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .background(Color.red.opacity(0.9))
-        .cornerRadius(12)
-        .onAppear { pulsing = true }
-    }
-}
-
-struct TrendingBadge: View {
-    var body: some View {
-        HStack(spacing: 3) {
-            Image(systemName: "flame.fill")
-                .font(.system(size: 8))
-            Text("TRENDING")
-                .font(.system(size: 8, weight: .black))
-        }
-        .foregroundColor(.white)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .background(Color.orange.opacity(0.85))
-        .cornerRadius(12)
-    }
-}
-
-struct NewBadge: View {
-    var body: some View {
-        Text("NEW")
-            .font(.system(size: 9, weight: .black))
-            .foregroundColor(.white)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
-            .background(Color.lcTeal.opacity(0.85))
-            .cornerRadius(12)
     }
 }
 

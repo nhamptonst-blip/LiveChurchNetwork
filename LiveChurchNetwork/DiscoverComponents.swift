@@ -366,3 +366,179 @@ struct DiscoverErrorState: View {
         .padding(.vertical, 60)
     }
 }
+
+// MARK: - Hero Card Skeleton
+
+struct HeroCardSkeleton: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Background gradient placeholder
+            RoundedRectangle(cornerRadius: 0)
+                .fill(DesignSystem.Colors.border.opacity(0.5))
+                .frame(height: 140)
+
+            // Content area
+            VStack(alignment: .leading, spacing: 12) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(DesignSystem.Colors.border.opacity(0.5))
+                    .frame(height: 16)
+                    .frame(maxWidth: 160)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(DesignSystem.Colors.border.opacity(0.5))
+                    .frame(height: 14)
+                    .frame(maxWidth: 240)
+
+                HStack(spacing: 8) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(DesignSystem.Colors.border.opacity(0.5))
+                        .frame(width: 80, height: 32)
+
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(DesignSystem.Colors.border.opacity(0.5))
+                        .frame(width: 80, height: 32)
+
+                    Spacer()
+                }
+            }
+            .padding(16)
+        }
+        .frame(height: 200)
+        .background(Color.white)
+        .cornerRadius(22)
+        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .opacity(isAnimating ? 0.6 : 1.0)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                isAnimating = true
+            }
+        }
+    }
+}
+
+// MARK: - Live Story Skeleton
+
+struct LiveStorySkeletonItem: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(spacing: 6) {
+            // Story thumbnail
+            RoundedRectangle(cornerRadius: 12)
+                .fill(DesignSystem.Colors.border.opacity(0.5))
+                .frame(width: 56, height: 80)
+
+            // Church name line
+            RoundedRectangle(cornerRadius: 4)
+                .fill(DesignSystem.Colors.border.opacity(0.5))
+                .frame(height: 10)
+                .frame(maxWidth: 50)
+        }
+        .frame(width: 56)
+        .opacity(isAnimating ? 0.6 : 1.0)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                isAnimating = true
+            }
+        }
+    }
+}
+
+// MARK: - Collection Card Skeleton
+
+struct CollectionCardSkeleton: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Gradient background
+            RoundedRectangle(cornerRadius: 0)
+                .fill(DesignSystem.Colors.border.opacity(0.5))
+                .frame(height: 100)
+
+            // Title line
+            RoundedRectangle(cornerRadius: 4)
+                .fill(DesignSystem.Colors.border.opacity(0.5))
+                .frame(height: 14)
+                .frame(maxWidth: 140)
+
+            // Subtitle line
+            RoundedRectangle(cornerRadius: 4)
+                .fill(DesignSystem.Colors.border.opacity(0.5))
+                .frame(height: 12)
+                .frame(maxWidth: 100)
+        }
+        .frame(width: 220, height: 120)
+        .background(Color.white)
+        .cornerRadius(24)
+        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .opacity(isAnimating ? 0.6 : 1.0)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                isAnimating = true
+            }
+        }
+    }
+}
+
+// MARK: - Featured Church Card Skeleton
+
+struct FeaturedChurchCardSkeleton: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Cover image placeholder
+            RoundedRectangle(cornerRadius: 0)
+                .fill(DesignSystem.Colors.border.opacity(0.5))
+                .frame(height: 120)
+
+            // Avatar overlap zone
+            ZStack {
+                Color.clear.frame(height: 20)
+                HStack {
+                    Spacer()
+                    Circle()
+                        .fill(DesignSystem.Colors.border.opacity(0.5))
+                        .frame(width: 40, height: 40)
+                    Spacer()
+                }
+            }
+            .frame(height: 40)
+
+            // Content placeholders
+            VStack(alignment: .leading, spacing: 6) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(DesignSystem.Colors.border.opacity(0.5))
+                    .frame(height: 12)
+                    .frame(maxWidth: 120)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(DesignSystem.Colors.border.opacity(0.5))
+                    .frame(height: 10)
+                    .frame(maxWidth: 80)
+
+                Spacer()
+
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(DesignSystem.Colors.border.opacity(0.5))
+                    .frame(height: 28)
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 6)
+            .padding(.bottom, 10)
+        }
+        .frame(width: 160, height: 220)
+        .background(Color.white)
+        .cornerRadius(22)
+        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .opacity(isAnimating ? 0.6 : 1.0)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                isAnimating = true
+            }
+        }
+    }
+}

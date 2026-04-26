@@ -6,6 +6,7 @@ struct ChurchSearchResultCard: View {
     let church: Church
     let initialIsFollowing: Bool
     @EnvironmentObject var appState: AppState
+    @State private var isPressed = false
 
     private var defaultGradient: LinearGradient {
         let hash = church.denomination.hashValue % 5
@@ -23,7 +24,7 @@ struct ChurchSearchResultCard: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Cover image or logo — 72pt
+            // Image/logo — 72pt with 16px radius
             ZStack(alignment: .bottomTrailing) {
                 if !church.image.isEmpty, let url = URL(string: church.image) {
                     AsyncImage(url: url) { phase in
@@ -32,9 +33,7 @@ struct ChurchSearchResultCard: View {
                             img.resizable()
                                 .scaledToFill()
                                 .clipped()
-                        case .empty, .failure:
-                            defaultGradient
-                        @unknown default:
+                        default:
                             defaultGradient
                         }
                     }
@@ -42,51 +41,41 @@ struct ChurchSearchResultCard: View {
                     defaultGradient
                 }
 
-                // Live badge
+                // Live badge (bottom-right)
                 if church.isLive {
-                    HStack(spacing: 2) {
-                        Circle()
-                            .fill(Color(red: 239/255, green: 68/255, blue: 68/255))
-                            .frame(width: 4, height: 4)
-
-                        Text("LIVE")
-                            .font(.system(size: 9, weight: .black))
-                            .foregroundColor(.white)
-                    }
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
-                    .background(Color(red: 239/255, green: 68/255, blue: 68/255))
-                    .cornerRadius(4)
-                    .padding(6)
+                    LiveBadge()
+                        .padding(4)
                 }
             }
             .frame(width: 72, height: 72)
-            .cornerRadius(12)
-            .clipped()
+            .clipShape(RoundedRectangle(cornerRadius: 16))
 
             // Content
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 4) {
+                // Church name — max 1 line
                 Text(church.name)
-                    .font(.system(size: 15, weight: .black))
+                    .font(.system(size: 16, weight: .bold, design: .default))
+                    .tracking(-0.2)
                     .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                     .lineLimit(1)
 
-                Text(church.denomination)
-                    .font(.system(size: 12, weight: .medium))
+                // Meta: Denomination • City
+                Text("\(church.denomination)\(church.city.isEmpty ? "" : " • \(church.city)")")
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
                     .lineLimit(1)
 
-                if !church.city.isEmpty {
-                    Text(church.city)
-                        .font(.system(size: 12, weight: .medium))
+                // Stats: followers if available
+                if church.followerCount > 0 {
+                    Text(formatCount(church.followerCount) + " followers")
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(Color(red: 156/255, green: 163/255, blue: 175/255))
-                        .lineLimit(1)
                 }
 
                 Spacer()
             }
 
-            VStack {
+            VStack(alignment: .trailing, spacing: 0) {
                 if appState.currentUserId != nil {
                     FollowButton(
                         followingId: church.slug,
@@ -98,15 +87,22 @@ struct ChurchSearchResultCard: View {
                 Spacer()
             }
         }
-        .frame(minHeight: 88)
-        .padding(12)
+        .frame(minHeight: 92)
+        .padding(10)
         .background(Color.white)
-        .cornerRadius(22)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
         .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color(red: 229/255, green: 231/255, blue: 235/255).opacity(0.85), lineWidth: 1)
         )
         .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.05), radius: 8, x: 0, y: 2)
+    }
+
+    private func formatCount(_ count: Int) -> String {
+        if count >= 1000 {
+            return String(format: "%.1fk", Double(count) / 1000.0)
+        }
+        return String(count)
     }
 }
 

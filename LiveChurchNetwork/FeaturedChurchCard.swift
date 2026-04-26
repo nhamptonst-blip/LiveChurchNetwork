@@ -4,6 +4,7 @@ struct FeaturedChurchCard: View {
     let church: Church
     let initialIsFollowing: Bool
     @EnvironmentObject var appState: AppState
+    @State private var isPressed = false
 
     private var defaultGradient: LinearGradient {
         let hash = church.denomination.hashValue % 5
@@ -20,120 +21,150 @@ struct FeaturedChurchCard: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Cover image zone — 128pt
-            ZStack(alignment: .center) {
-                if !church.image.isEmpty, let url = URL(string: church.image) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let img):
-                            img.resizable()
-                                .scaledToFill()
-                                .clipped()
-                        case .empty, .failure:
-                            defaultGradient
-                        @unknown default:
-                            defaultGradient
+        ZStack(alignment: .topLeading) {
+            VStack(spacing: 0) {
+                // Cover image — 150pt with gradient overlay
+                ZStack(alignment: .bottomLeading) {
+                    if !church.coverImage.isEmpty, let url = URL(string: church.coverImage) {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let img):
+                                img.resizable()
+                                    .scaledToFill()
+                                    .clipped()
+                            default:
+                                defaultGradient
+                            }
+                        }
+                    } else {
+                        defaultGradient
+                    }
+
+                    // Bottom gradient overlay
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color.black.opacity(0),
+                            Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.38)
+                        ]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+
+                    // Logo overlap
+                    ZStack {
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: 48, height: 48)
+
+                        if !church.image.isEmpty, let url = URL(string: church.image) {
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .success(let img):
+                                    img.resizable()
+                                        .scaledToFill()
+                                        .frame(width: 42, height: 42)
+                                        .clipShape(Circle())
+                                default:
+                                    churchInitial
+                                }
+                            }
+                        } else {
+                            churchInitial
                         }
                     }
-                } else {
-                    defaultGradient
+                    .overlay(Circle().stroke(Color.white, lineWidth: 3))
+                    .padding(12)
                 }
+                .frame(height: 150)
+                .clipped()
 
-                // Logo avatar overlap (centered, negative offset into content)
-                VStack {
-                    Spacer()
-                    churchLogo
-                    Spacer()
-                }
-            }
-            .frame(height: 128)
-            .clipped()
+                // Content
+                VStack(alignment: .leading, spacing: 8) {
+                    Spacer().frame(height: 12)
 
-            // Content zone with logo overlap space
-            VStack(spacing: 8) {
-                // Padding for logo overlap (50/2 = 25pt offset)
-                Spacer()
-                    .frame(height: 10)
+                    // Church name
+                    Text(church.name)
+                        .font(.system(size: 17, weight: .bold, design: .default))
+                        .tracking(-0.2)
+                        .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
+                        .lineLimit(2)
 
-                // Church name
-                Text(church.name)
-                    .font(.system(size: 17, weight: .black))
-                    .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-
-                // Denomination
-                Text(church.denomination)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
-                    .lineLimit(1)
-
-                // City/State
-                if !church.city.isEmpty {
-                    Text(church.city)
-                        .font(.system(size: 13, weight: .medium))
+                    // Meta: Denomination • City, State
+                    Text("\(church.denomination)\(church.city.isEmpty ? "" : " • \(church.city)")")
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
                         .lineLimit(1)
-                }
 
-                Spacer()
+                    // Stats
+                    if church.followerCount > 0 {
+                        Text("\(formatCount(church.followerCount)) followers")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(Color(red: 156/255, green: 163/255, blue: 175/255))
+                    }
 
-                // Follow button
-                if appState.currentUserId != nil {
-                    FollowButton(followingId: church.slug, followingType: "church", initialIsFollowing: initialIsFollowing)
+                    Spacer()
+
+                    // Follow button
+                    if appState.currentUserId != nil {
+                        FollowButton(
+                            followingId: church.slug,
+                            followingType: "church",
+                            initialIsFollowing: initialIsFollowing
+                        )
                         .frame(height: 32)
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 12)
-        }
-        .frame(width: 280, height: 210)
-        .background(Color.white)
-        .cornerRadius(24)
-        .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.08), radius: 12, x: 0, y: 3)
-        .overlay(
-            RoundedRectangle(cornerRadius: 24)
-                .stroke(Color(red: 229/255, green: 231/255, blue: 235/255).opacity(0.8), lineWidth: 1)
-        )
-    }
-
-    private var churchLogo: some View {
-        ZStack {
-            Circle()
-                .fill(Color.white)
-                .frame(width: 60, height: 60)
-                .shadow(color: Color.black.opacity(0.15), radius: 6, x: 0, y: 2)
-
-            if !church.image.isEmpty, let url = URL(string: church.image) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let img):
-                        img.resizable()
-                            .scaledToFill()
-                            .frame(width: 56, height: 56)
-                            .clipShape(Circle())
-                    case .empty, .failure:
-                        defaultChurchInitial
-                    @unknown default:
-                        defaultChurchInitial
                     }
                 }
-            } else {
-                defaultChurchInitial
+                .padding(.horizontal, 16)
+                .padding(.bottom, 14)
             }
+            .frame(width: 300, height: 240)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 28))
+            .overlay(
+                RoundedRectangle(cornerRadius: 28)
+                    .stroke(Color(red: 229/255, green: 231/255, blue: 235/255).opacity(0.7), lineWidth: 1)
+            )
+            .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.10), radius: 16, x: 0, y: 9)
+
+            // Badges (top-left and top-right)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    // Top-left: Live badge
+                    if church.isLive {
+                        LiveBadge()
+                    }
+
+                    Spacer()
+
+                    // Top-right: Verified/Trending/New (priority order)
+                    if church.isVerified {
+                        VerifiedBadge()
+                    } else if church.isTrending {
+                        TrendingBadge()
+                    } else if church.isNew {
+                        NewBadge()
+                    }
+                }
+                Spacer()
+            }
+            .padding(12)
         }
-        .frame(width: 60, height: 60)
     }
 
-    private var defaultChurchInitial: some View {
+    private var churchInitial: some View {
         ZStack {
-            Circle().fill(Color.lcNavy)
+            Circle().fill(Color(red: 31/255, green: 60/255, blue: 136/255))
             Text(church.name.prefix(1).uppercased())
-                .font(.system(size: 18, weight: .bold))
-                .foregroundColor(.lcGold)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(Color(red: 240/255, green: 165/255, blue: 0/255))
         }
-        .frame(width: 56, height: 56)
+    }
+
+    private func formatCount(_ count: Int) -> String {
+        if count >= 1000 {
+            return String(format: "%.1fk", Double(count) / 1000.0)
+        }
+        return String(count)
     }
 }
 
