@@ -109,6 +109,27 @@ struct DirectoryView: View {
         return churches
     }
 
+    private var smartFilteredChurches: [Church] {
+        var churches = filteredBrowseChurches
+
+        // Apply smart filters
+        if let filter = activeSmartFilter {
+            switch filter {
+            case "Live":
+                churches = churches.filter { $0.isLive }
+            case "Nearby":
+                churches = churches.filter { isNearby($0) }
+            case "Trending":
+                // Show churches with high follower count (trending)
+                churches = churches.filter { $0.followerCount > 100 }.sorted { $0.followerCount > $1.followerCount }
+            default:
+                break
+            }
+        }
+
+        return churches
+    }
+
     private var filteredBrowsePeople: [DiscoverableUser] {
         var people = vm.browsePeople.filter { $0.isDiscoverable }
 
@@ -956,7 +977,7 @@ struct DirectoryView: View {
                     )
 
                     // Result Count
-                    let sortedChurches = sortBrowseChurches(filteredBrowseChurches, by: browseSort)
+                    let sortedChurches = sortBrowseChurches(smartFilteredChurches, by: browseSort)
                     Text("\(sortedChurches.count) \(selectedDenomination.map { "\($0) " } ?? "")Churches")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
