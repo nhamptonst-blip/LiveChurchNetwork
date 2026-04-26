@@ -1312,8 +1312,8 @@ struct DirectoryView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 32) {
-                        // MARK: - 2. Suggested Worshippers
-                        if !vm.suggestedPeople.isEmpty {
+                        // Show content based on selected filter
+                        if selectedPeopleFilter == "Suggested" && !vm.suggestedPeople.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Suggested For You")
@@ -1326,12 +1326,32 @@ struct DirectoryView: View {
                                 }
                                 .padding(.horizontal, 20)
 
-                                peopleSocialListWithMetadata(Array(vm.suggestedPeople.prefix(6)))
+                                peopleSocialListWithMetadata(Array(vm.suggestedPeople.prefix(10)))
                             }
-                        }
+                        } else if selectedPeopleFilter == "Near Me" {
+                            VStack(alignment: .leading, spacing: 12) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("People Near You")
+                                        .font(.system(size: 22, weight: .black))
+                                        .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
 
-                        // MARK: - 3. People From Churches You Follow
-                        if !filteredBrowsePeople.isEmpty {
+                                    Text("Connect with believers in your area")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+                                }
+                                .padding(.horizontal, 20)
+
+                                let nearbyPeople = vm.browsePeople.filter { isPersonNearby($0) }
+                                if !nearbyPeople.isEmpty {
+                                    peopleSocialListWithMetadata(Array(nearbyPeople.prefix(10)))
+                                } else {
+                                    Text("No people found nearby. Enable location or expand your search radius.")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+                                        .padding(.horizontal, 20)
+                                }
+                            }
+                        } else if selectedPeopleFilter == "From My Churches" && !filteredBrowsePeople.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("From Churches You Follow")
@@ -1344,12 +1364,9 @@ struct DirectoryView: View {
                                 }
                                 .padding(.horizontal, 20)
 
-                                peopleSocialListWithMetadata(Array(filteredBrowsePeople.prefix(4)))
+                                peopleSocialListWithMetadata(Array(filteredBrowsePeople.prefix(10)))
                             }
-                        }
-
-                        // MARK: - 4. New Members
-                        if !filteredBrowsePeople.isEmpty {
+                        } else if selectedPeopleFilter == "New Members" && !filteredBrowsePeople.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("New Members")
@@ -1362,12 +1379,10 @@ struct DirectoryView: View {
                                 }
                                 .padding(.horizontal, 20)
 
-                                peopleSocialListWithMetadata(Array(filteredBrowsePeople.suffix(4).prefix(4)), markAsNew: true)
+                                let newMembers = filteredBrowsePeople.suffix(Int(Double(filteredBrowsePeople.count) * 0.3)).map { $0 }
+                                peopleSocialListWithMetadata(Array(newMembers.prefix(10)), markAsNew: true)
                             }
-                        }
-
-                        // MARK: - 5. Faith Leaders
-                        if !vm.suggestedPeople.isEmpty {
+                        } else if selectedPeopleFilter == "Leaders" && !vm.suggestedPeople.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Faith Leaders")
@@ -1380,7 +1395,22 @@ struct DirectoryView: View {
                                 }
                                 .padding(.horizontal, 20)
 
-                                peopleSocialListWithMetadata(Array(vm.suggestedPeople.suffix(4).prefix(4)))
+                                peopleSocialListWithMetadata(Array(vm.suggestedPeople.prefix(10)))
+                            }
+                        } else if selectedPeopleFilter == "Mutuals" && !filteredBrowsePeople.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Mutual Connections")
+                                        .font(.system(size: 22, weight: .black))
+                                        .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
+
+                                    Text("People you both follow")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+                                }
+                                .padding(.horizontal, 20)
+
+                                peopleSocialListWithMetadata(Array(filteredBrowsePeople.prefix(10)))
                             }
                         }
 
