@@ -590,50 +590,87 @@ struct DirectoryView: View {
                 loadingGrid
             } else {
                 // MARK: - 1. Smart Filter Row
-                SmartFilterRow(
-                    activeFilter: $activeSmartFilter,
-                    showFilterSheet: $showChurchFilterSheet,
-                    filterCount: churchFilters.isEmpty ? 0 : 1,
-                    onFilterChange: { filter in
-                        // Update filtering based on active smart filter
-                        if filter == "Live" {
-                            // Show only live churches
-                            churchFilters.location = []
-                        } else if filter == "Nearby" {
-                            // Show only nearby churches
-                            churchFilters.location = ["Near Me"]
-                        } else if filter == "Trending" {
-                            // Show trending churches (could add trending flag to model)
-                            churchFilters.location = []
-                        } else {
-                            // Clear smart filters
-                            churchFilters.location = []
+                // Simple filter buttons
+                HStack(spacing: 8) {
+                    Button(action: {
+                        activeSmartFilter = activeSmartFilter == "Live" ? nil : "Live"
+                        HapticEngine.selection()
+                    }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: "play.circle.fill")
+                                .font(.system(size: 16, weight: .semibold))
+                            Text("Live")
+                                .font(.system(size: 13, weight: .bold))
                         }
+                        .frame(maxWidth: .infinity)
+                        .foregroundColor(activeSmartFilter == "Live" ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
+                        .background(activeSmartFilter == "Live" ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 999))
+                        .overlay(RoundedRectangle(cornerRadius: 999).stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1))
                     }
-                )
+
+                    Button(action: {
+                        activeSmartFilter = activeSmartFilter == "Nearby" ? nil : "Nearby"
+                        HapticEngine.selection()
+                    }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: "location.fill")
+                                .font(.system(size: 16, weight: .semibold))
+                            Text("Nearby")
+                                .font(.system(size: 13, weight: .bold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .foregroundColor(activeSmartFilter == "Nearby" ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
+                        .background(activeSmartFilter == "Nearby" ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 999))
+                        .overlay(RoundedRectangle(cornerRadius: 999).stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1))
+                    }
+
+                    Button(action: {
+                        activeSmartFilter = activeSmartFilter == "Trending" ? nil : "Trending"
+                        HapticEngine.selection()
+                    }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: "arrow.up.right")
+                                .font(.system(size: 16, weight: .semibold))
+                            Text("Trending")
+                                .font(.system(size: 13, weight: .bold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .foregroundColor(activeSmartFilter == "Trending" ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
+                        .background(activeSmartFilter == "Trending" ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 999))
+                        .overlay(RoundedRectangle(cornerRadius: 999).stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1))
+                    }
+
+                    Button(action: {
+                        showChurchFilterSheet = true
+                        HapticEngine.selection()
+                    }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: "slider.horizontal.3")
+                                .font(.system(size: 16, weight: .semibold))
+                            Text("Filters")
+                                .font(.system(size: 13, weight: .bold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .foregroundColor(!churchFilters.isEmpty ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
+                        .background(!churchFilters.isEmpty ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 999))
+                        .overlay(RoundedRectangle(cornerRadius: 999).stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1))
+                    }
+                }
+                .frame(height: 38)
+                .padding(.horizontal, 20)
+                .padding(.top, 18)
+                .padding(.bottom, 12)
                 .sheet(isPresented: $showChurchFilterSheet) {
                     ChurchFilterSheet(selectedFilters: $churchFilters)
                         .presentationDetents([.fraction(0.85)])
                         .presentationCornerRadius(28)
                 }
 
-                // MARK: - 2. Hero Card
-                HeroCard(
-                    onExploreAction: {
-                        // Scroll to Browse All Churches section
-                        withAnimation {
-                            // This would ideally scroll to Browse All Churches
-                            // For now, we'll just update a state if needed
-                        }
-                    },
-                    onWatchLiveAction: {
-                        // Navigate to Live Now section or Live tab
-                        // For now, activate Live filter
-                        activeSmartFilter = "Live"
-                    }
-                )
-
-                // MARK: - 3. Live Now
+                // MARK: - 2. Live Now
                 if !vm.liveNowChurches.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Live Now")
