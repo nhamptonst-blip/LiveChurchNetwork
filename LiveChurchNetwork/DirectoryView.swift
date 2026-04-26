@@ -319,7 +319,11 @@ struct DirectoryView: View {
                     .padding(.bottom, isSearchFocused && searchQuery.isEmpty ? 0 : 16)
 
                     // MARK: - Tab Switcher (Segmented)
-                    if !isSearchFocused || !searchQuery.isEmpty {
+                    if isSearchFocused && searchQuery.isEmpty {
+                        // No tab switcher during focused search with empty query
+                        EmptyView()
+                    } else if !searchQuery.isEmpty {
+                        // Search results tabs
                         Picker("Search Results Tab", selection: $selectedSearchTab) {
                             Text("All").tag("All")
                             Text("Churches").tag("Churches")
@@ -332,6 +336,21 @@ struct DirectoryView: View {
                         .padding(.horizontal, 20)
                         .padding(.bottom, 16)
                         .onChange(of: selectedSearchTab) { _ in
+                            HapticEngine.selection()
+                        }
+                    } else {
+                        // Main content tabs (Churches/People)
+                        Picker("Main Tab", selection: $selectedTab) {
+                            Text("Churches").tag(DiscoverTab.churches)
+                            Text("People").tag(DiscoverTab.people)
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(height: 38)
+                        .background(Color(red: 243/255, green: 244/255, blue: 246/255))
+                        .cornerRadius(14)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 16)
+                        .onChange(of: selectedTab) { _ in
                             HapticEngine.selection()
                         }
                     }

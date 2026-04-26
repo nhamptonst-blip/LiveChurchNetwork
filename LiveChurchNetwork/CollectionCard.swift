@@ -57,13 +57,6 @@ struct CollectionCard: View {
             .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.10), radius: 12, x: 0, y: 2)
         }
         .buttonStyle(.plain)
-        .scaleEffect(isPressed ? 0.97 : 1.0)
-        .animation(.easeInOut(duration: 0.12), value: isPressed)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
-        )
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Browse \(title)")
         .accessibilityHint(subtitle)
