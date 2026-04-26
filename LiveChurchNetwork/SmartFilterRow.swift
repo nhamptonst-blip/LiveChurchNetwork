@@ -61,10 +61,11 @@ struct SmartFilterButton: View {
     let isActive: Bool
     var badgeCount: Int? = nil
     let action: () -> Void
-    @State private var isPressed = false
 
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            action()
+        }) {
             VStack(spacing: 4) {
                 Image(systemName: icon)
                     .font(.system(size: 16, weight: .semibold))
@@ -112,6 +113,7 @@ struct SmartFilterButton: View {
                 }
             )
         }
+        .contentShape(Rectangle())
         .buttonStyle(.plain)
     }
 }
