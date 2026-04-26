@@ -39,13 +39,6 @@ struct DirectoryView: View {
         "Young Adults"
     ]
 
-    private let discoveryShortcuts = [
-        ("Live Now", "antenna.radiowaves.left.and.right"),
-        ("Near Me", "location.fill"),
-        ("Trending", "arrow.up.circle.fill"),
-        ("Spanish", "globe")
-    ]
-
     private let denominationCategories = [
         "Non-Denominational", "Baptist", "Catholic", "Pentecostal",
         "Methodist", "Lutheran", "Presbyterian", "Orthodox",
@@ -396,25 +389,78 @@ struct DirectoryView: View {
                         .padding(.horizontal, 20)
 
                     HStack(spacing: 8) {
-                        ForEach(discoveryShortcuts, id: \.0) { shortcut, icon in
-                            Button(action: {
-                                searchQuery = shortcut
-                                performSearch(shortcut)
-                                HapticEngine.selection()
-                            }) {
-                                HStack(spacing: 6) {
-                                    Image(systemName: icon)
-                                        .font(.system(size: 12, weight: .semibold))
-                                    Text(shortcut)
-                                        .font(.system(size: 12, weight: .semibold))
-                                }
-                                .foregroundColor(Color(red: 31/255, green: 60/255, blue: 136/255))
-                                .padding(.horizontal, 10)
-                                .frame(height: 28)
-                                .background(Color(red: 31/255, green: 60/255, blue: 136/255).opacity(0.08))
-                                .clipShape(RoundedRectangle(cornerRadius: 999))
+                        Button(action: {
+                            activeSmartFilter = "Live"
+                            isSearchFocused = false
+                            HapticEngine.selection()
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "antenna.radiowaves.left.and.right")
+                                    .font(.system(size: 12, weight: .semibold))
+                                Text("Live Now")
+                                    .font(.system(size: 12, weight: .semibold))
                             }
+                            .foregroundColor(Color(red: 31/255, green: 60/255, blue: 136/255))
+                            .padding(.horizontal, 10)
+                            .frame(height: 28)
+                            .background(Color(red: 31/255, green: 60/255, blue: 136/255).opacity(0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: 999))
                         }
+
+                        Button(action: {
+                            activeSmartFilter = "Near"
+                            isSearchFocused = false
+                            HapticEngine.selection()
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "location.fill")
+                                    .font(.system(size: 12, weight: .semibold))
+                                Text("Near Me")
+                                    .font(.system(size: 12, weight: .semibold))
+                            }
+                            .foregroundColor(Color(red: 31/255, green: 60/255, blue: 136/255))
+                            .padding(.horizontal, 10)
+                            .frame(height: 28)
+                            .background(Color(red: 31/255, green: 60/255, blue: 136/255).opacity(0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: 999))
+                        }
+
+                        Button(action: {
+                            activeSmartFilter = "Trending"
+                            isSearchFocused = false
+                            HapticEngine.selection()
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "arrow.up.circle.fill")
+                                    .font(.system(size: 12, weight: .semibold))
+                                Text("Trending")
+                                    .font(.system(size: 12, weight: .semibold))
+                            }
+                            .foregroundColor(Color(red: 31/255, green: 60/255, blue: 136/255))
+                            .padding(.horizontal, 10)
+                            .frame(height: 28)
+                            .background(Color(red: 31/255, green: 60/255, blue: 136/255).opacity(0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: 999))
+                        }
+
+                        Button(action: {
+                            activeSmartFilter = "Spanish"
+                            isSearchFocused = false
+                            HapticEngine.selection()
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "globe")
+                                    .font(.system(size: 12, weight: .semibold))
+                                Text("Spanish")
+                                    .font(.system(size: 12, weight: .semibold))
+                            }
+                            .foregroundColor(Color(red: 31/255, green: 60/255, blue: 136/255))
+                            .padding(.horizontal, 10)
+                            .frame(height: 28)
+                            .background(Color(red: 31/255, green: 60/255, blue: 136/255).opacity(0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: 999))
+                        }
+
                         Spacer()
                     }
                     .padding(.horizontal, 20)
