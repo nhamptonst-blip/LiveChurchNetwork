@@ -67,6 +67,7 @@ let denominationOptions: [String] = [
       var livestreamUrl: String = ""
       var languages: String = ""
       var ministries: String = ""
+      var worshipStyle: String = ""
       var latitude: Double? = nil
       var longitude: Double? = nil
 
@@ -116,6 +117,8 @@ let denominationOptions: [String] = [
       let followersVisibility: String?
       let followingVisibility: String?
       let churchesVisibility:  String?
+      let createdAt: Date?
+      let isLeader: Bool?
 
       var activityPrivacy:  PrivacySetting { PrivacySetting(rawValue: activityVisibility  ?? "") ?? .public }
       var followersPrivacy: PrivacySetting { PrivacySetting(rawValue: followersVisibility ?? "") ?? .public }
@@ -141,6 +144,8 @@ let denominationOptions: [String] = [
           case followersVisibility = "followers_visibility"
           case followingVisibility = "following_visibility"
           case churchesVisibility  = "churches_visibility"
+          case createdAt           = "created_at"
+          case isLeader            = "is_leader"
       }
   }
 
@@ -335,6 +340,7 @@ let denominationOptions: [String] = [
       var livestreamUrl: String?
       var latitude: Double?
       var longitude: Double?
+      var worshipStyle: String?
 
       enum CodingKeys: String, CodingKey {
           case id, status, denomination, phone, website, about
@@ -364,6 +370,7 @@ let denominationOptions: [String] = [
           case livestreamUrl   = "livestream_url"
           case latitude
           case longitude
+          case worshipStyle    = "worship_style"
       }
   }
 

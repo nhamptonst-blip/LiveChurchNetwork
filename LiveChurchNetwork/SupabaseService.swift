@@ -470,6 +470,7 @@ private struct ProfileCoverUpdate: Encodable {
              .select()
              .eq("role", value: "worshipper")
              .neq("activity_visibility", value: "private")
+             .order("created_at", ascending: false)
              .range(from: offset, to: offset + limit - 1)
              .execute()
              .value

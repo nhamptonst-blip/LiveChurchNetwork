@@ -218,6 +218,7 @@ final class DiscoverViewModel: ObservableObject {
         church.livestreamUrl = submission.livestreamUrl ?? ""
         church.languages = submission.languages ?? ""
         church.ministries = submission.ministries ?? ""
+        church.worshipStyle = submission.worshipStyle ?? ""
         church.latitude = submission.latitude
         church.longitude = submission.longitude
         return church
@@ -234,7 +235,7 @@ final class DiscoverViewModel: ObservableObject {
             coverImageUrl: profile.coverUrl
         )
         user.homeChurchName = profile.homeChurchName
-        user.isLeader = profile.role == "church_admin"
+        user.isLeader = profile.isLeader ?? (profile.role == "church_admin")
         return user
     }
 }

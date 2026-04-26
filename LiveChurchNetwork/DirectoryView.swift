@@ -62,6 +62,14 @@ struct DirectoryView: View {
                 }
             }
 
+            // Filter by worship styles
+            if !churchFilters.worshipStyles.isEmpty {
+                churches = churches.filter { church in
+                    let churchStyles = church.worshipStyle.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+                    return !churchFilters.worshipStyles.intersection(Set(churchStyles)).isEmpty
+                }
+            }
+
             // Filter by location "Near Me"
             if churchFilters.location.contains("Near Me") {
                 if locationEnabled {
