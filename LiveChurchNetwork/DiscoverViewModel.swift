@@ -236,6 +236,11 @@ final class DiscoverViewModel: ObservableObject {
         )
         user.homeChurchName = profile.homeChurchName
         user.isLeader = profile.isLeader ?? (profile.role == "church_admin")
+        user.isDiscoverable = profile.isDiscoverable ?? true
+        user.isSearchable = profile.isSearchable ?? true
+        user.showHomeChurch = profile.showHomeChurch ?? true
+        user.showFollowers = profile.showFollowers ?? true
+        user.showFollowing = profile.showFollowing ?? true
         return user
     }
 }

@@ -119,6 +119,11 @@ let denominationOptions: [String] = [
       let churchesVisibility:  String?
       let createdAt: Date?
       let isLeader: Bool?
+      let isDiscoverable: Bool?
+      let isSearchable: Bool?
+      let showHomeChurch: Bool?
+      let showFollowers: Bool?
+      let showFollowing: Bool?
 
       var activityPrivacy:  PrivacySetting { PrivacySetting(rawValue: activityVisibility  ?? "") ?? .public }
       var followersPrivacy: PrivacySetting { PrivacySetting(rawValue: followersVisibility ?? "") ?? .public }
@@ -146,6 +151,11 @@ let denominationOptions: [String] = [
           case churchesVisibility  = "churches_visibility"
           case createdAt           = "created_at"
           case isLeader            = "is_leader"
+          case isDiscoverable      = "is_discoverable"
+          case isSearchable        = "is_searchable"
+          case showHomeChurch      = "show_home_church"
+          case showFollowers       = "show_followers"
+          case showFollowing       = "show_following"
       }
   }
 
@@ -169,6 +179,12 @@ let denominationOptions: [String] = [
       var followersPrivacy: PrivacySetting = .public
       var followingPrivacy: PrivacySetting = .public
       var churchesPrivacy:  PrivacySetting = .public
+      // Discovery privacy — defaults allow discovery
+      var isDiscoverable: Bool = true
+      var isSearchable: Bool = true
+      var showHomeChurch: Bool = true
+      var showFollowers: Bool = true
+      var showFollowing: Bool = true
 
       var hasProfilePhoto: Bool { photoUrl != nil && !photoUrl!.isEmpty }
       var hasCoverImage: Bool { coverImageUrl != nil && !coverImageUrl!.isEmpty }

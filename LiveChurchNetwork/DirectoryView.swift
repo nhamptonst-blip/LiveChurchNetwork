@@ -84,7 +84,7 @@ struct DirectoryView: View {
     }
 
     private var filteredBrowsePeople: [DiscoverableUser] {
-        var people = vm.browsePeople
+        var people = vm.browsePeople.filter { $0.isDiscoverable }
 
         // Apply PeopleFilters
         if !peopleFilters.isEmpty {
@@ -167,12 +167,14 @@ struct DirectoryView: View {
             return true
         }
 
-        // Search people
+        // Search people (respect isSearchable privacy)
         searchResultsPeople = vm.browsePeople.filter { person in
-            person.name.lowercased().contains(lowercaseQuery) ||
-            (person.homeChurchName?.lowercased().contains(lowercaseQuery) ?? false) ||
-            (person.denomination?.lowercased().contains(lowercaseQuery) ?? false) ||
-            (person.bio?.lowercased().contains(lowercaseQuery) ?? false)
+            person.isSearchable && (
+                person.name.lowercased().contains(lowercaseQuery) ||
+                (person.homeChurchName?.lowercased().contains(lowercaseQuery) ?? false) ||
+                (person.denomination?.lowercased().contains(lowercaseQuery) ?? false) ||
+                (person.bio?.lowercased().contains(lowercaseQuery) ?? false)
+            )
         }
     }
 

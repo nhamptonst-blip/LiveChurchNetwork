@@ -63,7 +63,7 @@ struct PeopleDiscoveryCard: View {
                     .foregroundColor(.lcText)
                     .lineLimit(1)
 
-                let subtitle = user.homeChurchName ?? user.denomination ?? "Worshipper"
+                let subtitle = (user.showHomeChurch ? user.homeChurchName : nil) ?? user.denomination ?? "Worshipper"
                 Text(subtitle)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.lcText3)

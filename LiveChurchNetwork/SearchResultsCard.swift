@@ -167,12 +167,12 @@ struct PeopleSearchResultRow: View {
                     .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                     .lineLimit(1)
 
-                if let homeChurchName = user.homeChurchName {
+                if user.showHomeChurch, let homeChurchName = user.homeChurchName {
                     Text(homeChurchName)
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(Color(red: 31/255, green: 60/255, blue: 136/255))
                         .lineLimit(1)
-                } else if let denomination = user.denomination {
+                } else if user.showHomeChurch != false, let denomination = user.denomination {
                     Text(denomination)
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(Color(red: 31/255, green: 60/255, blue: 136/255))

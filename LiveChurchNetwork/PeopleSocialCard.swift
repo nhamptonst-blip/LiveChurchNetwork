@@ -57,12 +57,15 @@ struct PeopleSocialCard: View {
                     .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                     .lineLimit(1)
 
-                // Home church — 13px, weight 600, navy
-                if let homeChurchName = user.homeChurchName {
+                // Home church — 13px, weight 600, navy (respect showHomeChurch privacy)
+                if user.showHomeChurch, let homeChurchName = user.homeChurchName {
                     Text(homeChurchName)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(Color(red: 31/255, green: 60/255, blue: 136/255))
                         .lineLimit(1)
+                } else if user.showHomeChurch == false {
+                    // Home church is hidden by user
+                    EmptyView()
                 } else if let denomination = user.denomination {
                     Text(denomination)
                         .font(.system(size: 13, weight: .semibold))
