@@ -141,17 +141,26 @@ struct UserProfileView: View {
                     }
                 }
 
-                // Stats
-                HStack(spacing: 24) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("\(followerCount)")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.lcText)
-                        Text(followerCount == 1 ? "follower" : "followers")
+                // Stats (respect privacy settings)
+                if profile?.showFollowers ?? true {
+                    HStack(spacing: 24) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(followerCount)")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.lcText)
+                            Text(followerCount == 1 ? "follower" : "followers")
+                                .font(.system(size: 12))
+                                .foregroundColor(.lcText3)
+                        }
+                        Spacer()
+                    }
+                } else {
+                    HStack {
+                        Text("Followers hidden")
                             .font(.system(size: 12))
                             .foregroundColor(.lcText3)
+                        Spacer()
                     }
-                    Spacer()
                 }
 
                 Divider()

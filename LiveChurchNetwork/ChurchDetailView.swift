@@ -17,7 +17,7 @@ struct ChurchDetailView: View {
 
     @State private var selectedTab: ChurchProfileTab
 
-    init(church: Church, initialTab: ChurchProfileTab = .home) {
+    init(church: Church, initialTab: ChurchProfileTab = .about) {
         self.church = church
         self._selectedTab = State(initialValue: initialTab)
     }
