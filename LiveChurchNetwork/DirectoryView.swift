@@ -8,6 +8,7 @@ struct DirectoryView: View {
     @StateObject private var locationManager = LocationManager.shared
     @State private var selectedTab: DiscoverTab = .churches
     @State private var isSearchFocused = false
+    @State private var activeSmartFilter: String? = nil
     @State private var activeFilters: Set<String> = []
     @State private var selectedDenomination: String? = nil
     @State private var selectedPeopleFilter: String = "Suggested"
@@ -183,8 +184,6 @@ struct DirectoryView: View {
         case people
     }
 
-    private let quickFilters = ["Live Now", "Near Me", "Trending", "Non-Denominational", "Baptist", "Catholic", "Pentecostal", "More Filters"]
-
     var body: some View {
         NavigationStack {
             ZStack {
@@ -306,10 +305,33 @@ struct DirectoryView: View {
             } else if vm.isCuratedLoading {
                 loadingGrid
             } else {
-                // MARK: - 1. Quick Filter Row
-                quickFilterRow
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
+                // MARK: - 1. Smart Filter Row
+                SmartFilterRow(
+                    activeFilter: $activeSmartFilter,
+                    showFilterSheet: $showChurchFilterSheet,
+                    filterCount: churchFilters.isEmpty ? 0 : 1,
+                    onFilterChange: { filter in
+                        // Update filtering based on active smart filter
+                        if filter == "Live" {
+                            // Show only live churches
+                            churchFilters.location = []
+                        } else if filter == "Nearby" {
+                            // Show only nearby churches
+                            churchFilters.location = ["Near Me"]
+                        } else if filter == "Trending" {
+                            // Show trending churches (could add trending flag to model)
+                            churchFilters.location = []
+                        } else {
+                            // Clear smart filters
+                            churchFilters.location = []
+                        }
+                    }
+                )
+                .sheet(isPresented: $showChurchFilterSheet) {
+                    ChurchFilterSheet(selectedFilters: $churchFilters)
+                        .presentationDetents([.fraction(0.85)])
+                        .presentationCornerRadius(28)
+                }
 
                 // MARK: - 2. Featured Churches (Premium Horizontal Scroll)
                 if !vm.trendingChurches.isEmpty {
@@ -552,53 +574,6 @@ struct DirectoryView: View {
         guard let userCity = locationManager.userCity,
               let personCity = person.city else { return false }
         return personCity.lowercased().contains(userCity.lowercased())
-    }
-
-    // MARK: - Quick Filter Row (Churches)
-    private var quickFilterRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(quickFilters, id: \.self) { filter in
-                    QuickFilterChip(
-                        label: filter,
-                        isActive: activeFilters.contains(filter),
-                        hasRedDot: filter == "Live Now"
-                    ) {
-                        if activeFilters.contains(filter) {
-                            activeFilters.remove(filter)
-                        } else {
-                            activeFilters.insert(filter)
-                        }
-                    }
-                }
-
-                // More Filters button
-                Button(action: { showChurchFilterSheet = true }) {
-                    Text("More Filters")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(!churchFilters.isEmpty ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
-                        .frame(height: 38)
-                        .padding(.horizontal, 14)
-                        .background(!churchFilters.isEmpty ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 999))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 999).stroke(
-                                !churchFilters.isEmpty
-                                    ? Color(red: 31/255, green: 60/255, blue: 136/255)
-                                    : Color(red: 229/255, green: 231/255, blue: 235/255),
-                                lineWidth: 1
-                            )
-                        )
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.vertical, 4)
-        }
-        .sheet(isPresented: $showChurchFilterSheet) {
-            ChurchFilterSheet(selectedFilters: $churchFilters)
-                .presentationDetents([.fraction(0.85)])
-                .presentationCornerRadius(28)
-        }
     }
 
     // MARK: - People Filter Row
