@@ -35,42 +35,42 @@ struct ChurchFilterSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     // Location
-                    FilterSection(
+                    ChurchFilterCheckboxSection(
                         title: "Location",
                         options: ["Near Me", "Anywhere"],
                         selectedOptions: $tempFilters.location
                     )
 
                     // Denomination
-                    FilterSection(
+                    ChurchFilterCheckboxSection(
                         title: "Denomination",
                         options: ["Baptist", "Catholic", "Pentecostal", "Methodist", "Lutheran", "Presbyterian"],
                         selectedOptions: $tempFilters.denominations
                     )
 
                     // Service Availability
-                    FilterSection(
+                    ChurchFilterCheckboxSection(
                         title: "Service Availability",
                         options: ["Sunday", "Saturday", "Weekday", "Online"],
                         selectedOptions: $tempFilters.serviceAvailability
                     )
 
                     // Language
-                    FilterSection(
+                    ChurchFilterCheckboxSection(
                         title: "Language",
                         options: ["English", "Spanish", "Mandarin", "Korean", "Vietnamese"],
                         selectedOptions: $tempFilters.languages
                     )
 
                     // Ministries
-                    FilterSection(
+                    ChurchFilterCheckboxSection(
                         title: "Ministries",
                         options: ["Youth", "College", "Singles", "Families", "Prayer", "Music"],
                         selectedOptions: $tempFilters.ministries
                     )
 
                     // Worship Style
-                    FilterSection(
+                    ChurchFilterCheckboxSection(
                         title: "Worship Style",
                         options: ["Traditional", "Contemporary", "Gospel", "Charismatic"],
                         selectedOptions: $tempFilters.worshipStyles
@@ -114,7 +114,7 @@ struct ChurchFilterSheet: View {
     }
 }
 
-struct FilterSection: View {
+struct ChurchFilterCheckboxSection: View {
     let title: String
     let options: [String]
     @Binding var selectedOptions: Set<String>

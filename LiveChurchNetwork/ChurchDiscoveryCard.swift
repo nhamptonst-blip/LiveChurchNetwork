@@ -4,6 +4,7 @@ struct ChurchDiscoveryCard: View {
     let church: Church
     let initialIsFollowing: Bool
     @EnvironmentObject var appState: AppState
+    @State private var isPressed = false
 
     private var defaultGradient: LinearGradient {
         let hash = church.denomination.hashValue % 5
@@ -75,18 +76,18 @@ struct ChurchDiscoveryCard: View {
             // Body — 70pt remaining (240 total - 120 cover - 50 overlap)
             VStack(spacing: 8) {
                 Text(church.name)
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 15, weight: .black))
                     .foregroundColor(.lcText)
                     .lineLimit(1)
 
                 if !church.address.isEmpty {
                     Text(church.address)
-                        .font(.system(size: 11, weight: .regular))
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.lcText3)
                         .lineLimit(1)
                 } else {
                     Text(church.denomination)
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.lcText3)
                         .lineLimit(1)
                 }
@@ -105,8 +106,19 @@ struct ChurchDiscoveryCard: View {
         }
         .frame(height: 240)
         .background(Color.white)
-        .cornerRadius(14)
-        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 3)
+        .cornerRadius(22)
+        .overlay(
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1)
+        )
+        .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.06), radius: 8, x: 0, y: 2)
+        .scaleEffect(isPressed ? 0.97 : 1.0)
+        .animation(.easeInOut(duration: 0.12), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
     }
 
     private var churchLogo: some View {

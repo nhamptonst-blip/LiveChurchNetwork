@@ -10,7 +10,7 @@ extension Color {
     static let lcTeal      = Color(red: 91/255,  green: 143/255, blue: 168/255)
 
     // Backgrounds
-    static let lcCream     = Color(red: 250/255, green: 248/255, blue: 245/255)
+    static let lcCream     = Color(red: 250/255, green: 249/255, blue: 246/255)
 
     // Typography — pure charcoal hierarchy for strong contrast
     static let lcText      = Color(red: 22/255,  green: 22/255,  blue: 22/255)   // #161616 near-black

@@ -65,20 +65,20 @@ struct ChurchSearchResultCard: View {
             .clipped()
 
             // Content
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 5) {
                 Text(church.name)
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 15, weight: .black))
                     .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                     .lineLimit(1)
 
                 Text(church.denomination)
-                    .font(.system(size: 12, weight: .regular))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
                     .lineLimit(1)
 
                 if !church.city.isEmpty {
                     Text(church.city)
-                        .font(.system(size: 11, weight: .regular))
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundColor(Color(red: 156/255, green: 163/255, blue: 175/255))
                         .lineLimit(1)
                 }
@@ -101,9 +101,9 @@ struct ChurchSearchResultCard: View {
         .frame(minHeight: 88)
         .padding(12)
         .background(Color.white)
-        .cornerRadius(16)
+        .cornerRadius(22)
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 22)
                 .stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1)
         )
         .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.05), radius: 8, x: 0, y: 2)
@@ -161,9 +161,9 @@ struct PeopleSearchResultRow: View {
             .frame(width: 56, height: 56)
 
             // Content
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 5) {
                 Text(user.name)
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 15, weight: .black))
                     .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                     .lineLimit(1)
 
@@ -181,7 +181,7 @@ struct PeopleSearchResultRow: View {
 
                 if let bio = user.bio, !bio.isEmpty {
                     Text(bio)
-                        .font(.system(size: 11, weight: .regular))
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
                         .lineLimit(1)
                 }
@@ -204,9 +204,9 @@ struct PeopleSearchResultRow: View {
         .frame(minHeight: 80)
         .padding(12)
         .background(Color.white)
-        .cornerRadius(16)
+        .cornerRadius(22)
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 22)
                 .stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1)
         )
         .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.05), radius: 8, x: 0, y: 2)

@@ -132,8 +132,12 @@ struct ChurchCard: View {
 
         }
         .background(Color.white)
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 3)
+        .cornerRadius(22)
+        .overlay(
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1)
+        )
+        .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.06), radius: 8, x: 0, y: 2)
     }
 
     private var churchInitialCircle: some View {

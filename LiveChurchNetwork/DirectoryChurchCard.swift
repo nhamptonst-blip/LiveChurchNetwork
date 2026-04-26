@@ -65,7 +65,7 @@ struct DirectoryChurchCard: View {
                     }
                 }
                 .frame(width: 44, height: 44)
-                .border(Circle(), width: 3, color: .white)
+                .overlay(Circle().stroke(Color.white, lineWidth: 3))
                 .offset(y: 22)
             }
             .frame(height: 112)

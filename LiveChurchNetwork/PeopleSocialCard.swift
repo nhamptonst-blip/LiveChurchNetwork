@@ -84,7 +84,7 @@ struct PeopleSocialCard: View {
 
                 // Social proof — 12px, gray
                 Text("Also follows Mosaic Church")
-                    .font(.system(size: 12, weight: .regular))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundColor(Color(red: 156/255, green: 163/255, blue: 175/255))
                     .lineLimit(1)
 

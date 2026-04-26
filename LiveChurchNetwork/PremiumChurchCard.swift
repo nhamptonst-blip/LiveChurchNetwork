@@ -4,6 +4,7 @@ struct PremiumChurchCard: View {
     let church: Church
     let initialIsFollowing: Bool
     @EnvironmentObject var appState: AppState
+    @State private var isPressed = false
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -85,7 +86,7 @@ struct PremiumChurchCard: View {
 
                     // Name
                     Text(church.name)
-                        .font(.system(size: 15, weight: .bold))
+                        .font(.system(size: 16, weight: .black))
                         .foregroundColor(.lcText)
                         .lineLimit(2)
                         .padding(.horizontal, 12)
@@ -93,7 +94,7 @@ struct PremiumChurchCard: View {
                     // Denomination
                     if !church.denomination.isEmpty {
                         Text(church.denomination)
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.lcText3)
                             .padding(.horizontal, 12)
                     }
@@ -104,7 +105,7 @@ struct PremiumChurchCard: View {
                             Image(systemName: "person.2.fill")
                                 .font(.system(size: 10))
                             Text(formatCount(church.followerCount))
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(.system(size: 12, weight: .medium))
                         }
                         .foregroundColor(.lcText3)
 
@@ -116,7 +117,7 @@ struct PremiumChurchCard: View {
                                 followingType: "church",
                                 initialIsFollowing: initialIsFollowing
                             )
-                            .frame(height: 28)
+                            .frame(height: 34)
                         }
                     }
                     .padding(.horizontal, 12)
@@ -124,8 +125,8 @@ struct PremiumChurchCard: View {
                 }
                 .background(Color.white)
             }
-            .cornerRadius(16)
-            .shadow(color: Color.black.opacity(0.10), radius: 12, x: 0, y: 4)
+            .cornerRadius(22)
+            .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.08), radius: 12, x: 0, y: 4)
             .background(Color.white)
 
             // MARK: - Badges (top-trailing)
@@ -139,6 +140,13 @@ struct PremiumChurchCard: View {
             }
             .padding(10)
         }
+        .scaleEffect(isPressed ? 0.97 : 1.0)
+        .animation(.easeInOut(duration: 0.12), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
     }
 
     private var churchInitialCircle: some View {

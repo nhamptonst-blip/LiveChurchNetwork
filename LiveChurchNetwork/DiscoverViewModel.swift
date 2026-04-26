@@ -26,6 +26,7 @@ final class DiscoverViewModel: ObservableObject {
     @Published var followedChurchSlugs: Set<String> = []
     @Published var followedUserIds: Set<String> = []
     @Published var isCuratedLoading = true
+    @Published var loadError = false
 
     enum ChurchSort: String, CaseIterable {
         case recommended = "Recommended"
@@ -89,44 +90,61 @@ final class DiscoverViewModel: ObservableObject {
     // MARK: - Data Loading
 
     func loadInitialData(appState: AppState) async {
-        async let liveTask = SupabaseService.shared.getLiveNowChurches()
-        async let recentTask = SupabaseService.shared.getRecentlyAddedChurches()
-        async let browseTask = SupabaseService.shared.getApprovedChurchesPaged(offset: 0, limit: 20)
-        async let peopleTask = SupabaseService.shared.getDiscoverableWorshippersPaged(offset: 0, limit: 20)
+        loadError = false
+        isCuratedLoading = true
+        do {
+            async let liveTask = SupabaseService.shared.getLiveNowChurches()
+            async let recentTask = SupabaseService.shared.getRecentlyAddedChurches()
+            async let browseTask = SupabaseService.shared.getApprovedChurchesPaged(offset: 0, limit: 20)
+            async let peopleTask = SupabaseService.shared.getDiscoverableWorshippersPaged(offset: 0, limit: 20)
 
-        let live = (try? await liveTask) ?? []
-        let recent = (try? await recentTask) ?? []
-        let browse = (try? await browseTask) ?? []
-        let people = (try? await peopleTask) ?? []
+            let live = try await liveTask
+            let recent = try await recentTask
+            let browse = try await browseTask
+            let people = try await peopleTask
 
-        // Fetch profile photos for all churches
-        let churchUserIds = (live + recent + browse).map { $0.userId }
-        let profileMap = await fetchChurchPhotoMap(userIds: churchUserIds)
+            // Fetch profile photos for all churches
+            let churchUserIds = (live + recent + browse).map { $0.userId }
+            let profileMap = await fetchChurchPhotoMap(userIds: churchUserIds)
 
-        liveNowChurches = live.map { toChurch($0, photoUrl: profileMap[$0.userId]) }
-        recentlyAdded = recent.map { toChurch($0, photoUrl: profileMap[$0.userId]) }
-        browseChurches = browse.map { toChurch($0, photoUrl: profileMap[$0.userId]) }
-        browsePeople = people.map { toDiscoverableUser($0) }
+            liveNowChurches = live.map { toChurch($0, photoUrl: profileMap[$0.userId]) }
+            recentlyAdded = recent.map { toChurch($0, photoUrl: profileMap[$0.userId]) }
+            browseChurches = browse.map { toChurch($0, photoUrl: profileMap[$0.userId]) }
+            browsePeople = people.map { toDiscoverableUser($0) }
 
-        // Recommended is same as live for now (can be enhanced with RecommendationEngine later)
-        recommendedChurches = liveNowChurches
+            // Recommended is same as live for now (can be enhanced with RecommendationEngine later)
+            recommendedChurches = liveNowChurches
 
-        // Trending: use recentlyAdded or first few browse churches
-        trendingChurches = recentlyAdded.count > 0 ? recentlyAdded : browseChurches.prefix(6).map { $0 }
+            // Trending: use recentlyAdded or first few browse churches
+            trendingChurches = recentlyAdded.count > 0 ? recentlyAdded : browseChurches.prefix(6).map { $0 }
 
-        // New This Week: recentlyAdded churches
-        newThisWeek = recentlyAdded
+            // New This Week: recentlyAdded churches
+            newThisWeek = recentlyAdded
 
-        // Load follow state
-        if let userId = appState.currentUserId {
-            let follows = (try? await SupabaseService.shared.getFollowing(followerId: userId)) ?? []
-            followedChurchSlugs = Set(follows.filter { $0.followingType == "church" }.map { $0.followingId })
-            followedUserIds = Set(follows.filter { $0.followingType == "worshipper" }.map { $0.followingId })
+            // Load follow state
+            if let userId = appState.currentUserId {
+                let follows = (try? await SupabaseService.shared.getFollowing(followerId: userId)) ?? []
+                followedChurchSlugs = Set(follows.filter { $0.followingType == "church" }.map { $0.followingId })
+                followedUserIds = Set(follows.filter { $0.followingType == "worshipper" }.map { $0.followingId })
+            }
+
+            hasMorePeople = people.count >= 20
+            hasMoreChurches = browse.count >= 20
+        } catch {
+            loadError = true
         }
-
-        hasMorePeople = people.count >= 20
-        hasMoreChurches = browse.count >= 20
         isCuratedLoading = false
+    }
+
+    func reload(appState: AppState) async {
+        browseChurches = []
+        browsePeople = []
+        suggestedPeople = []
+        liveNowChurches = []
+        recentlyAdded = []
+        hasMoreChurches = true
+        hasMorePeople = true
+        await loadInitialData(appState: appState)
     }
 
     func loadMoreChurches() async {

@@ -15,15 +15,16 @@ struct FollowButton: View {
                 EmptyView()
             } else {
                 Button {
+                    HapticEngine.impact(.light)
                     print("[FollowButton] Clicked for \(followingType) \(followingId), isFollowing=\(isFollowing), isToggling=\(isToggling)")
                     Task { await toggleFollow() }
                 } label: {
                     Text(isFollowing ? "Following" : "Follow")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(.system(size: 13, weight: .bold))
                         .foregroundColor(isFollowing ? .lcNavy : .white)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 6)
-                        .background(isFollowing ? Color.clear : Color.lcNavy)
+                        .background(isFollowing ? Color(red: 243/255, green: 244/255, blue: 246/255) : Color.lcNavy)
                         .cornerRadius(20)
                         .overlay(
                             RoundedRectangle(cornerRadius: 20)
@@ -31,6 +32,7 @@ struct FollowButton: View {
                         )
                 }
                 .disabled(isToggling)
+                .contentShape(Rectangle())
             }
         }
         .onAppear {

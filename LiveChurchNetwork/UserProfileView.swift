@@ -142,7 +142,7 @@ struct UserProfileView: View {
                 }
 
                 // Stats (respect privacy settings)
-                if profile?.showFollowers ?? true {
+                if profile.showFollowers ?? true {
                     HStack(spacing: 24) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("\(followerCount)")

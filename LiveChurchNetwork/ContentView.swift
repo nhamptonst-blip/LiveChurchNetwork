@@ -215,7 +215,7 @@ struct MainTabView: View {
         // Large title — dark charcoal, heavy weight
         appearance.largeTitleTextAttributes = [
             .foregroundColor: UIColor.lcText,
-            .font: UIFont.systemFont(ofSize: 32, weight: .black)
+            .font: UIFont.systemFont(ofSize: 34, weight: .black)
         ]
 
         // Inline title

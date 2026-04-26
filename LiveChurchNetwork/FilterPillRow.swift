@@ -66,6 +66,7 @@ struct FilterPillRow: View {
     }
 
     private func toggleFilter(_ filter: DiscoverViewModel.DiscoverFilter) {
+        HapticEngine.selection()
         if activeFilters.contains(filter) {
             activeFilters.remove(filter)
         } else {
@@ -129,9 +130,9 @@ struct FilterChip: View {
                     : Color.white
             )
             .foregroundColor(isActive ? .white : Color(red: 31/255, green: 60/255, blue: 136/255))
-            .cornerRadius(16)
+            .clipShape(RoundedRectangle(cornerRadius: 999))
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 999)
                     .stroke(
                         isActive
                             ? Color.clear

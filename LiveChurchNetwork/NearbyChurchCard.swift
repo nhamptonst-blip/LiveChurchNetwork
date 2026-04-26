@@ -71,13 +71,13 @@ struct NearbyChurchCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 // Church name
                 Text(church.name)
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(size: 15, weight: .black))
                     .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                     .lineLimit(1)
 
                 // Denomination
                 Text(church.denomination)
-                    .font(.system(size: 13, weight: .regular))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
                     .lineLimit(1)
 
@@ -85,14 +85,14 @@ struct NearbyChurchCard: View {
                 HStack(spacing: 4) {
                     if !church.city.isEmpty {
                         Text(church.city)
-                            .font(.system(size: 13, weight: .regular))
+                            .font(.system(size: 13, weight: .medium))
                             .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
                             .lineLimit(1)
                     }
 
                     if let distance = distance {
                         Text("• \(String(format: "%.1f", distance)) mi away")
-                            .font(.system(size: 13, weight: .regular))
+                            .font(.system(size: 13, weight: .medium))
                             .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
                             .lineLimit(1)
                     }

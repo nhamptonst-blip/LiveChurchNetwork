@@ -188,7 +188,7 @@ struct DirectoryView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.white.ignoresSafeArea()
+                Color.lcCream.ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     // MARK: - Header
@@ -207,7 +207,7 @@ struct DirectoryView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
                     .padding(.bottom, 16)
-                    .background(Color.white)
+                    .background(Color.lcCream)
 
                     // MARK: - Search Bar
                     HStack(spacing: 12) {
@@ -243,12 +243,12 @@ struct DirectoryView: View {
                     }
                     .padding(.horizontal, 16)
                     .frame(height: 54)
-                    .background(Color.white)
-                    .border(
-                        Color(red: 229/255, green: 231/255, blue: 235/255),
-                        width: 1
+                    .background(Color.lcCream)
+                    .clipShape(RoundedRectangle(cornerRadius: 999))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 999)
+                            .stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1)
                     )
-                    .cornerRadius(18)
                     .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.06), radius: 8, x: 0, y: 2)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 16)
@@ -262,7 +262,7 @@ struct DirectoryView: View {
                     .frame(height: 44)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 16)
-                    .background(Color.white)
+                    .background(Color.lcCream)
                     // Custom segmented control styling
                     .onAppear {
                         let appearance = UISegmentedControl.appearance()
@@ -301,7 +301,7 @@ struct DirectoryView: View {
                                 peopleContent
                             }
                         }
-                        .background(Color.white)
+                        .background(Color.lcCream)
                     }
                 }
             }
@@ -312,7 +312,11 @@ struct DirectoryView: View {
     // MARK: - Churches Content
     private var churchesContent: some View {
         VStack(spacing: 0) {
-            if vm.isCuratedLoading {
+            if vm.loadError {
+                DiscoverErrorState {
+                    Task { await vm.reload(appState: appState) }
+                }
+            } else if vm.isCuratedLoading {
                 loadingGrid
             } else {
                 // MARK: - 1. Quick Filter Row
@@ -358,13 +362,25 @@ struct DirectoryView: View {
                 if !vm.liveNowChurches.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Live Now")
-                            .font(.system(size: 22, weight: .heavy))
+                            .font(.system(size: 22, weight: .black))
                             .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 20)
 
                         churchGrid(vm.liveNowChurches.prefix(2).map { $0 })
                     }
+                    .padding(.vertical, 20)
+                } else {
+                    DiscoverEmptyState(
+                        icon: "antenna.radiowaves.left.and.right",
+                        title: "No churches are live right now",
+                        subtitle: "Explore featured churches or check back during service times.",
+                        actions: [
+                            .init(label: "Browse Churches") {
+                                // Already on churches tab, just scroll or do nothing
+                            }
+                        ]
+                    )
                     .padding(.vertical, 20)
                 }
 
@@ -403,7 +419,7 @@ struct DirectoryView: View {
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 48)
                                 .background(Color(red: 31/255, green: 60/255, blue: 136/255))
-                                .cornerRadius(12)
+                                .cornerRadius(16)
                         }
                         .padding(.horizontal, 20)
                     }
@@ -467,7 +483,7 @@ struct DirectoryView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(alignment: .center, spacing: 8) {
                         Text(selectedDenomination.map { "\($0) Churches" } ?? "Browse All Churches")
-                            .font(.system(size: 22, weight: .heavy))
+                            .font(.system(size: 22, weight: .black))
                             .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -502,7 +518,13 @@ struct DirectoryView: View {
                         DiscoverEmptyState(
                             icon: "building.2",
                             title: "No churches match your filters",
-                            subtitle: "Try adjusting your filters or denomination selection"
+                            subtitle: "Try adjusting your filters or denomination selection",
+                            actions: [
+                                .init(label: "Clear Filters") {
+                                    churchFilters = ChurchFilters()
+                                    selectedDenomination = nil
+                                }
+                            ]
                         )
                         .padding(.vertical, 40)
                     }
@@ -512,7 +534,13 @@ struct DirectoryView: View {
                     DiscoverEmptyState(
                         icon: "building.2",
                         title: "No churches found",
-                        subtitle: "Try adjusting your search"
+                        subtitle: "Try adjusting your search",
+                        actions: [
+                            .init(label: "Clear Filters") {
+                                churchFilters = ChurchFilters()
+                                selectedDenomination = nil
+                            }
+                        ]
                     )
                     .padding(.vertical, 40)
                 }
@@ -560,18 +588,20 @@ struct DirectoryView: View {
                 // More Filters button
                 Button(action: { showChurchFilterSheet = true }) {
                     Text("More Filters")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 14, weight: .bold))
                         .foregroundColor(!churchFilters.isEmpty ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
                         .frame(height: 38)
                         .padding(.horizontal, 14)
                         .background(!churchFilters.isEmpty ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
-                        .border(
-                            !churchFilters.isEmpty
-                                ? Color(red: 31/255, green: 60/255, blue: 136/255)
-                                : Color(red: 229/255, green: 231/255, blue: 235/255),
-                            width: 1
+                        .clipShape(RoundedRectangle(cornerRadius: 999))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 999).stroke(
+                                !churchFilters.isEmpty
+                                    ? Color(red: 31/255, green: 60/255, blue: 136/255)
+                                    : Color(red: 229/255, green: 231/255, blue: 235/255),
+                                lineWidth: 1
+                            )
                         )
-                        .cornerRadius(999)
                 }
                 .buttonStyle(.plain)
             }
@@ -591,18 +621,20 @@ struct DirectoryView: View {
                 ForEach(peopleFilterOptions, id: \.self) { filter in
                     Button(action: { selectedPeopleFilter = filter }) {
                         Text(filter)
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundColor(selectedPeopleFilter == filter ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
                             .frame(height: 38)
                             .padding(.horizontal, 14)
                             .background(selectedPeopleFilter == filter ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
-                            .border(
-                                selectedPeopleFilter == filter
-                                    ? Color(red: 31/255, green: 60/255, blue: 136/255)
-                                    : Color(red: 229/255, green: 231/255, blue: 235/255),
-                                width: 1
+                            .clipShape(RoundedRectangle(cornerRadius: 999))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 999).stroke(
+                                    selectedPeopleFilter == filter
+                                        ? Color(red: 31/255, green: 60/255, blue: 136/255)
+                                        : Color(red: 229/255, green: 231/255, blue: 235/255),
+                                    lineWidth: 1
+                                )
                             )
-                            .cornerRadius(999)
                     }
                     .buttonStyle(.plain)
                 }
@@ -610,18 +642,20 @@ struct DirectoryView: View {
                 // More Filters button
                 Button(action: { showPeopleFilterSheet = true }) {
                     Text("More Filters")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 14, weight: .bold))
                         .foregroundColor(!peopleFilters.isEmpty ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
                         .frame(height: 38)
                         .padding(.horizontal, 14)
                         .background(!peopleFilters.isEmpty ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
-                        .border(
-                            !peopleFilters.isEmpty
-                                ? Color(red: 31/255, green: 60/255, blue: 136/255)
-                                : Color(red: 229/255, green: 231/255, blue: 235/255),
-                            width: 1
+                        .clipShape(RoundedRectangle(cornerRadius: 999))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 999).stroke(
+                                !peopleFilters.isEmpty
+                                    ? Color(red: 31/255, green: 60/255, blue: 136/255)
+                                    : Color(red: 229/255, green: 231/255, blue: 235/255),
+                                lineWidth: 1
+                            )
                         )
-                        .cornerRadius(999)
                 }
                 .buttonStyle(.plain)
             }
@@ -637,7 +671,11 @@ struct DirectoryView: View {
     // MARK: - People Content
     private var peopleContent: some View {
         VStack(spacing: 0) {
-            if vm.isCuratedLoading {
+            if vm.loadError {
+                DiscoverErrorState {
+                    Task { await vm.reload(appState: appState) }
+                }
+            } else if vm.isCuratedLoading {
                 loadingPeopleGrid
             } else {
                 // MARK: - 1. People Filter Row
@@ -651,7 +689,7 @@ struct DirectoryView: View {
                         if !vm.suggestedPeople.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Suggested Worshippers")
-                                    .font(.system(size: 22, weight: .heavy))
+                                    .font(.system(size: 22, weight: .black))
                                     .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.horizontal, 20)
@@ -664,7 +702,7 @@ struct DirectoryView: View {
                         if !filteredBrowsePeople.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("From Your Churches")
-                                    .font(.system(size: 22, weight: .heavy))
+                                    .font(.system(size: 22, weight: .black))
                                     .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.horizontal, 20)
@@ -677,7 +715,7 @@ struct DirectoryView: View {
                         if !filteredBrowsePeople.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("New Members")
-                                    .font(.system(size: 22, weight: .heavy))
+                                    .font(.system(size: 22, weight: .black))
                                     .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.horizontal, 20)
@@ -690,7 +728,7 @@ struct DirectoryView: View {
                         if !vm.suggestedPeople.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Faith Leaders")
-                                    .font(.system(size: 22, weight: .heavy))
+                                    .font(.system(size: 22, weight: .black))
                                     .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.horizontal, 20)
@@ -703,7 +741,12 @@ struct DirectoryView: View {
                             DiscoverEmptyState(
                                 icon: "person.2",
                                 title: "No worshippers found",
-                                subtitle: "Check back later"
+                                subtitle: "Check back later",
+                                actions: [
+                                    .init(label: "Clear Filters") {
+                                        peopleFilters = PeopleFilters()
+                                    }
+                                ]
                             )
                             .padding(.vertical, 40)
                         }
@@ -895,7 +938,14 @@ struct DirectoryView: View {
                         DiscoverEmptyState(
                             icon: "magnifyingglass",
                             title: "No results found",
-                            subtitle: "Try a different search term"
+                            subtitle: "Try a different search term",
+                            actions: [
+                                .init(label: "Clear Search") {
+                                    searchQuery = ""
+                                    searchResultsChurches = []
+                                    searchResultsPeople = []
+                                }
+                            ]
                         )
                         .padding(.vertical, 40)
                     }
@@ -909,7 +959,7 @@ struct DirectoryView: View {
     private var loadingGrid: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Loading...")
-                .font(.system(size: 22, weight: .heavy))
+                .font(.system(size: 22, weight: .black))
                 .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 20)
@@ -932,19 +982,14 @@ struct DirectoryView: View {
     private var loadingPeopleGrid: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Loading...")
-                .font(.system(size: 22, weight: .heavy))
+                .font(.system(size: 22, weight: .black))
                 .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 20)
 
-            VStack(spacing: 14) {
-                ForEach(0..<3, id: \.self) { _ in
-                    HStack(spacing: 14) {
-                        PeopleDiscoveryCardSkeleton()
-                            .frame(height: 250)
-                        PeopleDiscoveryCardSkeleton()
-                            .frame(height: 250)
-                    }
+            VStack(spacing: 12) {
+                ForEach(0..<6, id: \.self) { _ in
+                    PeopleSocialCardSkeleton()
                 }
             }
             .padding(.horizontal, 20)
