@@ -613,10 +613,10 @@ struct DirectoryView: View {
                 // MARK: - 1. Smart Filter Row
                 // Simple filter buttons
                 HStack(spacing: 8) {
-                    Button(action: {
+                    Button {
                         activeSmartFilter = activeSmartFilter == "Live" ? nil : "Live"
                         HapticEngine.selection()
-                    }) {
+                    } label: {
                         VStack(spacing: 4) {
                             Image(systemName: "play.circle.fill")
                                 .font(.system(size: 16, weight: .semibold))
@@ -624,16 +624,18 @@ struct DirectoryView: View {
                                 .font(.system(size: 13, weight: .bold))
                         }
                         .frame(maxWidth: .infinity)
+                        .frame(height: 38)
                         .foregroundColor(activeSmartFilter == "Live" ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
                         .background(activeSmartFilter == "Live" ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
                         .clipShape(RoundedRectangle(cornerRadius: 999))
                         .overlay(RoundedRectangle(cornerRadius: 999).stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1))
                     }
+                    .buttonStyle(.plain)
 
-                    Button(action: {
+                    Button {
                         activeSmartFilter = activeSmartFilter == "Nearby" ? nil : "Nearby"
                         HapticEngine.selection()
-                    }) {
+                    } label: {
                         VStack(spacing: 4) {
                             Image(systemName: "location.fill")
                                 .font(.system(size: 16, weight: .semibold))
@@ -641,16 +643,18 @@ struct DirectoryView: View {
                                 .font(.system(size: 13, weight: .bold))
                         }
                         .frame(maxWidth: .infinity)
+                        .frame(height: 38)
                         .foregroundColor(activeSmartFilter == "Nearby" ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
                         .background(activeSmartFilter == "Nearby" ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
                         .clipShape(RoundedRectangle(cornerRadius: 999))
                         .overlay(RoundedRectangle(cornerRadius: 999).stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1))
                     }
+                    .buttonStyle(.plain)
 
-                    Button(action: {
+                    Button {
                         activeSmartFilter = activeSmartFilter == "Trending" ? nil : "Trending"
                         HapticEngine.selection()
-                    }) {
+                    } label: {
                         VStack(spacing: 4) {
                             Image(systemName: "arrow.up.right")
                                 .font(.system(size: 16, weight: .semibold))
@@ -658,16 +662,18 @@ struct DirectoryView: View {
                                 .font(.system(size: 13, weight: .bold))
                         }
                         .frame(maxWidth: .infinity)
+                        .frame(height: 38)
                         .foregroundColor(activeSmartFilter == "Trending" ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
                         .background(activeSmartFilter == "Trending" ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
                         .clipShape(RoundedRectangle(cornerRadius: 999))
                         .overlay(RoundedRectangle(cornerRadius: 999).stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1))
                     }
+                    .buttonStyle(.plain)
 
-                    Button(action: {
+                    Button {
                         showChurchFilterSheet = true
                         HapticEngine.selection()
-                    }) {
+                    } label: {
                         VStack(spacing: 4) {
                             Image(systemName: "slider.horizontal.3")
                                 .font(.system(size: 16, weight: .semibold))
@@ -675,13 +681,14 @@ struct DirectoryView: View {
                                 .font(.system(size: 13, weight: .bold))
                         }
                         .frame(maxWidth: .infinity)
+                        .frame(height: 38)
                         .foregroundColor(!churchFilters.isEmpty ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
                         .background(!churchFilters.isEmpty ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
                         .clipShape(RoundedRectangle(cornerRadius: 999))
                         .overlay(RoundedRectangle(cornerRadius: 999).stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1))
                     }
+                    .buttonStyle(.plain)
                 }
-                .frame(height: 38)
                 .padding(.horizontal, 20)
                 .padding(.top, 18)
                 .padding(.bottom, 12)
