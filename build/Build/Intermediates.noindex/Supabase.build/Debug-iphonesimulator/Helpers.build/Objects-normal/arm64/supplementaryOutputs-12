@@ -1,0 +1,23 @@
+{
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/SourcePackages/checkouts/supabase-swift/Sources/Helpers/AnyJSON/AnyJSON+Codable.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Helpers.build/Objects-normal/arm64/AnyJSON+Codable.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Helpers.build/Objects-normal/arm64/AnyJSON+Codable.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Helpers.build/Objects-normal/arm64/AnyJSON+Codable.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Helpers.build/Objects-normal/arm64/AnyJSON+Codable.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Helpers.build/Objects-normal/arm64/AnyJSON+Codable.swiftdeps"
+  },
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/SourcePackages/checkouts/supabase-swift/Sources/Helpers/AnyJSON/AnyJSON.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Helpers.build/Objects-normal/arm64/AnyJSON.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Helpers.build/Objects-normal/arm64/AnyJSON.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Helpers.build/Objects-normal/arm64/AnyJSON.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Helpers.build/Objects-normal/arm64/AnyJSON.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Helpers.build/Objects-normal/arm64/AnyJSON.swiftdeps"
+  },
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/SourcePackages/checkouts/supabase-swift/Sources/Helpers/AsyncValueSubject.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Helpers.build/Objects-normal/arm64/AsyncValueSubject.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Helpers.build/Objects-normal/arm64/AsyncValueSubject.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Helpers.build/Objects-normal/arm64/AsyncValueSubject.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Helpers.build/Objects-normal/arm64/AsyncValueSubject.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Helpers.build/Objects-normal/arm64/AsyncValueSubject.swiftdeps"
+  }
+}

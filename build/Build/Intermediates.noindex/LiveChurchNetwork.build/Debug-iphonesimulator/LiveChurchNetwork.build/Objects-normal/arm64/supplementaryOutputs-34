@@ -1,0 +1,30 @@
+{
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/ChurchInboxView.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/ChurchInboxView.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/ChurchInboxView.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/ChurchInboxView.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/ChurchInboxView.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/ChurchInboxView.swiftdeps"
+  },
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/ChurchOnboardingView.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/ChurchOnboardingView.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/ChurchOnboardingView.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/ChurchOnboardingView.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/ChurchOnboardingView.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/ChurchOnboardingView.swiftdeps"
+  },
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/ContentView.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/ContentView.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/ContentView.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/ContentView.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/ContentView.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/ContentView.swiftdeps"
+  },
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/CreateEventView.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/CreateEventView.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/CreateEventView.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/CreateEventView.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/CreateEventView.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/CreateEventView.swiftdeps"
+  }
+}

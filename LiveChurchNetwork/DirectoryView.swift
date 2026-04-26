@@ -1,13 +1,14 @@
 import SwiftUI
 import UIKit
+import CoreLocation
 
 struct DirectoryView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var vm = DiscoverViewModel()
+    @StateObject private var locationManager = LocationManager.shared
     @State private var selectedTab: DiscoverTab = .churches
     @State private var isSearchFocused = false
     @State private var activeFilters: Set<String> = []
-    @State private var locationEnabled = false
     @State private var selectedDenomination: String? = nil
     @State private var selectedPeopleFilter: String = "Suggested"
     @State private var searchQuery: String = ""
@@ -27,6 +28,10 @@ struct DirectoryView: View {
     ]
 
     private let peopleFilterOptions = ["Suggested", "Near Me", "From My Churches", "New Members", "Leaders", "Mutuals"]
+
+    private var locationEnabled: Bool {
+        locationManager.authorizationStatus == .authorizedWhenInUse
+    }
 
     // MARK: - Computed Filter Properties
     private var filteredBrowseChurches: [Church] {
@@ -57,9 +62,13 @@ struct DirectoryView: View {
                 }
             }
 
-            // Filter by location (simplified: "Near Me" or "Anywhere")
-            if churchFilters.location.contains("Near Me") && !locationEnabled {
-                churches = churches.prefix(10).map { $0 }
+            // Filter by location "Near Me"
+            if churchFilters.location.contains("Near Me") {
+                if locationEnabled {
+                    churches = churches.filter { isNearby($0) }
+                } else {
+                    churches = []
+                }
             }
         }
 
@@ -72,8 +81,11 @@ struct DirectoryView: View {
         // Apply PeopleFilters
         if !peopleFilters.isEmpty {
             if peopleFilters.nearMe {
-                // Filter to nearby people (simplified: just reduce list for now)
-                people = people.prefix(Int(Double(people.count) * 0.5)).map { $0 }
+                if locationEnabled {
+                    people = people.filter { isPersonNearby($0) }
+                } else {
+                    people = []
+                }
             }
 
             if peopleFilters.fromMyChurches {
@@ -374,7 +386,7 @@ struct DirectoryView: View {
                         }
                         .padding(.horizontal, 20)
                     } else if !locationEnabled {
-                        Button(action: { locationEnabled = true }) {
+                        Button(action: { locationManager.requestPermission() }) {
                             Text("Enable Location")
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(.white)
@@ -496,6 +508,25 @@ struct DirectoryView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Proximity Helpers
+    private func isNearby(_ church: Church) -> Bool {
+        if let userLoc = locationManager.userLocation,
+           let lat = church.latitude, let lng = church.longitude {
+            return userLoc.distance(from: CLLocation(latitude: lat, longitude: lng)) < 80_000 // 50 miles
+        }
+        // Fall back to city string match
+        if let userCity = locationManager.userCity {
+            return church.city.lowercased().contains(userCity.lowercased())
+        }
+        return false
+    }
+
+    private func isPersonNearby(_ person: DiscoverableUser) -> Bool {
+        guard let userCity = locationManager.userCity,
+              let personCity = person.city else { return false }
+        return personCity.lowercased().contains(userCity.lowercased())
     }
 
     // MARK: - Quick Filter Row (Churches)

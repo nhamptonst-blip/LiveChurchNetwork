@@ -1,0 +1,23 @@
+{
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/SourcePackages/checkouts/supabase-swift/Sources/Auth/Internal/Constants.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Constants.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Constants.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Constants.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Constants.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Constants.swiftdeps"
+  },
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/SourcePackages/checkouts/supabase-swift/Sources/Auth/Internal/Dependencies.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Dependencies.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Dependencies.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Dependencies.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Dependencies.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Dependencies.swiftdeps"
+  },
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/SourcePackages/checkouts/supabase-swift/Sources/Auth/Internal/EventEmitter.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/EventEmitter.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/EventEmitter.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/EventEmitter.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/EventEmitter.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/EventEmitter.swiftdeps"
+  }
+}

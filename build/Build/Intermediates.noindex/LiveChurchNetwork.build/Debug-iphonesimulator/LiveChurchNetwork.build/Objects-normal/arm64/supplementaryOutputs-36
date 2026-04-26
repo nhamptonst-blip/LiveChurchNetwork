@@ -1,0 +1,30 @@
+{
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/FeedView.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/FeedView.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/FeedView.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/FeedView.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/FeedView.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/FeedView.swiftdeps"
+  },
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/FollowButton.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/FollowButton.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/FollowButton.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/FollowButton.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/FollowButton.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/FollowButton.swiftdeps"
+  },
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/HapticEngine.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/HapticEngine.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/HapticEngine.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/HapticEngine.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/HapticEngine.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/HapticEngine.swiftdeps"
+  },
+  "/Users/mikedeckman/Desktop/LiveChurchNetwork/LiveChurchNetwork/HomeChurchPickerSheet.swift" : {
+    "const-values" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/HomeChurchPickerSheet.swiftconstvalues",
+    "dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/HomeChurchPickerSheet.d",
+    "diagnostics" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/HomeChurchPickerSheet.dia",
+    "object" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/HomeChurchPickerSheet.o",
+    "swift-dependencies" : "/Users/mikedeckman/Desktop/LiveChurchNetwork/build/Build/Intermediates.noindex/LiveChurchNetwork.build/Debug-iphonesimulator/LiveChurchNetwork.build/Objects-normal/arm64/HomeChurchPickerSheet.swiftdeps"
+  }
+}
