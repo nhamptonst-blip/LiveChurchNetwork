@@ -253,42 +253,29 @@ struct DirectoryView: View {
                     .padding(.horizontal, 20)
                     .padding(.bottom, 16)
 
-                    // MARK: - Segmented Control
-                    Picker("Find Tab", selection: $selectedTab) {
-                        Text("Churches").tag(DiscoverTab.churches)
-                        Text("People").tag(DiscoverTab.people)
+                    // MARK: - Tab Switcher
+                    HStack(spacing: 0) {
+                        Button(action: { selectedTab = .churches }) {
+                            Text("Churches")
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundColor(selectedTab == .churches ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color(red: 107/255, green: 114/255, blue: 128/255))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                        }
+                        .buttonStyle(.plain)
+
+                        Button(action: { selectedTab = .people }) {
+                            Text("People")
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundColor(selectedTab == .people ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color(red: 107/255, green: 114/255, blue: 128/255))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .pickerStyle(.segmented)
-                    .frame(height: 44)
                     .padding(.horizontal, 20)
-                    .padding(.bottom, 16)
+                    .padding(.bottom, 12)
                     .background(Color.lcCream)
-                    // Custom segmented control styling
-                    .onAppear {
-                        let appearance = UISegmentedControl.appearance()
-                        appearance.selectedSegmentTintColor = UIColor.white
-                        appearance.setBackgroundImage(
-                            UIImage(color: UIColor(red: 243/255, green: 244/255, blue: 246/255, alpha: 1)),
-                            for: .normal,
-                            barMetrics: .default
-                        )
-                        appearance.setDividerImage(
-                            UIImage(),
-                            forLeftSegmentState: .normal,
-                            rightSegmentState: .normal,
-                            barMetrics: .default
-                        )
-                        let normalTextAttrs: [NSAttributedString.Key: Any] = [
-                            .foregroundColor: UIColor(red: 107/255, green: 114/255, blue: 128/255, alpha: 1),
-                            .font: UIFont.systemFont(ofSize: 15, weight: .bold)
-                        ]
-                        let selectedTextAttrs: [NSAttributedString.Key: Any] = [
-                            .foregroundColor: UIColor(red: 31/255, green: 60/255, blue: 136/255, alpha: 1),
-                            .font: UIFont.systemFont(ofSize: 15, weight: .bold)
-                        ]
-                        appearance.setTitleTextAttributes(normalTextAttrs, for: .normal)
-                        appearance.setTitleTextAttributes(selectedTextAttrs, for: .selected)
-                    }
 
                     // MARK: - Content
                     if !searchQuery.isEmpty {
