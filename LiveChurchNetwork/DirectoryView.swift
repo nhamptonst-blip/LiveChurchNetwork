@@ -443,7 +443,7 @@ struct DirectoryView: View {
                             .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
 
                         Text("Explore churches by tradition and worship style")
-                            .font(.system(size: 14, weight: .regular))
+                            .font(.system(size: 14, weight: .medium))
                             .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
                     }
                     .padding(.horizontal, 20)

@@ -7,10 +7,13 @@ struct DenominationCategoryCard: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            HapticEngine.selection()
+            action()
+        }) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(denomination)
-                    .font(.system(size: 16, weight: .black))
+                    .font(.system(size: 15, weight: .black))
                     .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
                     .lineLimit(1)
 
@@ -18,29 +21,25 @@ struct DenominationCategoryCard: View {
 
                 HStack(spacing: 0) {
                     Text("\(count)")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
 
                     Text(" churches")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(height: 86)
+            .frame(height: 88)
             .padding(16)
-            .background(isSelected ? Color(red: 31/255, green: 60/255, blue: 136/255).opacity(0.1) : Color.white)
-            .cornerRadius(20)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 22))
             .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(
-                        isSelected
-                            ? Color(red: 31/255, green: 60/255, blue: 136/255).opacity(0.3)
-                            : Color(red: 229/255, green: 231/255, blue: 235/255),
-                        lineWidth: 1
-                    )
+                RoundedRectangle(cornerRadius: 22)
+                    .stroke(Color(red: 229/255, green: 231/255, blue: 235/255).opacity(0.9), lineWidth: 1)
             )
-            .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.05), radius: 8, x: 0, y: 2)
+            .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.05), radius: 12, x: 0, y: 4)
+            .scaleEffect(isSelected ? 0.97 : 1.0)
         }
         .buttonStyle(.plain)
     }
