@@ -45,7 +45,7 @@ let denominationOptions: [String] = [
 
   // MARK: - Church (static directory)
 
-  struct Church: Identifiable, Equatable {
+  struct Church: Identifiable, Equatable, Hashable {
       let id = UUID()
       let name: String
       let slug: String
@@ -128,6 +128,8 @@ let denominationOptions: [String] = [
       let showHomeChurch: Bool?
       let showFollowers: Bool?
       let showFollowing: Bool?
+      let favoriteScripture: String?
+      let isBanned: Bool?
 
       var activityPrivacy:  PrivacySetting { PrivacySetting(rawValue: activityVisibility  ?? "") ?? .public }
       var followersPrivacy: PrivacySetting { PrivacySetting(rawValue: followersVisibility ?? "") ?? .public }
@@ -160,6 +162,8 @@ let denominationOptions: [String] = [
           case showHomeChurch      = "show_home_church"
           case showFollowers       = "show_followers"
           case showFollowing       = "show_following"
+          case favoriteScripture   = "favorite_scripture"
+          case isBanned            = "is_banned"
       }
   }
 
@@ -291,6 +295,10 @@ let denominationOptions: [String] = [
       let body: String
       var status: String         // InquiryStatus.rawValue
       let createdAt: Date
+      // In-app reply written by the church admin. Single reply for now;
+      // threading would require a separate inquiry_messages table.
+      var replyText: String?
+      var repliedAt: Date?
 
       var inquiryType: InquiryType  { InquiryType(rawValue: type)     ?? .general }
       var inquiryStatus: InquiryStatus { InquiryStatus(rawValue: status) ?? .new }
@@ -312,6 +320,8 @@ let denominationOptions: [String] = [
           case churchSlug = "church_slug"
           case churchName = "church_name"
           case createdAt  = "created_at"
+          case replyText  = "reply_text"
+          case repliedAt  = "replied_at"
       }
   }
 
@@ -361,6 +371,13 @@ let denominationOptions: [String] = [
       var latitude: Double?
       var longitude: Double?
       var worshipStyle: String?
+      // Cover photo (matches web's church_submissions.cover_url)
+      var coverUrl: String?
+      // Structured schedule (web stack adds these alongside the legacy text columns).
+      // Legacy serviceTimes/officeHours strings remain in sync as auto-derived summaries.
+      var serviceTimesJson: [ServiceTime]?
+      var officeHoursJson: OfficeHours?
+      var scheduleTimezone: String?
 
       enum CodingKeys: String, CodingKey {
           case id, status, denomination, phone, website, about
@@ -383,6 +400,7 @@ let denominationOptions: [String] = [
           case youtubeUrl      = "youtube_url"
           case languages
           case avatarUrl       = "avatar_url"
+          case coverUrl        = "cover_url"
           case officeHours     = "office_hours"
           case leadershipTeam  = "leadership_team"
           case ministries
@@ -391,6 +409,9 @@ let denominationOptions: [String] = [
           case latitude
           case longitude
           case worshipStyle    = "worship_style"
+          case serviceTimesJson = "service_times_json"
+          case officeHoursJson  = "office_hours_json"
+          case scheduleTimezone = "schedule_timezone"
       }
   }
 
@@ -413,16 +434,24 @@ let denominationOptions: [String] = [
       let authorId: UUID
       let authorName: String
       let authorType: String
+      let title: String?
       let content: String?
       let photoUrl: String?
       let videoUrl: String?
       let postType: String
       var likeCount: Int
+      var prayerCount: Int?            // separate from likes (prayer_responses)
       var isImportant: Bool = false
       var isPinned: Bool = false
       var sendNotification: Bool = false
       var highlightInFeed: Bool = false
       let createdAt: Date
+      // Wall posts — when a worshipper posts on a church's profile
+      var postedOnId: String?
+      var postedOnType: String?
+      // Event-typed posts carry date + location inline
+      var eventDate: Date?
+      var eventLocation: String?
       var isLiked: Bool = false
 
       var isChurchPost: Bool { authorType == "church" }
@@ -435,7 +464,7 @@ let denominationOptions: [String] = [
       }
 
       enum CodingKeys: String, CodingKey {
-          case id, content
+          case id, title, content
           case authorId   = "author_id"
           case authorName = "author_name"
           case authorType = "author_type"
@@ -443,11 +472,16 @@ let denominationOptions: [String] = [
           case videoUrl   = "video_url"
           case postType   = "post_type"
           case likeCount  = "like_count"
+          case prayerCount = "prayer_count"
           case isImportant = "is_important"
           case isPinned = "is_pinned"
           case sendNotification = "send_notification"
           case highlightInFeed = "highlight_in_feed"
           case createdAt  = "created_at"
+          case postedOnId = "posted_on_id"
+          case postedOnType = "posted_on_type"
+          case eventDate = "event_date"
+          case eventLocation = "event_location"
       }
   }
 
@@ -594,5 +628,184 @@ let denominationOptions: [String] = [
       let displayName: String
       let photoUrl: String?
       let subtitle: String?
+  }
+
+  // MARK: - Structured schedule
+  //
+  // Mirrors the web stack's `service_times_json` (array of ServiceTime) and
+  // `office_hours_json` (week object) shapes. Stored as JSONB on
+  // `church_submissions`. Source of truth: src/lib/schedule.ts in lcn-web.
+
+  enum DayOfWeek: String, Codable, CaseIterable {
+      case sunday, monday, tuesday, wednesday, thursday, friday, saturday
+
+      var label: String {
+          switch self {
+          case .sunday:    return "Sunday"
+          case .monday:    return "Monday"
+          case .tuesday:   return "Tuesday"
+          case .wednesday: return "Wednesday"
+          case .thursday:  return "Thursday"
+          case .friday:    return "Friday"
+          case .saturday:  return "Saturday"
+          }
+      }
+
+      var shortLabel: String {
+          switch self {
+          case .sunday:    return "Sun"
+          case .monday:    return "Mon"
+          case .tuesday:   return "Tue"
+          case .wednesday: return "Wed"
+          case .thursday:  return "Thu"
+          case .friday:    return "Fri"
+          case .saturday:  return "Sat"
+          }
+      }
+  }
+
+  struct ServiceTime: Codable, Identifiable, Hashable {
+      let id: String
+      var serviceType: String   // "Sunday Service", "Bible Study", etc.
+      var day: DayOfWeek
+      var startTime: String     // "HH:mm" 24-hour
+      var endTime: String       // "HH:mm" 24-hour
+      var language: String      // "English", etc.
+      var livestream: Bool
+  }
+
+  struct OfficeHoursDay: Codable, Hashable {
+      var isOpen: Bool
+      var open: String?         // "HH:mm" or nil when closed
+      var close: String?
+  }
+
+  struct OfficeHours: Codable, Hashable {
+      var byAppointmentOnly: Bool
+      var schedule: [String: OfficeHoursDay]  // keyed by DayOfWeek.rawValue
+  }
+
+  // MARK: - Trust & Safety
+
+  /// Reasons a user can flag content. Mirrors the web FlagReason union.
+  enum FlagReason: String, CaseIterable, Codable {
+      case spam
+      case harassment
+      case hateSpeech     = "hate_speech"
+      case inappropriate
+      case misinformation
+      case other
+
+      var label: String {
+          switch self {
+          case .spam:           return "Spam"
+          case .harassment:     return "Harassment or bullying"
+          case .hateSpeech:     return "Hate speech"
+          case .inappropriate:  return "Inappropriate content"
+          case .misinformation: return "Misleading information"
+          case .other:          return "Something else"
+          }
+      }
+
+      var helper: String {
+          switch self {
+          case .spam:           return "Repeated, unwanted, or commercial content."
+          case .harassment:     return "Targeting someone with insults or threats."
+          case .hateSpeech:     return "Attacks based on identity, religion, race, etc."
+          case .inappropriate:  return "Sexual, violent, or shocking content."
+          case .misinformation: return "Knowingly false or harmful claims."
+          case .other:          return "Use the notes field to explain."
+          }
+      }
+  }
+
+  /// What's being flagged. Matches `flagged_content.content_type`.
+  enum FlagContentType: String, Codable {
+      case post, comment, profile, church
+  }
+
+  struct UserBlock: Codable {
+      let blockerId: UUID
+      let blockedId: UUID
+      let reason: String?
+      let createdAt: Date
+
+      enum CodingKeys: String, CodingKey {
+          case reason
+          case blockerId  = "blocker_id"
+          case blockedId  = "blocked_id"
+          case createdAt  = "created_at"
+      }
+  }
+
+  struct HiddenPost: Codable {
+      let userId: UUID
+      let postId: UUID
+      let createdAt: Date
+
+      enum CodingKeys: String, CodingKey {
+          case userId    = "user_id"
+          case postId    = "post_id"
+          case createdAt = "created_at"
+      }
+  }
+
+  /// Per-category notification opt-outs. Mirrors the columns on
+  /// `notification_preferences`. The DB-side trigger on `notifications`
+  /// INSERT consults these — turning a flag off here means the
+  /// recipient never sees that notification, full stop.
+  struct NotificationPreferences: Codable {
+      var newFollowers:    Bool
+      var newLikes:        Bool
+      var newComments:     Bool
+      var prayerResponses: Bool
+      var churchUpdates:   Bool
+      var churchLive:      Bool
+      var inquiryReplies:  Bool
+      var newInquiries:    Bool
+      /// Master switch — when false, every category is suppressed.
+      var pushEnabled:     Bool
+
+      static let defaults = NotificationPreferences(
+          newFollowers:    true,
+          newLikes:        true,
+          newComments:     true,
+          prayerResponses: true,
+          churchUpdates:   true,
+          churchLive:      true,
+          inquiryReplies:  true,
+          newInquiries:    true,
+          pushEnabled:     true,
+      )
+
+      enum CodingKeys: String, CodingKey {
+          case newFollowers    = "new_followers"
+          case newLikes        = "new_likes"
+          case newComments     = "new_comments"
+          case prayerResponses = "prayer_responses"
+          case churchUpdates   = "church_updates"
+          case churchLive      = "church_live"
+          case inquiryReplies  = "inquiry_replies"
+          case newInquiries    = "new_inquiries"
+          case pushEnabled     = "push_enabled"
+      }
+  }
+
+  /// Display row for the Blocked Accounts management screen — already
+  /// joined against profiles + church_submissions so the view can render
+  /// without further roundtrips.
+  struct BlockedEntry: Identifiable {
+      let blockedId: UUID
+      let name: String
+      let photoUrl: String?
+      let kind: Kind
+      /// Church slug when `.church`; nil for people (use blockedId).
+      let slug: String?
+      let reason: String?
+      let blockedAt: Date
+
+      var id: UUID { blockedId }
+
+      enum Kind { case person, church }
   }
 
