@@ -40,8 +40,11 @@ struct FeedView: View {
                     }
                     .padding(24)
                 } else if isLoading {
-                    ProgressView().tint(.lcNavy)
-                        .transition(.opacity)
+                    ScrollView {
+                        LCFeedSkeleton(count: 3)
+                            .padding(.top, 12)
+                    }
+                    .transition(.opacity)
                 } else {
                     feedList
                         .transition(.opacity)
@@ -91,7 +94,8 @@ struct FeedView: View {
                 if !liveChurches.isEmpty { liveNowBanner }
                 if !events.isEmpty { eventsStrip }
                 if posts.isEmpty {
-                    emptyFeed
+                    EmptyFeedPanel(onRefresh: { await loadFeed() })
+                        .environmentObject(appState)
                 } else {
                     ForEach(posts) { post in
                         PostCard(post: post, onLikeToggled: { updatedPost in
@@ -264,6 +268,17 @@ struct FeedView: View {
         var rawPosts  = (try? await postsTask)  ?? []
         let rawEvents = (try? await eventsTask) ?? []
         let rawLive   = (try? await liveTask)   ?? []
+
+        // Trust & safety: drop posts authored by blocked users or in the
+        // viewer's hide list. Filters live in AppState (refreshed on
+        // sign-in and after each block/hide), so this is a cheap set check.
+        let blockedIds = appState.blockedUserIds
+        let hiddenIds  = appState.hiddenPostIds
+        if !blockedIds.isEmpty || !hiddenIds.isEmpty {
+            rawPosts = rawPosts.filter { p in
+                !blockedIds.contains(p.authorId) && !hiddenIds.contains(p.id)
+            }
+        }
 
         // 3. Guard against stale results from a cancelled task
         guard !Task.isCancelled else { return }

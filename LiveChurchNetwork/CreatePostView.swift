@@ -9,12 +9,21 @@ struct CreatePostView: View {
 
     var onPosted: (() async -> Void)?
 
+    /// Optional initial post type — used by QuickComposer to deep-link a tile
+    /// directly into the right composer mode. Falls back to "update" when nil.
+    init(initialPostType: String? = nil, onPosted: (() async -> Void)? = nil) {
+        self.onPosted = onPosted
+        let validTypes = ["update", "verse", "prayer", "testimony", "announcement", "livestream"]
+        let resolved = (initialPostType.flatMap { validTypes.contains($0) ? $0 : nil }) ?? "update"
+        self._postType = State(initialValue: resolved)
+    }
+
     // Shared fields
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var selectedImageData: Data?
     @State private var isPosting = false
     @State private var errorMessage: String?
-    @State private var postType = "update"
+    @State private var postType: String
 
     // Update fields
     @State private var updateContent = ""
@@ -45,6 +54,10 @@ struct CreatePostView: View {
     @State private var announcementTitle = ""
     @State private var announcementBody = ""
 
+    // Testimony fields
+    @State private var testimonyTitle = ""
+    @State private var testimonyBody = ""
+
     // Post enhancements (for update type)
     @State private var isImportant = false
     @State private var isPinned = false
@@ -58,6 +71,7 @@ struct CreatePostView: View {
                 ("update", "Update", "Share news", "text.bubble"),
                 ("verse", "Verse", "Share scripture", "book.fill"),
                 ("prayer", "Prayer", "Request prayer", "hands.sparkles.fill"),
+                ("testimony", "Testimony", "Share what God has done", "sparkles"),
                 ("announcement", "Announce", "Important notice", "megaphone.fill"),
                 ("livestream", "Stream", "Go live", "antenna.radiowaves.left.and.right"),
             ]
@@ -66,6 +80,7 @@ struct CreatePostView: View {
                 ("update", "Update", "Share news", "text.bubble"),
                 ("verse", "Verse", "Share scripture", "book.fill"),
                 ("prayer", "Prayer", "Request prayer", "hands.sparkles.fill"),
+                ("testimony", "Testimony", "Share what God has done", "sparkles"),
                 ("event", "Event", "Announce event", "calendar"),
             ]
         }
@@ -221,6 +236,8 @@ struct CreatePostView: View {
             livestreamFields
         case "prayer":
             prayerFields
+        case "testimony":
+            testimonyFields
         case "announcement":
             announcementFields
         default:
@@ -245,6 +262,9 @@ struct CreatePostView: View {
         case "prayer":
             return !prayerTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
                    !prayerMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        case "testimony":
+            return !testimonyTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                   !testimonyBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         case "announcement":
             return !announcementTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
                    !announcementBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -527,6 +547,51 @@ struct CreatePostView: View {
 
     // MARK: - Announcement fields
 
+    // MARK: - Testimony fields
+
+    private var testimonyFields: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Testimony Title")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                TextField("What's the headline?", text: $testimonyTitle)
+                    .font(.system(size: 15))
+                    .foregroundColor(.lcText)
+                    .padding(12)
+                    .background(Color.lcCream)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Your Testimony")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.lcText2)
+                TextEditor(text: $testimonyBody)
+                    .font(.system(size: 15))
+                    .foregroundColor(.lcText)
+                    .scrollContentBackground(.hidden)
+                    .frame(minHeight: 140)
+                    .padding(10)
+                    .background(Color.lcCream)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.lcBorder, lineWidth: 1))
+                    .overlay(alignment: .topLeading) {
+                        if testimonyBody.isEmpty {
+                            Text("Share what God has done in your life")
+                                .font(.system(size: 15))
+                                .foregroundColor(.lcText3)
+                                .padding(14)
+                                .allowsHitTesting(false)
+                        }
+                    }
+            }
+            photoPicker
+        }
+    }
+
+    // MARK: - Announcement fields
+
     private var announcementFields: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 8) {
@@ -661,6 +726,9 @@ struct CreatePostView: View {
         case "prayer":
             postContent = "\(prayerTitle)\n\n\(prayerMessage)"
 
+        case "testimony":
+            postContent = "\(testimonyTitle)\n\n\(testimonyBody)"
+
         case "announcement":
             postContent = "\(announcementTitle)\n\n\(announcementBody)"
 
@@ -683,6 +751,11 @@ struct CreatePostView: View {
                 highlightInFeed: postType == "update" ? highlightInFeed : false
             )
             HapticEngine.notification(.success)
+            // Earned the user a "moment of joy" — score it for the
+            // review prompt. The service decides whether to actually
+            // surface SKStoreReviewController based on cumulative score
+            // and cooldowns.
+            ReviewPromptService.recordTrigger(.createdPost)
             await onPosted?()
             dismiss()
         } catch {

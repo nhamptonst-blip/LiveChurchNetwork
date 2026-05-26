@@ -574,6 +574,7 @@ enum MockDataProvider {
             authorId: authorId,
             authorName: authorName,
             authorType: authorType,
+            title: nil,
             content: content,
             photoUrl: photoUrl,
             videoUrl: videoUrl,
