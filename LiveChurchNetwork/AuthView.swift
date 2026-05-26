@@ -102,6 +102,24 @@ struct LoginView: View {
             .disabled(isLoading || email.isEmpty || password.isEmpty)
             .padding(.top, 12)
 
+            // "Or continue with" — Sign in with Apple. Required by App
+            // Store policy on iOS, and a faster sign-in path regardless.
+            HStack(spacing: 8) {
+                Rectangle().fill(Color.lcBorder).frame(height: 1)
+                Text("OR")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(.lcText3)
+                    .tracking(0.5)
+                Rectangle().fill(Color.lcBorder).frame(height: 1)
+            }
+            .padding(.top, 16)
+            .padding(.bottom, 12)
+
+            AppleSignInButton(
+                onSuccess: { HapticEngine.notification(.success) },
+                onError: { msg in errorMessage = msg }
+            )
+
             VStack(spacing: 8) {
                 Rectangle()
                     .fill(Color.lcBorder)
