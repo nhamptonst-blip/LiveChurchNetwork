@@ -27,6 +27,7 @@ struct ProfileOnboardingView: View {
 
     @State private var isLoading = false
     @State private var isSaving = false
+    @State private var isLoadingPeople = false
 
     var body: some View {
         ZStack {
@@ -51,7 +52,7 @@ struct ProfileOnboardingView: View {
             }
             .animation(.easeInOut(duration: 0.28), value: step)
         }
-        .task { await loadChurchesAndPeople() }
+        .task { await loadChurches() }
     }
 
     private var progressHeader: some View {
@@ -264,7 +265,10 @@ struct ProfileOnboardingView: View {
                 Spacer()
 
                 Button {
-                    Task { await followSelectedChurches() }
+                    Task {
+                        await followSelectedChurches()
+                        await loadSuggestedPeople()
+                    }
                     step += 1
                 } label: {
                     Text("Continue")
@@ -289,11 +293,36 @@ struct ProfileOnboardingView: View {
                     Text("Follow People")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.lcText)
-                    Text("Connect with other worshippers")
+                    Text(suggestedPeopleSubtitle)
                         .font(.system(size: 14))
                         .foregroundColor(.lcText2)
                 }
                 .padding(.horizontal, 16)
+
+                if isLoadingPeople {
+                    HStack {
+                        Spacer()
+                        ProgressView().tint(.lcNavy)
+                        Spacer()
+                    }
+                    .padding(.vertical, 24)
+                } else if peoplesToShow.isEmpty {
+                    VStack(spacing: 8) {
+                        Image(systemName: "person.2.slash")
+                            .font(.system(size: 28))
+                            .foregroundColor(.lcText3)
+                        Text("No members to show yet")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.lcText)
+                        Text("You can find people to follow from the Discover tab anytime.")
+                            .font(.system(size: 13))
+                            .foregroundColor(.lcText3)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 28)
+                    .padding(.horizontal, 24)
+                }
 
                 VStack(spacing: 12) {
                     ForEach(peoplesToShow.prefix(8), id: \.id) { person in
@@ -385,10 +414,51 @@ struct ProfileOnboardingView: View {
         .background(Color.lcCream)
     }
 
-    private func loadChurchesAndPeople() async {
+    private var suggestedPeopleSubtitle: String {
+        let names = churchesToShow
+            .filter { selectedChurches.contains($0.slug) }
+            .prefix(2)
+            .map { $0.name }
+        switch names.count {
+        case 0: return "Connect with other worshippers"
+        case 1: return "Members of \(names[0])"
+        default:
+            let extra = selectedChurches.count - names.count
+            let head = names.joined(separator: " and ")
+            return extra > 0 ? "Members of \(head) and \(extra) more" : "Members of \(head)"
+        }
+    }
+
+    private func loadChurches() async {
         churchesToShow = appState.allChurchesForDisplay()
+    }
+
+    private func loadSuggestedPeople() async {
+        isLoadingPeople = true
+        defer { isLoadingPeople = false }
+
+        let slugs = Array(selectedChurches)
+        let profiles: [Profile]
         do {
-            peoplesToShow = (try? await SupabaseService.shared.getDiscoverableWorshippers().map { profile in
+            if slugs.isEmpty {
+                profiles = try await SupabaseService.shared.getDiscoverableWorshippers()
+            } else {
+                profiles = try await SupabaseService.shared.getDiscoverableWorshippersByChurches(
+                    slugs: slugs,
+                    excludeUserId: appState.currentUserId,
+                    limit: 24
+                )
+            }
+        } catch {
+            print("Error loading people: \(error)")
+            peoplesToShow = []
+            return
+        }
+
+        let mapped = profiles
+            .filter { $0.id != appState.currentUserId }
+            .filter { ($0.activityVisibility ?? "public") != "private" }
+            .map { profile in
                 DiscoverableUser(
                     id: profile.id,
                     name: profile.fullName ?? "User",
@@ -397,9 +467,25 @@ struct ProfileOnboardingView: View {
                     city: profile.city,
                     photoUrl: profile.photoUrl
                 )
-            }) ?? []
-        } catch {
-            print("Error loading people: \(error)")
+            }
+
+        if mapped.isEmpty && !slugs.isEmpty {
+            let fallback = (try? await SupabaseService.shared.getDiscoverableWorshippers()) ?? []
+            peoplesToShow = fallback
+                .filter { $0.id != appState.currentUserId }
+                .filter { ($0.activityVisibility ?? "public") != "private" }
+                .map { profile in
+                    DiscoverableUser(
+                        id: profile.id,
+                        name: profile.fullName ?? "User",
+                        bio: profile.bio,
+                        denomination: profile.denomination,
+                        city: profile.city,
+                        photoUrl: profile.photoUrl
+                    )
+                }
+        } else {
+            peoplesToShow = mapped
         }
     }
 
