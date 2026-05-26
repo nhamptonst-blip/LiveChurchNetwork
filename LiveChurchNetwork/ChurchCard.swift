@@ -19,10 +19,20 @@ struct ChurchCard: View {
         }
     }
 
-    private var backgroundImageName: String {
-        let backgroundImages = ["lcn1", "lcn2", "lcn3", "lcn4"]
-        let hash = abs(church.name.hashValue % 4)
-        return backgroundImages[hash]
+    /// Solid two-tone gradient tinted by denomination. Replaces the four
+    /// stock `lcn1`–`lcn4` brand photos for churches with no cover/avatar.
+    /// Adds the church's first letter centered so cards still feel populated.
+    private var placeholderGradient: some View {
+        ZStack {
+            LinearGradient(
+                gradient: Gradient(colors: [gradientColors.top, gradientColors.bottom]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            Text(churchInitial)
+                .font(.system(size: 56, weight: .heavy))
+                .foregroundColor(Color.white.opacity(0.18))
+        }
     }
 
     var body: some View {
@@ -30,30 +40,48 @@ struct ChurchCard: View {
             // Cover image and info with tap handler
             VStack(alignment: .leading, spacing: 0) {
                 ZStack(alignment: .bottomLeading) {
-                    // Background image (LCN brand images)
-                    Image(backgroundImageName)
-                        .resizable()
-                        .scaledToFill()
-                        .overlay(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.3)]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-
-                    // Church's custom cover image (if available)
-                    if !church.image.isEmpty, let url = URL(string: church.image) {
+                    // Background — either the church's own image, or a
+                    // denomination-hashed gradient if they haven't uploaded
+                    // anything. We deliberately avoid the lcn1–lcn4 brand
+                    // photos when there's no church-specific image because
+                    // 670 churches funneling into 4 templates makes every
+                    // suggestion look identical.
+                    if let coverUrlString = church.coverImage.isEmpty ? nil : church.coverImage,
+                       let url = URL(string: coverUrlString) {
                         AsyncImage(url: url) { phase in
                             switch phase {
                             case .success(let img):
                                 img.resizable()
                                     .scaledToFill()
-                                    .opacity(0.0)
+                                    .overlay(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.35)]),
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
                             default:
-                                EmptyView()
+                                placeholderGradient
                             }
                         }
+                    } else if !church.image.isEmpty, let url = URL(string: church.image) {
+                        // No cover, but a logo exists — use a blurred-logo
+                        // backdrop so the card stays per-church distinct.
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let img):
+                                img.resizable()
+                                    .scaledToFill()
+                                    .blur(radius: 18)
+                                    .overlay(Color.black.opacity(0.35))
+                            default:
+                                placeholderGradient
+                            }
+                        }
+                    } else {
+                        // Neither cover nor avatar — clean solid gradient
+                        // tinted by denomination, not a stock photo.
+                        placeholderGradient
                     }
 
                     // Live badge (if applicable)

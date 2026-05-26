@@ -9,6 +9,32 @@ struct ChurchAdminDashboardView: View {
 
     @State private var posts: [Post] = []
     @State private var events: [Event] = []
+
+    // Derived counts powering the visibility score's "recent posts" and
+    // "upcoming events" weighted factors. Recompute on every render so they
+    // stay in sync with the @State arrays without manual invalidation.
+    private var recentPostCountThisWeek: Int {
+        let cutoff = Date().addingTimeInterval(-7 * 24 * 60 * 60)
+        return posts.filter { $0.createdAt >= cutoff }.count
+    }
+    private var upcomingEventCount: Int {
+        let now = Date()
+        return events.filter { $0.eventDate > now }.count
+    }
+
+    /// Compute the visibility score and return it only when there's still
+    /// something to recommend. Returns nil at score 100 so the parent view
+    /// can hide the Smart Recommendations card entirely.
+    private func visibilityIfIncomplete(_ sub: ChurchSubmission) -> VisibilityResult? {
+        let result = VisibilityScoreEngine.compute(
+            sub,
+            signals: VisibilityScoreEngine.Signals(
+                recentPostCount: recentPostCountThisWeek,
+                upcomingEventCount: upcomingEventCount
+            )
+        )
+        return result.score >= 100 ? nil : result
+    }
     @State private var inquiries: [ChurchInquiry] = []
     @State private var followerEntries: [FollowEntry] = []
 
@@ -20,6 +46,12 @@ struct ChurchAdminDashboardView: View {
     @State private var showPostSheet = false
     @State private var showEventSheet = false
     @State private var showSignOutAlert = false
+    @State private var showBlockedAccounts = false
+    @State private var showDeleteAccount = false
+    @State private var showNotificationPrefs = false
+    /// Carries the post-type chosen from QuickComposer's tile grid into the
+    /// CreatePostView sheet so the right composer mode is pre-selected.
+    @State private var pendingPostType: String?
 
     @State private var postToDelete: Post?
     @State private var eventToDelete: Event?
@@ -85,13 +117,40 @@ struct ChurchAdminDashboardView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showPostSheet) {
-                CreatePostView(onPosted: { await reload() })
+            .sheet(isPresented: $showPostSheet, onDismiss: { pendingPostType = nil }) {
+                CreatePostView(initialPostType: pendingPostType, onPosted: { await reload() })
                     .environmentObject(appState)
             }
             .sheet(isPresented: $showEventSheet) {
                 CreateEventView(onCreated: { await reload() })
                     .environmentObject(appState)
+            }
+            .sheet(isPresented: $showBlockedAccounts) {
+                NavigationStack {
+                    BlockedAccountsView()
+                        .environmentObject(appState)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button("Done") { showBlockedAccounts = false }
+                            }
+                        }
+                }
+            }
+            .sheet(isPresented: $showDeleteAccount) {
+                NavigationStack {
+                    DeleteAccountView().environmentObject(appState)
+                }
+            }
+            .sheet(isPresented: $showNotificationPrefs) {
+                NavigationStack {
+                    NotificationPreferencesView()
+                        .environmentObject(appState)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button("Done") { showNotificationPrefs = false }
+                            }
+                        }
+                }
             }
             .alert("Sign Out", isPresented: $showSignOutAlert) {
                 Button("Cancel", role: .cancel) {}
@@ -204,6 +263,15 @@ struct ChurchAdminDashboardView: View {
                         }
                         Button { showEditSheet = true } label: {
                             Label("Edit Profile", systemImage: "pencil")
+                        }
+                        Button { showNotificationPrefs = true } label: {
+                            Label("Notifications", systemImage: "bell.badge")
+                        }
+                        Button { showBlockedAccounts = true } label: {
+                            Label("Blocked Accounts", systemImage: "hand.raised")
+                        }
+                        Button(role: .destructive) { showDeleteAccount = true } label: {
+                            Label("Delete Account", systemImage: "trash")
                         }
                         Button(role: .destructive) { showSignOutAlert = true } label: {
                             Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
@@ -345,9 +413,41 @@ struct ChurchAdminDashboardView: View {
 
     @ViewBuilder
     private func overviewTab(_ sub: ChurchSubmission) -> some View {
+        QuickComposer(
+            churchAvatarUrl: sub.avatarUrl,
+            churchName: sub.churchName ?? "your church",
+            onSelectPostType: { type in
+                pendingPostType = type
+                showPostSheet = true
+            },
+            onSelectEvent: { showEventSheet = true }
+        )
         quickActionsRow(sub)
         statsCard
         engagementCard
+
+        // Smart Recommendations — only renders while there's something to
+        // recommend. Once the church hits 100 the card disappears entirely
+        // so the dashboard doesn't keep nagging finished users.
+        if let visibility = visibilityIfIncomplete(sub) {
+            VisibilityScoreCard(
+                result: visibility,
+                onTapFactor: { factor in
+                    switch factor.key {
+                    case "posts":  pendingPostType = "update"; showPostSheet = true
+                    case "events": showEventSheet = true
+                    default:       showEditSheet = true
+                    }
+                }
+            )
+        }
+
+        // Live engagement stream (follows, likes, prayers, comments, inquiries)
+        ChurchActivityFeed(
+            churchId: sub.id.uuidString,
+            churchName: sub.churchName ?? "",
+            ownPostIds: posts.map { $0.id.uuidString }
+        )
 
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -457,13 +557,23 @@ struct ChurchAdminDashboardView: View {
 
     private var statsCard: some View {
         HStack(spacing: 0) {
-            statItem(value: "\(followerEntries.count)", label: "Followers", icon: "person.2.fill")
+            statItem(value: "\(followerEntries.count)", label: "Followers", icon: "person.2.fill") {
+                selectedTab = .audience
+            }
             statDivider
-            statItem(value: "\(posts.count)", label: "Posts", icon: "square.stack.fill")
+            statItem(value: "\(posts.count)", label: "Posts", icon: "square.stack.fill") {
+                selectedTab = .content
+                contentSubTab = .posts
+            }
             statDivider
-            statItem(value: "\(events.count)", label: "Events", icon: "calendar")
+            statItem(value: "\(events.count)", label: "Events", icon: "calendar") {
+                selectedTab = .content
+                contentSubTab = .events
+            }
             statDivider
-            statItem(value: "\(newInquiryCount)", label: "Messages", icon: "envelope.fill")
+            statItem(value: "\(newInquiryCount)", label: "Messages", icon: "envelope.fill") {
+                selectedTab = .inbox
+            }
         }
         .padding(.vertical, 16)
         .background(Color.white)
@@ -496,13 +606,25 @@ struct ChurchAdminDashboardView: View {
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.lcBorder, lineWidth: 1))
     }
 
-    private func statItem(value: String, label: String, icon: String) -> some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon).font(.system(size: 13)).foregroundColor(.lcNavy.opacity(0.5))
-            Text(value).font(.system(size: 20, weight: .black)).foregroundColor(.lcText)
-            Text(label).font(.system(size: 10, weight: .semibold)).foregroundColor(.lcText3)
+    private func statItem(
+        value: String,
+        label: String,
+        icon: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: {
+            HapticEngine.impact(.light)
+            action()
+        }) {
+            VStack(spacing: 6) {
+                Image(systemName: icon).font(.system(size: 13)).foregroundColor(.lcNavy.opacity(0.5))
+                Text(value).font(.system(size: 20, weight: .black)).foregroundColor(.lcText)
+                Text(label).font(.system(size: 10, weight: .semibold)).foregroundColor(.lcText3)
+            }
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
         }
-        .frame(maxWidth: .infinity)
+        .buttonStyle(.plain)
     }
 
     private var statDivider: some View {
@@ -834,45 +956,65 @@ struct ChurchAdminDashboardView: View {
 
     @ViewBuilder
     private func liveTab(_ sub: ChurchSubmission) -> some View {
+        // Two distinct kinds of live: the admin's manual override (sub.isLive)
+        // and the schedule-derived window. We show both clearly so the admin
+        // never wonders why the badge is on without them tapping anything.
+        let scheduledLive = LiveChurchEvaluator.isLiveNow(sub, ignoreManualOverride: true)
+        let effectiveLive = sub.isLive || scheduledLive
+
         VStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(sub.isLive ? Color.red : Color.red.opacity(0.1))
+                    .fill(effectiveLive ? Color.red : Color.red.opacity(0.1))
                     .frame(width: 80, height: 80)
-                Image(systemName: sub.isLive ? "stop.circle.fill" : "play.circle.fill")
+                Image(systemName: effectiveLive ? "dot.radiowaves.left.and.right" : "play.circle.fill")
                     .font(.system(size: 44))
-                    .foregroundColor(sub.isLive ? .white : .red)
+                    .foregroundColor(effectiveLive ? .white : .red)
             }
 
-            Text(sub.isLive ? "You are LIVE" : "Not currently streaming")
+            Text(
+                sub.isLive
+                ? "You are LIVE (manual)"
+                : scheduledLive
+                ? "You are LIVE (scheduled)"
+                : "Not currently streaming"
+            )
                 .font(.system(size: 18, weight: .black))
                 .foregroundColor(.lcText)
 
-            Text(sub.isLive
-                 ? "Followers can watch your stream right now."
-                 : "Tap Go Live when you're ready to stream your service.")
+            Text(
+                sub.isLive
+                ? "Followers can watch your stream right now."
+                : scheduledLive
+                ? "Your scheduled service window is in progress — followers see the LIVE badge automatically."
+                : "Tap Go Live when you want to start streaming. Your scheduled service times also light up the badge automatically."
+            )
                 .font(.system(size: 13))
                 .foregroundColor(.lcText3)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)
 
-            Button { Task { await toggleLive(!sub.isLive) } } label: {
-                HStack(spacing: 8) {
-                    if isTogglingLive {
-                        ProgressView().tint(.white)
-                    } else {
-                        Image(systemName: sub.isLive ? "stop.fill" : "play.fill")
+            // Manual override button — only meaningful when *not* scheduled-live,
+            // or when admin wants to end an unscheduled stream they started.
+            if !scheduledLive || sub.isLive {
+                Button { Task { await toggleLive(!sub.isLive) } } label: {
+                    HStack(spacing: 8) {
+                        if isTogglingLive {
+                            ProgressView().tint(.white)
+                        } else {
+                            Image(systemName: sub.isLive ? "stop.fill" : "play.fill")
+                        }
+                        Text(sub.isLive ? "End Livestream" : "Go Live Now")
+                            .font(.system(size: 16, weight: .bold))
                     }
-                    Text(sub.isLive ? "End Livestream" : "Go Live Now")
-                        .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(sub.status != "approved" ? Color.lcText3 : Color.red)
+                    .cornerRadius(14)
                 }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(sub.status != "approved" ? Color.lcText3 : Color.red)
-                .cornerRadius(14)
+                .disabled(sub.status != "approved" || isTogglingLive)
             }
-            .disabled(sub.status != "approved" || isTogglingLive)
 
             if sub.status != "approved" {
                 Text("Your church must be approved before going live.")
@@ -1222,10 +1364,16 @@ struct ChurchAdminDashboardView: View {
         }
 
         let churchName = submission?.churchName ?? appState.profile?.fullName ?? ""
+        // Churches are followed by slug, not by user_id — use the
+        // church-aware lookup. Same slug computation `churchSlug()` used
+        // by the web app + every FollowButton call site.
+        let churchSlug = churchName
+            .lowercased()
+            .replacingOccurrences(of: " ", with: "-")
 
         async let postsTask     = SupabaseService.shared.getPostsByAuthor(authorName: churchName)
         async let eventsTask    = SupabaseService.shared.getEventsByAuthor(authorName: churchName)
-        async let followersTask = SupabaseService.shared.getFollowers(userId: userId)
+        async let followersTask = SupabaseService.shared.getChurchFollowers(slug: churchSlug)
         async let inquiriesTask = SupabaseService.shared.getInquiries(churchName: churchName)
 
         posts     = (try? await postsTask) ?? []
@@ -1358,6 +1506,29 @@ struct EditChurchProfileView: View {
     @State private var isSaving = false
     @State private var errorMessage: String?
 
+    // Structured schedule — hydrated from JSONB or the legacy text parser.
+    @State private var serviceTimesJson: [ServiceTime]
+    @State private var officeHoursJson: OfficeHours
+
+    // Outreach + contact (each row in the Smart Recommendations card on the
+    // dashboard routes here, so every recommended field has to be editable).
+    @State private var contactEmail: String
+    @State private var donationUrl: String
+    @State private var livestreamUrl: String
+    @State private var addressLine: String
+    @State private var city: String
+    @State private var state: String
+    @State private var postalCode: String
+    @State private var country: String
+    @State private var pastorName: String
+    @State private var whatToExpect: String
+    @State private var ministries: String
+    @State private var facebookUrl: String
+    @State private var instagramUrl: String
+    @State private var youtubeUrl: String
+    @State private var tiktokUrl: String
+    @State private var xUrl: String
+
     init(submission: ChurchSubmission, onSave: @escaping (ChurchSubmission) -> Void) {
         self.submission = submission
         self.onSave = onSave
@@ -1367,6 +1538,33 @@ struct EditChurchProfileView: View {
         _website       = State(initialValue: submission.website ?? "")
         _serviceTimes  = State(initialValue: submission.serviceTimes ?? "")
         _about         = State(initialValue: submission.about ?? "")
+
+        _contactEmail   = State(initialValue: submission.contactEmail ?? "")
+        _donationUrl    = State(initialValue: submission.donationUrl ?? "")
+        _livestreamUrl  = State(initialValue: submission.livestreamUrl ?? "")
+        _addressLine    = State(initialValue: submission.addressLine ?? "")
+        _city           = State(initialValue: submission.city ?? "")
+        _state          = State(initialValue: submission.state ?? "")
+        _postalCode     = State(initialValue: submission.postalCode ?? "")
+        _country        = State(initialValue: submission.country ?? "")
+        _pastorName     = State(initialValue: submission.pastorName ?? "")
+        _whatToExpect   = State(initialValue: submission.whatToExpect ?? "")
+        _ministries     = State(initialValue: submission.ministries ?? "")
+        _facebookUrl    = State(initialValue: submission.facebookUrl ?? "")
+        _instagramUrl   = State(initialValue: submission.instagramUrl ?? "")
+        _youtubeUrl     = State(initialValue: submission.youtubeUrl ?? "")
+        _tiktokUrl      = State(initialValue: submission.tiktokUrl ?? "")
+        _xUrl           = State(initialValue: submission.xUrl ?? "")
+
+        // Prefer structured JSON; fall back to parsing the legacy text.
+        let structured: [ServiceTime]
+        if let s = submission.serviceTimesJson, !s.isEmpty {
+            structured = s
+        } else {
+            structured = ScheduleHelpers.parseLegacyServiceTimes(submission.serviceTimes)
+        }
+        _serviceTimesJson = State(initialValue: structured)
+        _officeHoursJson = State(initialValue: submission.officeHoursJson ?? ScheduleHelpers.emptyOfficeHours)
     }
 
     var body: some View {
@@ -1388,20 +1586,84 @@ struct EditChurchProfileView: View {
                             .keyboardType(.phonePad)
                             .multilineTextAlignment(.trailing)
                     }
+                    LabeledContent("Email") {
+                        TextField("hello@church.org", text: $contactEmail)
+                            .keyboardType(.emailAddress)
+                            .autocapitalization(.none)
+                            .multilineTextAlignment(.trailing)
+                    }
                     LabeledContent("Website") {
                         TextField("https://...", text: $website)
                             .keyboardType(.URL)
                             .autocapitalization(.none)
                             .multilineTextAlignment(.trailing)
                     }
+                    LabeledContent("Pastor") {
+                        TextField("Pastor name", text: $pastorName)
+                            .multilineTextAlignment(.trailing)
+                    }
                 }
-                Section("Services") {
-                    TextEditor(text: $serviceTimes)
-                        .frame(minHeight: 60)
+                Section("Location") {
+                    TextField("Address", text: $addressLine)
+                    HStack {
+                        TextField("City", text: $city)
+                        TextField("State", text: $state)
+                            .frame(maxWidth: 80)
+                    }
+                    HStack {
+                        TextField("Postal code", text: $postalCode)
+                            .keyboardType(.numbersAndPunctuation)
+                        TextField("Country", text: $country)
+                    }
+                }
+                Section {
+                    LabeledContent("Livestream URL") {
+                        TextField("https://youtube.com/...", text: $livestreamUrl)
+                            .keyboardType(.URL)
+                            .autocapitalization(.none)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    LabeledContent("Donation URL") {
+                        TextField("https://give...", text: $donationUrl)
+                            .keyboardType(.URL)
+                            .autocapitalization(.none)
+                            .multilineTextAlignment(.trailing)
+                    }
+                } header: {
+                    Text("Outreach")
+                } footer: {
+                    Text("A livestream URL unlocks the Go Live toggle. A donation link adds a Give button to your public profile.")
+                }
+                Section("Social Links") {
+                    socialField(label: "Facebook",  text: $facebookUrl,  placeholder: "https://facebook.com/...")
+                    socialField(label: "Instagram", text: $instagramUrl, placeholder: "https://instagram.com/...")
+                    socialField(label: "YouTube",   text: $youtubeUrl,   placeholder: "https://youtube.com/...")
+                    socialField(label: "TikTok",    text: $tiktokUrl,    placeholder: "https://tiktok.com/@...")
+                    socialField(label: "X",         text: $xUrl,         placeholder: "https://x.com/...")
+                }
+                Section("Service Times") {
+                    ServiceTimesEditor(services: $serviceTimesJson)
+                        .padding(.vertical, 4)
+                }
+                Section("Office Hours") {
+                    OfficeHoursEditor(hours: $officeHoursJson)
+                        .padding(.vertical, 4)
                 }
                 Section("About") {
                     TextEditor(text: $about)
                         .frame(minHeight: 80)
+                }
+                Section("What to Expect") {
+                    TextEditor(text: $whatToExpect)
+                        .frame(minHeight: 60)
+                }
+                Section {
+                    TextEditor(text: $ministries)
+                        .frame(minHeight: 50)
+                } header: {
+                    Text("Ministries")
+                } footer: {
+                    Text("Comma-separated list — appears as chips on your public profile.")
                 }
                 if let error = errorMessage {
                     Section {
@@ -1427,28 +1689,96 @@ struct EditChurchProfileView: View {
     private func save() async {
         isSaving = true
         errorMessage = nil
+
+        // Re-derive the legacy text summary so external readers (older
+        // clients, integrations) stay current with the structured data.
+        let derivedServiceTimesText = ScheduleHelpers.summarizeServiceTimes(serviceTimesJson)
+
         do {
+            // Step 1 — basic profile fields (name, denomination, phone,
+            // website, service-times text summary, about).
             try await SupabaseService.shared.updateChurchProfile(
                 submissionId: submission.id,
                 churchName: churchName,
                 denomination: denomination,
                 phone: phone,
                 website: website,
-                serviceTimes: serviceTimes,
+                serviceTimes: derivedServiceTimesText,
                 about: about
             )
+            // Step 2 — outreach + contact + location + social. Empty
+            // strings are still sent so the user can clear a field.
+            try await SupabaseService.shared.updateChurchDetails(
+                submissionId: submission.id,
+                contactEmail: contactEmail,
+                donationUrl: donationUrl,
+                livestreamUrl: livestreamUrl,
+                addressLine: addressLine,
+                city: city,
+                state: state,
+                postalCode: postalCode,
+                country: country,
+                pastorName: pastorName,
+                whatToExpect: whatToExpect,
+                ministries: ministries,
+                facebookUrl: facebookUrl,
+                instagramUrl: instagramUrl,
+                tiktokUrl: tiktokUrl,
+                xUrl: xUrl,
+                youtubeUrl: youtubeUrl
+            )
+            // Step 3 — structured schedule (writes both JSON columns + the
+            // legacy text summaries). Defensive: if the migration wasn't
+            // applied, this throws; the saves above have already landed.
+            try await SupabaseService.shared.updateChurchSchedule(
+                submissionId: submission.id,
+                services: serviceTimesJson,
+                officeHours: officeHoursJson
+            )
+
             var updated = submission
-            updated.churchName   = churchName
-            updated.denomination = denomination
-            updated.phone        = phone
-            updated.website      = website
-            updated.serviceTimes = serviceTimes
-            updated.about        = about
+            updated.churchName       = churchName
+            updated.denomination     = denomination
+            updated.phone            = phone
+            updated.website          = website
+            updated.serviceTimes     = derivedServiceTimesText
+            updated.about            = about
+            updated.contactEmail     = contactEmail
+            updated.donationUrl      = donationUrl
+            updated.livestreamUrl    = livestreamUrl
+            updated.addressLine      = addressLine
+            updated.city             = city
+            updated.state            = state
+            updated.postalCode       = postalCode
+            updated.country          = country
+            updated.pastorName       = pastorName
+            updated.whatToExpect     = whatToExpect
+            updated.ministries       = ministries
+            updated.facebookUrl      = facebookUrl
+            updated.instagramUrl     = instagramUrl
+            updated.youtubeUrl       = youtubeUrl
+            updated.tiktokUrl        = tiktokUrl
+            updated.xUrl             = xUrl
+            updated.serviceTimesJson = serviceTimesJson
+            updated.officeHoursJson  = officeHoursJson
+            updated.officeHours      = ScheduleHelpers.summarizeOfficeHours(officeHoursJson)
             onSave(updated)
             dismiss()
         } catch {
             errorMessage = "Could not save changes. Please try again."
         }
         isSaving = false
+    }
+
+    /// Compact labeled URL-style field used for each of the 5 social network
+    /// rows so the form stays scannable.
+    @ViewBuilder
+    private func socialField(label: String, text: Binding<String>, placeholder: String) -> some View {
+        LabeledContent(label) {
+            TextField(placeholder, text: text)
+                .keyboardType(.URL)
+                .autocapitalization(.none)
+                .multilineTextAlignment(.trailing)
+        }
     }
 }

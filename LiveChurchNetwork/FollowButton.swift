@@ -1,5 +1,11 @@
 import SwiftUI
 
+/// Self-hydrating follow toggle. Callers pass a slug or user-id and an
+/// optional `initialIsFollowing` hint; the button re-checks the real state
+/// from Supabase on appear so it never gets stuck out of sync (which used
+/// to happen on every feed render — `initialIsFollowing: false` was
+/// hardcoded in PostCard, so tapping a church the user already followed
+/// hit a unique-constraint error and silently failed).
 struct FollowButton: View {
     let followingId: String
     let followingType: String   // "church" | "worshipper"
@@ -7,6 +13,7 @@ struct FollowButton: View {
 
     @EnvironmentObject var appState: AppState
     @State private var isFollowing = false
+    @State private var didHydrate = false
     @State private var isToggling = false
     @State private var isPressed = false
 
@@ -31,6 +38,7 @@ struct FollowButton: View {
                                 .stroke(Color.lcNavy, lineWidth: isFollowing ? 1.5 : 0)
                         )
                 }
+                .buttonStyle(.plain)
                 .disabled(isToggling)
                 .scaleEffect(isPressed ? 0.97 : 1.0)
                 .opacity(isPressed ? 0.8 : 1.0)
@@ -43,26 +51,66 @@ struct FollowButton: View {
                 )
             }
         }
-        .onAppear {
-            isFollowing = initialIsFollowing
+        .onAppear { isFollowing = initialIsFollowing }
+        .task(id: hydrationKey) { await hydrate() }
+    }
+
+    /// Re-fire the hydration query when any of the identifying inputs change.
+    private var hydrationKey: String {
+        "\(appState.currentUserId?.uuidString ?? "anon")|\(followingType)|\(followingId)"
+    }
+
+    /// Look up the real follow state on appear so the button never lies.
+    private func hydrate() async {
+        guard let userId = appState.currentUserId else { return }
+        if didHydrate { return }
+        didHydrate = true
+        do {
+            let truth: Bool
+            switch followingType {
+            case "church":
+                truth = try await SupabaseService.shared.isFollowingChurch(
+                    followerId: userId,
+                    churchSlug: followingId
+                )
+            case "worshipper":
+                guard let subjectId = UUID(uuidString: followingId) else { return }
+                truth = try await SupabaseService.shared.isFollowingUser(
+                    followerId: userId,
+                    subjectId: subjectId
+                )
+            default:
+                return
+            }
+            await MainActor.run { isFollowing = truth }
+        } catch {
+            print("[FollowButton] hydrate failed: \(error.localizedDescription)")
         }
     }
 
     private func toggleFollow() async {
-        guard let userId = appState.currentUserId else {
-            return
-        }
+        guard let userId = appState.currentUserId else { return }
         isToggling = true
+        // Optimistic flip — feels instant, reverts on failure.
+        let wasFollowing = isFollowing
+        isFollowing.toggle()
         do {
-            if isFollowing {
-                try await SupabaseService.shared.unfollow(followerId: userId, followingId: followingId)
-                isFollowing = false
+            if wasFollowing {
+                try await SupabaseService.shared.unfollow(
+                    followerId: userId,
+                    followingId: followingId
+                )
             } else {
-                try await SupabaseService.shared.follow(followerId: userId, followingId: followingId, followingType: followingType)
-                isFollowing = true
+                try await SupabaseService.shared.follow(
+                    followerId: userId,
+                    followingId: followingId,
+                    followingType: followingType
+                )
             }
         } catch {
-            // Silent fail with state rollback
+            // Surface the real error so we can debug instead of failing silently.
+            print("[FollowButton] toggle failed (\(followingType) \(followingId)): \(error.localizedDescription)")
+            await MainActor.run { isFollowing = wasFollowing }
         }
         isToggling = false
     }

@@ -15,6 +15,10 @@ struct ChurchInboxView: View {
     @State private var filterStatus: InquiryStatus? = .new  // default: show new
     @State private var selectedInquiry: ChurchInquiry? = nil
     @State private var errorMessage: String?
+    /// Polls every 15s while the inbox is on screen so new inquiries from
+    /// members appear without a manual refresh. APNs handles bell-badge
+    /// notifications outside the app.
+    @State private var refreshTask: Task<Void, Never>?
 
     // MARK: - Derived
 
@@ -39,13 +43,21 @@ struct ChurchInboxView: View {
             typeFilterBar
 
             if isLoading {
-                Spacer()
-                ProgressView().tint(.lcNavy)
-                Spacer()
+                ScrollView { VStack(spacing: 0) { LCListSkeleton(rows: 5) } }
             } else if let err = errorMessage {
-                errorState(err)
+                LCErrorState(
+                    title: "Inbox unavailable",
+                    message: err,
+                    onRetry: { Task { await load() } }
+                )
             } else if filtered.isEmpty {
-                emptyState
+                LCEmptyState(
+                    icon: filterStatus == .new ? "tray" : filterStatus == .archived ? "archivebox" : "tray.full",
+                    title: filterStatus == .new ? "No new inquiries" : "Nothing here",
+                    subtitle: filterStatus == .new
+                        ? "When members reach out, their messages will appear here. Make sure your profile is complete so people can find you."
+                        : "No inquiries match this filter."
+                )
             } else {
                 inquiryList
             }
@@ -54,28 +66,77 @@ struct ChurchInboxView: View {
         .navigationTitle("Inbox")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $selectedInquiry) { inquiry in
-            InquiryDetailView(inquiry: inquiry) { updated in
-                if let idx = inquiries.firstIndex(where: { $0.id == updated.id }) {
-                    inquiries[idx] = updated
+            InquiryDetailView(
+                inquiry: inquiry,
+                onStatusChange: { updated in
+                    if let idx = inquiries.firstIndex(where: { $0.id == updated.id }) {
+                        inquiries[idx] = updated
+                    }
+                },
+                onDelete: { id in
+                    inquiries.removeAll { $0.id == id }
+                    selectedInquiry = nil
                 }
-                selectedInquiry = nil
-            }
+            )
         }
         .task { await load() }
+        .onAppear { startAutoRefresh() }
+        .onDisappear { refreshTask?.cancel(); refreshTask = nil }
+    }
+
+    private func startAutoRefresh() {
+        refreshTask?.cancel()
+        refreshTask = Task {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 15_000_000_000) // 15s
+                if Task.isCancelled { return }
+                await silentRefresh()
+            }
+        }
+    }
+
+    /// Refresh without toggling the spinner so the screen doesn't flicker.
+    private func silentRefresh() async {
+        do {
+            let fresh = try await SupabaseService.shared.getInquiries(churchName: churchName)
+            await MainActor.run {
+                inquiries = fresh
+                if let current = selectedInquiry,
+                   let updated = fresh.first(where: { $0.id == current.id }) {
+                    selectedInquiry = updated
+                }
+            }
+        } catch {
+            print("[ChurchInbox] silent refresh failed: \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Filter bars
 
     private var statusFilterBar: some View {
+        // Show counts on every pill so the church admin can see how many
+        // past messages live behind Replied / Archived / All — without that,
+        // a marked-replied inquiry can feel "lost."
         HStack(spacing: 0) {
-            statusPill(label: "New\(newCount > 0 ? " (\(newCount))" : "")", status: .new)
-            statusPill(label: "Replied",  status: .replied)
-            statusPill(label: "Archived", status: .archived)
-            statusPill(label: "All",      status: nil)
+            statusPill(label: pillLabel("New",      count: newCount),       status: .new)
+            statusPill(label: pillLabel("Replied",  count: repliedCount),   status: .replied)
+            statusPill(label: pillLabel("Archived", count: archivedCount),  status: .archived)
+            statusPill(label: pillLabel("All",      count: inquiries.count), status: nil)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .background(Color.white)
+    }
+
+    private func pillLabel(_ name: String, count: Int) -> String {
+        count > 0 ? "\(name) (\(count))" : name
+    }
+
+    private var repliedCount: Int {
+        inquiries.filter { $0.status == InquiryStatus.replied.rawValue }.count
+    }
+    private var archivedCount: Int {
+        inquiries.filter { $0.status == InquiryStatus.archived.rawValue }.count
     }
 
     private func statusPill(label: String, status: InquiryStatus?) -> some View {
@@ -271,9 +332,30 @@ private struct InquiryRowView: View {
 struct InquiryDetailView: View {
     let inquiry: ChurchInquiry
     let onStatusChange: (ChurchInquiry) -> Void
+    /// Called when the church admin permanently deletes the inquiry — the
+    /// parent removes it from the local list and dismisses the sheet.
+    let onDelete: ((UUID) -> Void)?
+
+    init(
+        inquiry: ChurchInquiry,
+        onStatusChange: @escaping (ChurchInquiry) -> Void,
+        onDelete: ((UUID) -> Void)? = nil
+    ) {
+        self.inquiry = inquiry
+        self.onStatusChange = onStatusChange
+        self.onDelete = onDelete
+    }
 
     @Environment(\.dismiss) private var dismiss
     @State private var isUpdating = false
+    @State private var showDeleteConfirm = false
+    @State private var actionError: String?
+    /// Controls the in-app reply composer sheet.
+    @State private var showReplyComposer = false
+    /// Local mirror of the saved reply so the detail view updates instantly
+    /// after the church admin submits a reply (without waiting for a refetch).
+    @State private var savedReplyText: String?
+    @State private var savedReplyAt: Date?
 
     var body: some View {
         NavigationStack {
@@ -322,22 +404,62 @@ struct InquiryDetailView: View {
                     .background(Color.white)
                     .cornerRadius(14)
 
+                    // Existing reply (if the admin has already replied) —
+                    // shown read-only above the action buttons so they can see
+                    // what they sent and when, and re-open the composer to edit.
+                    if let body = currentReplyText, !body.isEmpty {
+                        replyPanel(body: body, sentAt: currentReplyAt)
+                    }
+
                     // Actions
-                    if inquiry.inquiryStatus != .archived {
-                        VStack(spacing: 10) {
-                            if inquiry.inquiryStatus == .new {
-                                actionButton(
-                                    label: "Mark as Replied",
-                                    icon: "checkmark.circle",
-                                    color: .lcTeal
-                                ) { await updateStatus(.replied) }
-                            }
+                    VStack(spacing: 10) {
+                        // Write a reply inside the app. The composer is a sheet
+                        // with a TextEditor; submitting writes reply_text /
+                        // replied_at and flips status to 'replied'.
+                        actionButton(
+                            label: currentReplyText?.isEmpty == false ? "Edit Reply" : "Write Reply",
+                            icon: "bubble.left.and.bubble.right.fill",
+                            color: .lcNavy
+                        ) { showReplyComposer = true }
+
+                        if inquiry.inquiryStatus == .new && (currentReplyText ?? "").isEmpty {
+                            actionButton(
+                                label: "Mark as Replied",
+                                icon: "checkmark.circle",
+                                color: .lcTeal
+                            ) { await updateStatus(.replied) }
+                        }
+
+                        if inquiry.inquiryStatus != .archived {
                             actionButton(
                                 label: "Archive",
                                 icon: "archivebox",
                                 color: .lcText3
                             ) { await updateStatus(.archived) }
                         }
+
+                        // Permanent delete — confirmation alert below.
+                        Button {
+                            showDeleteConfirm = true
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "trash").font(.system(size: 14))
+                                Text("Delete").font(.system(size: 14, weight: .semibold))
+                            }
+                            .foregroundColor(.red)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 46)
+                            .background(Color.red.opacity(0.08))
+                            .cornerRadius(12)
+                        }
+                        .disabled(isUpdating)
+                    }
+
+                    if let err = actionError {
+                        Text(err)
+                            .font(.system(size: 12))
+                            .foregroundColor(.red)
+                            .padding(.horizontal, 4)
                     }
                 }
                 .padding(16)
@@ -352,7 +474,108 @@ struct InquiryDetailView: View {
                         .foregroundColor(.lcNavy)
                 }
             }
+            .alert("Delete this inquiry?", isPresented: $showDeleteConfirm) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete", role: .destructive) { Task { await deleteInquiry() } }
+            } message: {
+                Text("This permanently removes the message. The member won't be notified.")
+            }
+            .sheet(isPresented: $showReplyComposer) {
+                ReplyComposerSheet(
+                    inquiry: inquiry,
+                    initialText: currentReplyText ?? "",
+                    onSubmit: { text in await submitReply(text) }
+                )
+            }
         }
+    }
+
+    // MARK: - Saved-reply accessors
+    //
+    // Prefer the locally-mirrored value (set on submit) over the inquiry passed
+    // in by the parent — the parent only refreshes from Supabase between sheets.
+
+    private var currentReplyText: String? {
+        savedReplyText ?? inquiry.replyText
+    }
+
+    private var currentReplyAt: Date? {
+        savedReplyAt ?? inquiry.repliedAt
+    }
+
+    // MARK: - Reply panel
+
+    @ViewBuilder
+    private func replyPanel(body: String, sentAt: Date?) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "checkmark.bubble.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(.lcTeal)
+                Text("Your reply")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.lcText)
+                Spacer()
+                if let sentAt {
+                    Text(sentAt.formatted(date: .abbreviated, time: .shortened))
+                        .font(.system(size: 11))
+                        .foregroundColor(.lcText3)
+                }
+            }
+            Text(body)
+                .font(.system(size: 14))
+                .foregroundColor(.lcText2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.lcTeal.opacity(0.08))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.lcTeal.opacity(0.25), lineWidth: 1)
+        )
+        .cornerRadius(12)
+    }
+
+    // MARK: - In-app reply
+
+    /// Persists the church admin's reply to Supabase, mirrors it locally, and
+    /// notifies the parent so the inbox row updates without a full refetch.
+    private func submitReply(_ text: String) async {
+        actionError = nil
+        isUpdating = true
+        defer { isUpdating = false }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        do {
+            try await SupabaseService.shared.replyToInquiry(inquiry: inquiry, text: trimmed)
+            ReviewPromptService.recordTrigger(.repliedToInquiry)
+            let now = Date()
+            savedReplyText = trimmed
+            savedReplyAt = now
+            var updated = inquiry
+            updated.status = InquiryStatus.replied.rawValue
+            updated.replyText = trimmed
+            updated.repliedAt = now
+            onStatusChange(updated)
+            showReplyComposer = false
+        } catch {
+            actionError = "Couldn't send the reply. Please try again."
+        }
+    }
+
+    // MARK: - Delete
+
+    private func deleteInquiry() async {
+        isUpdating = true
+        do {
+            try await SupabaseService.shared.deleteInquiry(id: inquiry.id)
+            onDelete?(inquiry.id)
+            dismiss()
+        } catch {
+            actionError = "Couldn't delete the inquiry. Try again."
+        }
+        isUpdating = false
     }
 
     private var statusBadge: some View {
@@ -408,5 +631,113 @@ struct InquiryDetailView: View {
             // Status update failure is non-critical; dismiss anyway
         }
         isUpdating = false
+    }
+}
+
+// MARK: - Reply Composer Sheet
+//
+// In-app reply composer. The church admin types directly into a TextEditor;
+// Send persists via `replyToInquiry` and dismisses. Available on every
+// inquiry — composing a fresh reply, or editing an existing one (initialText
+// is seeded from the saved reply when present).
+
+private struct ReplyComposerSheet: View {
+    let inquiry: ChurchInquiry
+    let initialText: String
+    let onSubmit: (String) async -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var text: String = ""
+    @State private var isSending = false
+    @FocusState private var editorFocused: Bool
+
+    private var trimmed: String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 14) {
+
+                // Original-message context — keeps the church grounded in
+                // what they're replying to without making them scroll away.
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Replying to \(inquiry.memberName)")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.lcText3)
+                    Text(inquiry.subject)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.lcText)
+                    Text(inquiry.body)
+                        .font(.system(size: 13))
+                        .foregroundColor(.lcText2)
+                        .lineLimit(3)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.lcCream)
+                .cornerRadius(10)
+
+                // Composer
+                ZStack(alignment: .topLeading) {
+                    TextEditor(text: $text)
+                        .focused($editorFocused)
+                        .font(.system(size: 15))
+                        .foregroundColor(.lcText)
+                        .scrollContentBackground(.hidden)
+                        .padding(8)
+                        .frame(minHeight: 200)
+                        .background(Color.white)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.lcBorder, lineWidth: 1)
+                        )
+                        .cornerRadius(12)
+                    if text.isEmpty {
+                        Text("Write your reply…")
+                            .font(.system(size: 15))
+                            .foregroundColor(.lcText3)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 16)
+                            .allowsHitTesting(false)
+                    }
+                }
+
+                Spacer()
+            }
+            .padding(16)
+            .background(Color.lcCream)
+            .navigationTitle("Reply")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { dismiss() }
+                        .foregroundColor(.lcText2)
+                        .disabled(isSending)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        Task {
+                            isSending = true
+                            await onSubmit(trimmed)
+                            isSending = false
+                        }
+                    } label: {
+                        if isSending {
+                            ProgressView().tint(.lcNavy)
+                        } else {
+                            Text("Send")
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundColor(trimmed.isEmpty ? .lcText3 : .lcNavy)
+                        }
+                    }
+                    .disabled(trimmed.isEmpty || isSending)
+                }
+            }
+            .onAppear {
+                if text.isEmpty { text = initialText }
+                editorFocused = true
+            }
+        }
     }
 }
