@@ -561,14 +561,42 @@ Handled by `PrivacySetting` enum and `PrivacySettingsView`.
 
 ## Things That Don't Exist Yet (Future Work)
 
-- Real-time notifications (Supabase realtime / push)
-- Church `email` and `donationUrl` as dedicated DB columns (currently stored in `about` text)
-- Sermon/media library
-- In-app livestream player (currently opens external URL)
-- Search across posts and people
-- Direct messages between churches and members
-- Church analytics dashboard
-- Admin approval flow for new church submissions
+Updated 2026-05-08 after a full web↔iOS parity audit.
+
+**Genuinely missing on iOS:**
+- Sermon/media library (separate `sermons` table + UI)
+- In-app livestream player (still opens external URL)
+- Direct messages between churches and members (the inquiry-reply system
+  covers async messaging; this would be true real-time DMs)
+- Realtime-driven notification badge (currently pull-only)
+- Full platform admin parity — `AdminDashboardView` only handles
+  pending-church approve/reject; web `/admin` has user moderation, content
+  moderation, reports, ownership requests, audit log, analytics, etc.
+  Probably fine to leave on web only for now.
+
+**iOS-only (no web equivalent yet):**
+- APNs push notifications (`PushService.swift` + `device_tokens` table —
+  iOS registers and deletes; web has no service-worker push.)
+
+**Recently shipped on both (was a parity gap, no longer):**
+- In-app inquiry replies — church admin types a reply in the Inbox, member
+  sees it in the Messages tab. Powered by `church_inquiries.reply_text` +
+  `replied_at` and `church_inquiry_reply` notifications.
+- Command Center / Welcome panel / structured Service Times + Office Hours /
+  verse rendering / posts manager / events manager / verified badge / share
+  button / Smart Recommendations / cross-type search — all live on iOS now.
+
+**Schema corrections vs prior versions of this doc:**
+- `church_submissions` has dedicated `donation_url`, `contact_email`, `cover_url`,
+  `address_line`, `postal_code`, `country`, `pastor_name`, `year_founded`,
+  social URLs, `ministries`, `leadership_team`, `what_to_expect`, `podcast_url`,
+  `livestream_url`, `service_times_json`, `office_hours_json`, `schedule_timezone`.
+  Treat web's `src/types/database.ts` as the canonical TS shape.
+- `posts` has `title`, `prayer_count`, `posted_on_id`, `posted_on_type`,
+  `event_date`, `event_location` in addition to the basic fields.
+- `profiles` has `favorite_scripture`, `is_banned`.
+- `prayer_responses` is its own table (separate from `likes`); not yet wired in iOS.
+- `event_rsvps` table exists; not yet wired in iOS.
 
 ---
 
