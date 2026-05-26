@@ -67,7 +67,13 @@ struct MainTabView: View {
     @State private var selectedTab = 0
     @AppStorage("pendingNavigationTab") private var pendingTab = 0
     @State private var showFeedback = false
+    @State private var didApplyInitialRoleTab = false
     private static var appearanceConfigured = false
+
+    /// Profile is tab index 4 in this TabView. Church admins and platform
+    /// admins land on it after sign-in (their dashboard lives there);
+    /// worshippers land on the Feed (index 0).
+    private static let profileTabIndex = 4
 
     init() {
         guard !Self.appearanceConfigured else { return }
@@ -172,6 +178,18 @@ struct MainTabView: View {
                     pendingTab = 0
                 }
             }
+            // Role-aware initial routing — fires when the profile becomes
+            // available and again whenever role changes (sign-out/sign-in).
+            // Church admins + platform admins open straight into their
+            // Profile/Dashboard tab; worshippers stay on Feed.
+            // iOS 16 single-parameter onChange — the (oldValue, newValue)
+            // form is iOS 17+ only.
+            .onChange(of: appState.profile?.role) { newRole in
+                applyInitialRoleTab(role: newRole)
+            }
+            .task(id: appState.profile?.role) {
+                applyInitialRoleTab(role: appState.profile?.role)
+            }
 
             // Feedback FAB
             Button {
@@ -202,6 +220,23 @@ struct MainTabView: View {
         guard let userId = appState.currentUserId else { return }
         let notifs = (try? await SupabaseService.shared.getNotifications(userId: userId)) ?? []
         unreadCount = notifs.filter { !$0.isRead }.count
+    }
+
+    /// Sets the initial tab once per session based on the signed-in user's
+    /// role. Skips if a `pendingTab` deep link override is in flight, and
+    /// only fires once so we don't fight the user's tab choice mid-session.
+    @MainActor
+    private func applyInitialRoleTab(role: String?) {
+        guard let role, !role.isEmpty else { return }
+        guard !didApplyInitialRoleTab else { return }
+        guard pendingTab == 0 else { return }   // honor deep links over default routing
+        switch role {
+        case "church_admin", "admin":
+            selectedTab = Self.profileTabIndex
+        default:
+            selectedTab = 0
+        }
+        didApplyInitialRoleTab = true
     }
 
     // MARK: - Navigation bar
