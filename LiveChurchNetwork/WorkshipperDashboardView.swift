@@ -9,6 +9,13 @@ struct WorkshipperDashboardView: View {
     @State private var editingPostId: UUID?
     @State private var editedContent: String = ""
     @State private var isSavingPost = false
+    /// Total inquiries the worshipper has sent — drives the Messages card label.
+    @State private var inquiryCount = 0
+    /// Inquiries with a reply that the member hasn't opened yet — counted via
+    /// unread `church_inquiry_reply` notifications, not by reading the inquiry
+    /// rows directly.
+    @State private var unreadReplyCount = 0
+    @State private var showMessages = false
 
     var body: some View {
         ScrollView {
@@ -147,6 +154,68 @@ struct WorkshipperDashboardView: View {
                             Divider()
                                 .padding(.vertical, 8)
 
+                            // Notification preferences — per-category opt-outs.
+                            // Toggle persistence is owned by the DB-side
+                            // trigger, which silently drops disabled types.
+                            NavigationLink(destination: NotificationPreferencesView().environmentObject(appState)) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "bell.badge")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(.lcText3)
+                                    Text("Notifications")
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(.lcText3)
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundColor(.lcText3)
+                                }
+                                .padding(.vertical, 10)
+                            }
+                            .buttonStyle(.plain)
+
+                            // Blocked accounts (safety) — surfaced from the
+                            // privacy section of every account so users have
+                            // an obvious recovery path for any block.
+                            NavigationLink(destination: BlockedAccountsView().environmentObject(appState)) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "hand.raised")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(.lcText3)
+                                    Text("Blocked Accounts")
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(.lcText3)
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundColor(.lcText3)
+                                }
+                                .padding(.vertical, 10)
+                            }
+                            .buttonStyle(.plain)
+
+                            // Delete account — required by App Store Guideline
+                            // 5.1.1(v). Uses the destructive red so the user
+                            // can't miss it and the type-to-confirm gate lives
+                            // inside DeleteAccountView so accidental taps are
+                            // safe.
+                            NavigationLink(destination: DeleteAccountView().environmentObject(appState)) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "trash")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(.red)
+                                    Text("Delete Account")
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(.red)
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundColor(.red.opacity(0.6))
+                                }
+                                .padding(.vertical, 10)
+                            }
+                            .buttonStyle(.plain)
+
                             // Sign out button
                             Button {
                                 Task { await appState.signOut() }
@@ -163,6 +232,56 @@ struct WorkshipperDashboardView: View {
                     }
                 .cornerRadius(16)
                 .border(Color.lcBorder, width: 1)
+                .padding(.horizontal, 16)
+
+                // Messages — entry point to MyInquiriesView. Shows replies
+                // from churches the worshipper has reached out to. Unread
+                // count comes from the notifications table so it stays
+                // truthful across devices.
+                Button { showMessages = true } label: {
+                    HStack(spacing: 14) {
+                        ZStack(alignment: .topTrailing) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.lcNavy.opacity(0.10))
+                                    .frame(width: 44, height: 44)
+                                Image(systemName: "bubble.left.and.bubble.right.fill")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(.lcNavy)
+                            }
+                            if unreadReplyCount > 0 {
+                                Text("\(unreadReplyCount)")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.red)
+                                    .clipShape(Capsule())
+                                    .offset(x: 4, y: -4)
+                            }
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Messages")
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundColor(.lcText)
+                            Text(messagesSubtitle)
+                                .font(.system(size: 12))
+                                .foregroundColor(.lcText3)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.lcText3)
+                    }
+                    .padding(14)
+                    .background(Color.white)
+                    .cornerRadius(14)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(Color.lcBorder, lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
                 .padding(.horizontal, 16)
 
                 // Posts Section
@@ -265,6 +384,15 @@ struct WorkshipperDashboardView: View {
                 }
             }
         }
+        .sheet(isPresented: $showMessages, onDismiss: {
+            // Refresh the unread count after the worshipper closes Messages —
+            // any inquiry they opened may have flipped its notification to read.
+            Task { await loadStats() }
+        }) {
+            if let userId = appState.currentUserId {
+                MyInquiriesView(memberId: userId)
+            }
+        }
         .task {
             await appState.loadProfile()
             await loadStats()
@@ -282,6 +410,16 @@ struct WorkshipperDashboardView: View {
         }
     }
 
+    private var messagesSubtitle: String {
+        if unreadReplyCount > 0 {
+            return "\(unreadReplyCount) new reply\(unreadReplyCount == 1 ? "" : "s")"
+        }
+        if inquiryCount == 0 {
+            return "Reach out to a church to start a conversation"
+        }
+        return "\(inquiryCount) message\(inquiryCount == 1 ? "" : "s")"
+    }
+
     private func loadStats() async {
         guard let userId = appState.currentUserId else { return }
         do {
@@ -295,6 +433,21 @@ struct WorkshipperDashboardView: View {
             await MainActor.run { userPosts = posts }
         } catch {
             print("Error loading stats: \(error)")
+        }
+        // Inquiry totals + unread-reply count drive the Messages card.
+        // Pulled separately from the main stats block so a single failure
+        // (e.g. unmigrated reply columns on an older build) doesn't blow
+        // away followers / following / posts.
+        do {
+            let mine = try await SupabaseService.shared.getInquiriesForMember(memberId: userId)
+            let notifs = (try? await SupabaseService.shared.getNotifications(userId: userId)) ?? []
+            let unread = notifs.filter { $0.type == "church_inquiry_reply" && !$0.isRead }.count
+            await MainActor.run {
+                inquiryCount = mine.count
+                unreadReplyCount = unread
+            }
+        } catch {
+            print("Error loading inquiries: \(error)")
         }
     }
 

@@ -35,6 +35,18 @@ struct UserProfileView: View {
             .background(Color.lcCream)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                if !isOwnProfile, let p = profile {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        ProfileActionMenuView(
+                            targetUserId: userId,
+                            targetName: p.fullName ?? "this person",
+                            kind: .person,
+                            viewerId: appState.currentUserId
+                        )
+                    }
+                }
+            }
             .navigationDestination(for: Post.self) { post in
                 PostDetailView(post: post).environmentObject(appState)
             }
