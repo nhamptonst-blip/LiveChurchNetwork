@@ -110,7 +110,9 @@ final class DiscoverViewModel: ObservableObject {
             liveNowChurches = live.map { toChurch($0, photoUrl: profileMap[$0.userId]) }
             recentlyAdded = recent.map { toChurch($0, photoUrl: profileMap[$0.userId]) }
             browseChurches = browse.map { toChurch($0, photoUrl: profileMap[$0.userId]) }
-            browsePeople = people.map { toDiscoverableUser($0) }
+            let discoverablePeople = people.map { toDiscoverableUser($0) }
+            browsePeople = discoverablePeople
+            suggestedPeople = discoverablePeople
 
             // Recommended is same as live for now (can be enhanced with RecommendationEngine later)
             recommendedChurches = liveNowChurches
@@ -196,6 +198,45 @@ final class DiscoverViewModel: ObservableObject {
     }
 
     // MARK: - Helpers
+
+    func calculateTrendingScore(_ church: Church) -> Double {
+        var score: Double = 0
+
+        // Base score: follower count (0-40 points)
+        // Using logarithmic scale so large numbers don't dominate
+        let baseScore = min(40, log1p(Double(church.followerCount)) * 6)
+        score += baseScore
+
+        // Live engagement bonus (0-30 points)
+        if church.isLive {
+            score += 30
+        } else if church.liveViewerCount > 0 {
+            // Recent livestream activity (0-20 points)
+            score += min(20, Double(church.liveViewerCount) / 5)
+        }
+
+        // New church bonus (0-20 points)
+        if church.isNew {
+            score += 20
+        }
+
+        // Social proof multiplier: if followers are high, boost the score
+        if church.followerCount >= 500 {
+            score *= 1.3
+        } else if church.followerCount >= 200 {
+            score *= 1.15
+        }
+
+        return score
+    }
+
+    func getTrendingChurches(from churches: [Church], limit: Int = 20) -> [Church] {
+        churches
+            .filter { $0.followerCount >= 50 || $0.isLive || $0.isNew } // Minimum viability
+            .sorted { calculateTrendingScore($0) > calculateTrendingScore($1) }
+            .prefix(limit)
+            .map { $0 }
+    }
 
     private func fetchChurchPhotoMap(userIds: [UUID]) async -> [UUID: String] {
         let profiles = (try? await SupabaseService.shared.getProfiles(ids: userIds)) ?? []

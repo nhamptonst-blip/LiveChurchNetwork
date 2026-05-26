@@ -29,6 +29,8 @@ struct DirectoryView: View {
     @State private var viewDensity: String = "Comfortable"
     @State private var isLoadingMore: Bool = false
     @State private var recentSearches: [String] = []
+    @State private var showFilteredResultsSheet: Bool = false
+    @State private var selectedChurchFromSheet: Church? = nil
 
     private let suggestedSearches = [
         "Live Churches",
@@ -45,7 +47,7 @@ struct DirectoryView: View {
         "Anglican", "Evangelical"
     ]
 
-    private let peopleFilterOptions = ["Suggested", "Near Me", "From My Churches", "New Members", "Leaders", "Mutuals"]
+    private let peopleFilterOptions = ["Suggested", "Near Me", "From My Churches", "New Members", "Leaders"]
 
     private var locationEnabled: Bool {
         locationManager.authorizationStatus == .authorizedWhenInUse
@@ -115,13 +117,11 @@ struct DirectoryView: View {
         // Apply smart filters
         if let filter = activeSmartFilter {
             switch filter {
-            case "Live":
-                churches = churches.filter { $0.isLive }
             case "Nearby":
                 churches = churches.filter { isNearby($0) }
             case "Trending":
-                // Show churches with high follower count (trending)
-                churches = churches.filter { $0.followerCount > 100 }.sorted { $0.followerCount > $1.followerCount }
+                // Use dynamic trending algorithm
+                churches = vm.getTrendingChurches(from: filteredBrowseChurches, limit: 50)
             default:
                 break
             }
@@ -614,26 +614,13 @@ struct DirectoryView: View {
                 // Simple filter buttons
                 HStack(spacing: 8) {
                     Button {
-                        activeSmartFilter = activeSmartFilter == "Live" ? nil : "Live"
-                        HapticEngine.selection()
-                    } label: {
-                        VStack(spacing: 4) {
-                            Image(systemName: "play.circle.fill")
-                                .font(.system(size: 16, weight: .semibold))
-                            Text("Live")
-                                .font(.system(size: 13, weight: .bold))
+                        if activeSmartFilter == "Nearby" {
+                            activeSmartFilter = nil
+                            showFilteredResultsSheet = false
+                        } else {
+                            activeSmartFilter = "Nearby"
+                            showFilteredResultsSheet = true
                         }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 38)
-                        .foregroundColor(activeSmartFilter == "Live" ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
-                        .background(activeSmartFilter == "Live" ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 999))
-                        .overlay(RoundedRectangle(cornerRadius: 999).stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1))
-                    }
-                    .buttonStyle(.plain)
-
-                    Button {
-                        activeSmartFilter = activeSmartFilter == "Nearby" ? nil : "Nearby"
                         HapticEngine.selection()
                     } label: {
                         VStack(spacing: 4) {
@@ -652,7 +639,13 @@ struct DirectoryView: View {
                     .buttonStyle(.plain)
 
                     Button {
-                        activeSmartFilter = activeSmartFilter == "Trending" ? nil : "Trending"
+                        if activeSmartFilter == "Trending" {
+                            activeSmartFilter = nil
+                            showFilteredResultsSheet = false
+                        } else {
+                            activeSmartFilter = "Trending"
+                            showFilteredResultsSheet = true
+                        }
                         HapticEngine.selection()
                     } label: {
                         VStack(spacing: 4) {
@@ -696,6 +689,62 @@ struct DirectoryView: View {
                     ChurchFilterSheet(selectedFilters: $churchFilters)
                         .presentationDetents([.fraction(0.85)])
                         .presentationCornerRadius(28)
+                }
+                .sheet(isPresented: $showFilteredResultsSheet) {
+                    NavigationStack {
+                        VStack(spacing: 0) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text(activeSmartFilter ?? "Results")
+                                        .font(.system(size: 22, weight: .black))
+                                        .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
+
+                                    Spacer()
+
+                                    Button {
+                                        showFilteredResultsSheet = false
+                                        activeSmartFilter = nil
+                                    } label: {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .font(.system(size: 24))
+                                            .foregroundColor(Color(red: 156/255, green: 163/255, blue: 175/255))
+                                    }
+                                }
+
+                                Text("\(smartFilteredChurches.count) churches")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 16)
+
+                            Divider()
+
+                            ScrollView {
+                                VStack(spacing: 12) {
+                                    ForEach(smartFilteredChurches, id: \.id) { church in
+                                        Button {
+                                            selectedChurchFromSheet = church
+                                        } label: {
+                                            DirectoryChurchCard(church: church, initialIsFollowing: vm.followedChurchSlugs.contains(church.slug))
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                            }
+                            .sheet(item: $selectedChurchFromSheet) { church in
+                                ChurchDetailView(church: church)
+                                    .environmentObject(appState)
+                                    .environmentObject(vm)
+                            }
+                        }
+                    }
+                    .environmentObject(appState)
+                    .environmentObject(vm)
+                    .presentationDetents([.large])
+                    .presentationCornerRadius(28)
                 }
 
                 // MARK: - 2. Live Now
@@ -1058,7 +1107,7 @@ struct DirectoryView: View {
                     } else if !vm.browseChurches.isEmpty {
                         // No results for current filters
                         VStack(alignment: .center, spacing: 16) {
-                            Image(systemName: "building.2.circle.fill")
+                            Image(systemName: "building.2.fill")
                                 .font(.system(size: 48, weight: .light))
                                 .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
 
@@ -1289,57 +1338,76 @@ struct DirectoryView: View {
 
     // MARK: - People Filter Row
     private var peopleFilterRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+        HStack(spacing: 12) {
+            // People Category Dropdown
+            Menu {
                 ForEach(peopleFilterOptions, id: \.self) { filter in
                     Button(action: {
                         selectedPeopleFilter = filter
                         HapticEngine.selection()
                     }) {
-                        Text(filter)
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(selectedPeopleFilter == filter ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
-                            .frame(height: 36)
-                            .padding(.horizontal, 14)
-                            .background(selectedPeopleFilter == filter ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 999))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 999).stroke(
-                                    selectedPeopleFilter == filter
-                                        ? Color(red: 31/255, green: 60/255, blue: 136/255)
-                                        : Color(red: 229/255, green: 231/255, blue: 235/255),
-                                    lineWidth: 1
-                                )
-                            )
+                        HStack {
+                            Text(filter)
+                            if selectedPeopleFilter == filter {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(Color(red: 31/255, green: 60/255, blue: 136/255))
+                            }
+                        }
                     }
-                    .buttonStyle(.plain)
                 }
+            } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Category")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
 
-                // More Filters button
-                Button(action: {
-                    showPeopleFilterSheet = true
-                    HapticEngine.selection()
-                }) {
-                    Text("More Filters")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(!peopleFilters.isEmpty ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
-                        .frame(height: 36)
-                        .padding(.horizontal, 14)
-                        .background(!peopleFilters.isEmpty ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 999))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 999).stroke(
-                                !peopleFilters.isEmpty
-                                    ? Color(red: 31/255, green: 60/255, blue: 136/255)
-                                    : Color(red: 229/255, green: 231/255, blue: 235/255),
-                                lineWidth: 1
-                            )
-                        )
+                        Text(selectedPeopleFilter)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
+                            .lineLimit(1)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
                 }
-                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .padding(.horizontal, 14)
+                .background(Color.white)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Color(red: 229/255, green: 231/255, blue: 235/255), lineWidth: 1)
+                )
             }
-            .padding(.vertical, 4)
+            .buttonStyle(.plain)
+
+            // More Filters button
+            Button(action: {
+                showPeopleFilterSheet = true
+                HapticEngine.selection()
+            }) {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(!peopleFilters.isEmpty ? .white : Color(red: 55/255, green: 65/255, blue: 81/255))
+                    .frame(width: 44, height: 56)
+                    .background(!peopleFilters.isEmpty ? Color(red: 31/255, green: 60/255, blue: 136/255) : Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14).stroke(
+                            Color(red: 229/255, green: 231/255, blue: 235/255),
+                            lineWidth: 1
+                        )
+                    )
+            }
+            .buttonStyle(.plain)
         }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
         .sheet(isPresented: $showPeopleFilterSheet) {
             PeopleFilterSheet(selectedFilters: $peopleFilters)
                 .presentationDetents([.fraction(0.85)])
@@ -1461,21 +1529,6 @@ struct DirectoryView: View {
                                 .padding(.horizontal, 20)
 
                                 peopleSocialListWithMetadata(Array(vm.suggestedPeople.prefix(10)))
-                            }
-                        } else if selectedPeopleFilter == "Mutuals" && !filteredBrowsePeople.isEmpty {
-                            VStack(alignment: .leading, spacing: 12) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Mutual Connections")
-                                        .font(.system(size: 22, weight: .black))
-                                        .foregroundColor(Color(red: 17/255, green: 24/255, blue: 39/255))
-
-                                    Text("People you both follow")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
-                                }
-                                .padding(.horizontal, 20)
-
-                                peopleSocialListWithMetadata(Array(filteredBrowsePeople.prefix(10)))
                             }
                         }
 
