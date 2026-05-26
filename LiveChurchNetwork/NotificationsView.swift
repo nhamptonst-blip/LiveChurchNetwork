@@ -8,6 +8,9 @@ import SwiftUI
 enum NotificationRoute: Hashable {
     case userProfile(UUID)
     case church(String, ChurchProfileTab)   // slug + initial tab
+    /// Worshipper-side route to the Messages screen with an optional inquiry
+    /// to auto-open. Triggered by `church_inquiry_reply` notification taps.
+    case myInquiries(UUID?)
     case unavailable
 }
 
@@ -25,9 +28,13 @@ struct NotificationsView: View {
         NavigationStack(path: $path) {
             Group {
                 if isLoading {
-                    ProgressView().tint(.lcNavy)
+                    ScrollView { VStack(spacing: 0) { LCListSkeleton(rows: 6) } }
                 } else if notifications.isEmpty {
-                    emptyState
+                    LCEmptyState(
+                        icon: "bell.slash",
+                        title: "You're all caught up",
+                        subtitle: "When churches you follow post, go live, or new people follow you, you'll see it here."
+                    )
                 } else {
                     notificationsList
                 }
@@ -65,6 +72,13 @@ struct NotificationsView: View {
             if let submission = appState.church(bySlug: slug) {
                 let church = appState.toChurch(submission)
                 ChurchDetailView(church: church, initialTab: tab)
+            } else {
+                NotificationUnavailableView()
+            }
+
+        case .myInquiries(let inquiryId):
+            if let userId = appState.currentUserId {
+                MyInquiriesView(memberId: userId, focusInquiryId: inquiryId)
             } else {
                 NotificationUnavailableView()
             }
@@ -110,6 +124,11 @@ struct NotificationsView: View {
             if let actorId = notification.actorUserId {
                 return .userProfile(actorId)
             }
+
+        case "church_inquiry_reply":
+            // related_id holds the inquiry UUID — pass it through so the
+            // Messages screen can auto-open that conversation.
+            return .myInquiries(notification.relatedId)
 
         default:
             // Best-effort: try user then church
@@ -202,9 +221,13 @@ struct NotificationsView: View {
         guard let userId = appState.currentUserId else { isLoading = false; return }
         do {
             let loaded = try await SupabaseService.shared.getNotifications(userId: userId)
-            notifications = loaded.isEmpty ? MockDataProvider.notifications : loaded
+            notifications = loaded
         } catch {
-            notifications = MockDataProvider.notifications
+            // On failure, show real empty state — never fall back to mock
+            // fixtures (those leak fake "Grace Community Church is LIVE"
+            // entries into production builds).
+            print("[NotificationsView] load failed: \(error.localizedDescription)")
+            notifications = []
         }
         isLoading = false
     }
@@ -235,21 +258,23 @@ struct NotificationRowContent: View {
 
     private var icon: String {
         switch notification.type {
-        case "new_post":     return "doc.text.fill"
-        case "new_follower": return "person.fill.badge.plus"
-        case "church_live":  return "antenna.radiowaves.left.and.right"
-        case "new_event":    return "calendar.badge.plus"
-        default:             return "bell.fill"
+        case "new_post":              return "doc.text.fill"
+        case "new_follower":          return "person.fill.badge.plus"
+        case "church_live":           return "antenna.radiowaves.left.and.right"
+        case "new_event":             return "calendar.badge.plus"
+        case "church_inquiry_reply":  return "bubble.left.and.bubble.right.fill"
+        default:                      return "bell.fill"
         }
     }
 
     private var iconColor: Color {
         switch notification.type {
-        case "church_live":  return .red
-        case "new_event":    return .lcNavy
-        case "new_follower": return .lcTeal
-        case "new_post":     return .lcText2
-        default:             return .lcText3
+        case "church_live":           return .red
+        case "new_event":             return .lcNavy
+        case "new_follower":          return .lcTeal
+        case "new_post":              return .lcText2
+        case "church_inquiry_reply":  return .lcTeal
+        default:                      return .lcText3
         }
     }
 
