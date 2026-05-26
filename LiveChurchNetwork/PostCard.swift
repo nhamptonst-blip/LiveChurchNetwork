@@ -13,11 +13,6 @@ struct PostCard: View {
     @State private var rsvpCountLocal: Int = 0
     @State private var isAttending: Bool = false
     @State private var showPostDetail = false
-    /// Lazy-resolved church for the post author when the AppState cache
-    /// lookup by name misses (e.g. pending status, name punctuation drift).
-    /// Falls back to a Supabase fetch by author user-id so the church header
-    /// always lands on ChurchDetailView instead of dropping the tap.
-    @State private var resolvedAuthorChurch: Church?
     /// When the viewer hides this post or blocks the author, we splice the
     /// card out locally so the feed visibly shrinks. The next refetch keeps
     /// it gone via the safety filters loaded in AppState.
@@ -105,24 +100,8 @@ struct PostCard: View {
 
     private var authorChurch: Church? {
         guard post.authorType == "church" else { return nil }
-        if let submission = appState.church(byName: post.authorName) {
-            return appState.toChurch(submission)
-        }
-        return resolvedAuthorChurch
-    }
-
-    /// Fallback resolution when the in-memory cache doesn't contain this
-    /// church (status drift, name punctuation mismatch, etc). Looks up the
-    /// church_submissions row by the post author's user_id and hydrates
-    /// `resolvedAuthorChurch` so the header NavigationLink can render.
-    private func resolveAuthorChurchIfNeeded() async {
-        guard post.authorType == "church",
-              appState.church(byName: post.authorName) == nil,
-              resolvedAuthorChurch == nil else { return }
-        guard let submission = try? await SupabaseService.shared.getChurchSubmission(userId: post.authorId) else { return }
-        await MainActor.run {
-            resolvedAuthorChurch = appState.toChurch(submission)
-        }
+        guard let submission = appState.church(byName: post.authorName) else { return nil }
+        return appState.toChurch(submission)
     }
 
     /// One-line sublabel shown beneath the author name.
@@ -497,10 +476,7 @@ struct PostCard: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .task(id: post.id) {
-            await hydrateEngagement()
-            await resolveAuthorChurchIfNeeded()
-        }
+        .task(id: post.id) { await hydrateEngagement() }
     }
 
     private var likeButton: some View {
