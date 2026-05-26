@@ -49,6 +49,17 @@ struct ChurchDetailView: View {
                 headerSection
                 serviceTimesStrip
                 actionStrip
+
+                // "Welcome to {Church}" — primary public-profile content card,
+                // shown directly under the hero so first-time visitors can read
+                // mission, denomination, location, livestream, service times,
+                // and ministries without clicking into the About tab.
+                if let submission = churchSubmission {
+                    WelcomeChurchPanel(church: submission)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
+                }
+
                 tabBar.background(Color.white)
                 Divider()
                 tabContent
@@ -60,6 +71,23 @@ struct ChurchDetailView: View {
         .background(Color.lcCream)
         .ignoresSafeArea(edges: .top)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            // Trust & safety menu in the nav bar — Report / Block. Hidden when
+            // the viewer owns this church (no meaningful action). The church
+            // admin's user_id comes from the matched submission so blocking
+            // hides their posts everywhere.
+            if let submission = churchSubmission,
+               submission.userId != appState.currentUserId {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    ProfileActionMenuView(
+                        targetUserId: submission.userId,
+                        targetName: church.name,
+                        kind: .church,
+                        viewerId: appState.currentUserId
+                    )
+                }
+            }
+        }
         .task { await loadAll() }
         .sheet(isPresented: $showContact) {
             ChurchContactView(church: church)
@@ -270,6 +298,9 @@ struct ChurchDetailView: View {
                             actionPill(icon: "envelope.fill", label: "Contact", active: true, accent: false)
                         }
                     }
+
+                    // Native share sheet — copies / shares the public profile URL
+                    ChurchShareLink(slug: church.slug, churchName: church.name)
 
                     Spacer(minLength: 0)
                 }
@@ -661,7 +692,7 @@ struct ChurchDetailView: View {
 
                     LazyVStack(spacing: 12) {
                         ForEach(events) { event in
-                            ChurchEventCard(event: event)
+                            ChurchEventCard(event: event, showsRsvp: true)
                         }
                     }
                 }
@@ -890,6 +921,11 @@ struct ChurchDetailView: View {
 
 struct ChurchEventCard: View {
     let event: Event
+    var showsRsvp: Bool = false
+
+    @EnvironmentObject var appState: AppState
+    @State private var rsvpCount: Int = 0
+    @State private var isAttending: Bool = false
 
     private static let monthFormatter: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "MMM"; return f
@@ -909,44 +945,71 @@ struct ChurchEventCard: View {
     private var dateString: String { Self.dateFormatter.string(from: event.eventDate) }
     private var timeString: String { Self.timeFormatter.string(from: event.eventDate) }
 
-    var body: some View {
-        HStack(alignment: .top, spacing: 14) {
-            VStack(spacing: 0) {
-                Text(month)
-                    .font(.system(size: 10, weight: .black))
-                    .foregroundColor(.lcGold)
-                Text(day)
-                    .font(.system(size: 26, weight: .black))
-                    .foregroundColor(.lcNavy)
-            }
-            .frame(width: 44)
-            .padding(.vertical, 10)
+    private var canRsvp: Bool {
+        showsRsvp && !event.isPastEvent && appState.profile?.role != "church_admin"
+    }
 
-            VStack(alignment: .leading, spacing: 5) {
-                Text(event.title)
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.lcText)
-                Text("\(dateString) · \(timeString)")
-                    .font(.system(size: 12))
-                    .foregroundColor(.lcText2)
-                if let location = event.location, !location.isEmpty {
-                    Text(location)
-                        .font(.system(size: 12))
-                        .foregroundColor(.lcText3)
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 14) {
+                VStack(spacing: 0) {
+                    Text(month)
+                        .font(.system(size: 10, weight: .black))
+                        .foregroundColor(.lcGold)
+                    Text(day)
+                        .font(.system(size: 26, weight: .black))
+                        .foregroundColor(.lcNavy)
                 }
-                if let desc = event.description, !desc.isEmpty {
-                    Text(desc)
+                .frame(width: 44)
+                .padding(.vertical, 10)
+
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(event.title)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.lcText)
+                    Text("\(dateString) · \(timeString)")
                         .font(.system(size: 12))
-                        .foregroundColor(.lcText3)
-                        .lineLimit(2)
-                        .padding(.top, 2)
+                        .foregroundColor(.lcText2)
+                    if let location = event.location, !location.isEmpty {
+                        Text(location)
+                            .font(.system(size: 12))
+                            .foregroundColor(.lcText3)
+                    }
+                    if let desc = event.description, !desc.isEmpty {
+                        Text(desc)
+                            .font(.system(size: 12))
+                            .foregroundColor(.lcText3)
+                            .lineLimit(2)
+                            .padding(.top, 2)
+                    }
                 }
+                Spacer()
             }
-            Spacer()
+
+            if canRsvp {
+                HStack {
+                    RsvpButton(
+                        eventId: event.id,
+                        rsvpCount: $rsvpCount,
+                        isAttending: $isAttending
+                    )
+                    .environmentObject(appState)
+                    Spacer()
+                }
+                .padding(.leading, 58)
+                .task(id: event.id) { await hydrateRsvp() }
+            }
         }
         .padding(14)
         .background(Color.white)
         .cornerRadius(14)
         .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 2)
+    }
+
+    private func hydrateRsvp() async {
+        guard let uid = appState.currentUserId else { return }
+        rsvpCount = (try? await SupabaseService.shared.getRsvpCount(eventId: event.id)) ?? 0
+        let going = (try? await SupabaseService.shared.getRsvpedEventIds(userId: uid)) ?? []
+        isAttending = going.contains(event.id)
     }
 }

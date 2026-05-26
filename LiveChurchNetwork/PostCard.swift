@@ -6,7 +6,17 @@ struct PostCard: View {
 
     @EnvironmentObject var appState: AppState
     @State private var isLiking = false
+    // Engagement state (prayer-typed and event-typed posts).
+    // Hydrated once per render via `.task(id: post.id)`.
+    @State private var prayerCountLocal: Int = 0
+    @State private var hasPrayed: Bool = false
+    @State private var rsvpCountLocal: Int = 0
+    @State private var isAttending: Bool = false
     @State private var showPostDetail = false
+    /// When the viewer hides this post or blocks the author, we splice the
+    /// card out locally so the feed visibly shrinks. The next refetch keeps
+    /// it gone via the safety filters loaded in AppState.
+    @State private var dismissed = false
 
     private var timeAgo: String {
         let diff = Date().timeIntervalSince(post.createdAt)
@@ -19,6 +29,15 @@ struct PostCard: View {
     }
 
     var body: some View {
+        if dismissed {
+            EmptyView()
+        } else {
+            cardBody
+        }
+    }
+
+    @ViewBuilder
+    private var cardBody: some View {
         ZStack {
             VStack(alignment: .leading, spacing: 0) {
                 header
@@ -209,13 +228,27 @@ struct PostCard: View {
 
             Spacer()
 
-            if post.authorType == "church" {
-                // Use church slug from appState if available, otherwise generate from name
-                let churchSlug = authorChurch?.slug ?? post.authorName.lowercased().replacingOccurrences(of: " ", with: "-")
-                FollowButton(followingId: churchSlug, followingType: "church", initialIsFollowing: false)
-            } else if post.authorType == "worshipper" && post.authorId != appState.currentUserId {
-                FollowButton(followingId: post.authorId.uuidString, followingType: "worshipper", initialIsFollowing: false)
+            // Hide the follow button when the viewer authored this post —
+            // applies to both church admins viewing their own posts and
+            // worshippers viewing their own. post.authorId is the user_id
+            // of whoever created the post (the church admin's user_id for
+            // church-typed posts).
+            if post.authorId != appState.currentUserId {
+                if post.authorType == "church" {
+                    let churchSlug = authorChurch?.slug ?? post.authorName.lowercased().replacingOccurrences(of: " ", with: "-")
+                    FollowButton(followingId: churchSlug, followingType: "church", initialIsFollowing: false)
+                } else if post.authorType == "worshipper" {
+                    FollowButton(followingId: post.authorId.uuidString, followingType: "worshipper", initialIsFollowing: false)
+                }
             }
+
+            // Trust & safety menu — Report / Hide / Block. Hidden when the
+            // viewer is the author (no meaningful actions to take).
+            PostActionMenuView(
+                post: post,
+                viewerId: appState.currentUserId,
+                onDismiss: { dismissed = true }
+            )
         }
         .padding(.horizontal, 16)
         .padding(.top, 14)
@@ -411,32 +444,76 @@ struct PostCard: View {
     }
 
     // MARK: Actions
+    //
+    // Per-post engagement controls. Prayer-typed posts surface a separate
+    // PrayerResponseButton; event-typed posts surface RsvpButton. State for
+    // those lives locally — full hydration of "hasPrayed" / "isAttending"
+    // happens lazily on first appearance.
 
     private var actions: some View {
-        HStack(spacing: 20) {
-            Button {
-                guard let userId = appState.currentUserId else { return }
-                HapticEngine.impact(.light)
-                Task { await toggleLike(userId: userId) }
-            } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: post.isLiked ? "heart.fill" : "heart")
-                        .foregroundColor(post.isLiked ? .red : .lcText3)
-                        .scaleEffect(post.isLiked ? 1.15 : 1.0)
-                        .animation(.appSpring, value: post.isLiked)
-                    if post.likeCount > 0 {
-                        Text("\(post.likeCount)")
-                            .font(.system(size: 13))
-                            .foregroundColor(.lcText3)
-                    }
-                }
+        HStack(spacing: 16) {
+            likeButton
+
+            if post.postType == "prayer" {
+                PrayerResponseButton(
+                    postId: post.id,
+                    prayerCount: $prayerCountLocal,
+                    hasPrayed: $hasPrayed
+                )
+                .environmentObject(appState)
             }
-            .disabled(isLiking)
+
+            if post.postType == "event" {
+                RsvpButton(
+                    eventId: post.id,
+                    rsvpCount: $rsvpCountLocal,
+                    isAttending: $isAttending
+                )
+                .environmentObject(appState)
+            }
 
             Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+        .task(id: post.id) { await hydrateEngagement() }
+    }
+
+    private var likeButton: some View {
+        Button {
+            guard let userId = appState.currentUserId else { return }
+            HapticEngine.impact(.light)
+            Task { await toggleLike(userId: userId) }
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: post.isLiked ? "heart.fill" : "heart")
+                    .foregroundColor(post.isLiked ? .red : .lcText3)
+                    .scaleEffect(post.isLiked ? 1.15 : 1.0)
+                    .animation(.appSpring, value: post.isLiked)
+                if post.likeCount > 0 {
+                    Text("\(post.likeCount)")
+                        .font(.system(size: 13))
+                        .foregroundColor(.lcText3)
+                }
+            }
+        }
+        .disabled(isLiking)
+    }
+
+    /// Lazily fetch whether the current user has already prayed / RSVP'd so
+    /// the optimistic-toggle buttons reflect the real state on render.
+    private func hydrateEngagement() async {
+        guard let uid = appState.currentUserId else { return }
+        prayerCountLocal = post.prayerCount ?? 0
+        if post.postType == "prayer" {
+            let prayed = (try? await SupabaseService.shared.getPrayedPostIds(userId: uid)) ?? []
+            hasPrayed = prayed.contains(post.id)
+        }
+        if post.postType == "event" {
+            rsvpCountLocal = (try? await SupabaseService.shared.getRsvpCount(eventId: post.id)) ?? 0
+            let going = (try? await SupabaseService.shared.getRsvpedEventIds(userId: uid)) ?? []
+            isAttending = going.contains(post.id)
+        }
     }
 
     // MARK: Like action
