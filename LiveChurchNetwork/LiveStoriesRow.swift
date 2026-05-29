@@ -16,7 +16,7 @@ struct LiveStoriesRow: View {
                     .font(.system(size: 14, weight: .regular))
                     .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
 
-                Button(action: {}) {
+                NavigationLink(destination: DirectoryView()) {
                     Text("Browse Churches")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.white)
