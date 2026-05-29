@@ -925,11 +925,18 @@ struct ChurchOnboardingView: View {
         guard logoData != nil || coverData != nil,
               let userId = appState.currentUserId else { advance(); return }
         isUploadingBranding = true
+        // The Discover directory reads the per-church avatar_url/cover_url, so
+        // write the logo/cover to the church_submissions row (by id) in
+        // addition to the profile that drives the dashboard/feed avatar.
+        let submissionId = (try? await SupabaseService.shared.getChurchSubmission(userId: userId))?.id
         if let data = logoData,
            let compressed = UIImage(data: data)?.jpegData(compressionQuality: 0.75) {
             if let url = try? await SupabaseService.shared.uploadProfileImage(
                 userId: userId, data: compressed, bucket: "avatars") {
                 try? await SupabaseService.shared.updateProfilePhotoUrl(userId: userId, photoUrl: url)
+                if let sid = submissionId {
+                    try? await SupabaseService.shared.updateChurchAvatarUrl(submissionId: sid, avatarUrl: url)
+                }
             }
         }
         if let data = coverData,
@@ -937,6 +944,9 @@ struct ChurchOnboardingView: View {
             if let url = try? await SupabaseService.shared.uploadProfileImage(
                 userId: userId, data: compressed, bucket: "covers") {
                 try? await SupabaseService.shared.updateProfileCoverUrl(userId: userId, coverUrl: url)
+                if let sid = submissionId {
+                    try? await SupabaseService.shared.updateChurchCoverUrl(submissionId: sid, coverUrl: url)
+                }
             }
         }
         await appState.loadProfile()

@@ -62,6 +62,9 @@ import Foundation
      let office_hours_json: OfficeHours?
      let livestream_schedule_json: LivestreamSchedule?
  }
+
+ private struct ChurchAvatarUpdate: Encodable { let avatar_url: String }
+ private struct ChurchCoverUpdate: Encodable { let cover_url: String }
   
  private struct SavedChurchInsert: Encodable {
      let user_id: String
@@ -444,6 +447,25 @@ private struct ProfileCoverUpdate: Encodable {
              .from("profiles")
              .update(ProfileCoverUpdate(cover_url: coverUrl))
              .eq("id", value: userId.uuidString)
+             .execute()
+     }
+
+     /// Church logo → `church_submissions.avatar_url` (the per-church field the
+     /// Discover directory reads). Targets a specific submission by id, never
+     /// by user_id (the bulk-import account owns hundreds of churches).
+     func updateChurchAvatarUrl(submissionId: UUID, avatarUrl: String) async throws {
+         try await client
+             .from("church_submissions")
+             .update(ChurchAvatarUpdate(avatar_url: avatarUrl))
+             .eq("id", value: submissionId.uuidString)
+             .execute()
+     }
+
+     func updateChurchCoverUrl(submissionId: UUID, coverUrl: String) async throws {
+         try await client
+             .from("church_submissions")
+             .update(ChurchCoverUpdate(cover_url: coverUrl))
+             .eq("id", value: submissionId.uuidString)
              .execute()
      }
 

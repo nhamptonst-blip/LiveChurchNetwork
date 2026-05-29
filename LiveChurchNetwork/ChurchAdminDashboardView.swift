@@ -1475,9 +1475,23 @@ struct ChurchAdminDashboardView: View {
         do {
             let url = try await SupabaseService.shared.uploadProfileImage(
                 userId: userId, data: compressed, bucket: kind.bucket)
+            // Write to the profile (drives the dashboard/feed avatar) AND to the
+            // church_submissions row (drives the Discover directory image). The
+            // directory reads the per-church avatar_url/cover_url, so the church
+            // record must be updated too or an admin's logo won't appear there.
             switch kind {
-            case .cover: try await SupabaseService.shared.updateProfileCoverUrl(userId: userId, coverUrl: url)
-            case .logo:  try await SupabaseService.shared.updateProfilePhotoUrl(userId: userId, photoUrl: url)
+            case .cover:
+                try await SupabaseService.shared.updateProfileCoverUrl(userId: userId, coverUrl: url)
+                if let sid = submission?.id {
+                    try await SupabaseService.shared.updateChurchCoverUrl(submissionId: sid, coverUrl: url)
+                    submission?.coverUrl = url
+                }
+            case .logo:
+                try await SupabaseService.shared.updateProfilePhotoUrl(userId: userId, photoUrl: url)
+                if let sid = submission?.id {
+                    try await SupabaseService.shared.updateChurchAvatarUrl(submissionId: sid, avatarUrl: url)
+                    submission?.avatarUrl = url
+                }
             }
             await appState.loadProfile()
         } catch {

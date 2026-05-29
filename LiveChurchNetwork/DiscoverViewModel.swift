@@ -103,13 +103,9 @@ final class DiscoverViewModel: ObservableObject {
             let browse = try await browseTask
             let people = try await peopleTask
 
-            // Fetch profile photos for all churches
-            let churchUserIds = (live + recent + browse).map { $0.userId }
-            let profileMap = await fetchChurchPhotoMap(userIds: churchUserIds)
-
-            liveNowChurches = live.map { toChurch($0, photoUrl: profileMap[$0.userId]) }
-            recentlyAdded = recent.map { toChurch($0, photoUrl: profileMap[$0.userId]) }
-            browseChurches = browse.map { toChurch($0, photoUrl: profileMap[$0.userId]) }
+            liveNowChurches = live.map { toChurch($0) }
+            recentlyAdded = recent.map { toChurch($0) }
+            browseChurches = browse.map { toChurch($0) }
             let discoverablePeople = people.map { toDiscoverableUser($0) }
             browsePeople = discoverablePeople
             suggestedPeople = discoverablePeople
@@ -167,11 +163,7 @@ final class DiscoverViewModel: ObservableObject {
             hasMoreChurches = false
         }
 
-        // Fetch photos for new churches
-        let userIds = results.map { $0.userId }
-        let profileMap = await fetchChurchPhotoMap(userIds: userIds)
-
-        let newChurches = results.map { toChurch($0, photoUrl: profileMap[$0.userId]) }
+        let newChurches = results.map { toChurch($0) }
         browseChurches.append(contentsOf: newChurches)
     }
 
@@ -238,18 +230,7 @@ final class DiscoverViewModel: ObservableObject {
             .map { $0 }
     }
 
-    private func fetchChurchPhotoMap(userIds: [UUID]) async -> [UUID: String] {
-        let profiles = (try? await SupabaseService.shared.getProfiles(ids: userIds)) ?? []
-        var map: [UUID: String] = [:]
-        for profile in profiles {
-            if let photoUrl = profile.photoUrl {
-                map[profile.id] = photoUrl
-            }
-        }
-        return map
-    }
-
-    private func toChurch(_ submission: ChurchSubmission, photoUrl: String?) -> Church {
+    private func toChurch(_ submission: ChurchSubmission) -> Church {
         let name = submission.churchName ?? "Unknown Church"
         let addressParts = [
             submission.addressLine,
@@ -260,7 +241,7 @@ final class DiscoverViewModel: ObservableObject {
         var church = Church(
             name: name,
             slug: name.lowercased().replacingOccurrences(of: " ", with: "-"),
-            image: photoUrl ?? "",
+            image: submission.avatarUrl ?? "",
             denomination: submission.denomination ?? "",
             permalink: "",
             phone: submission.phone ?? "",
@@ -271,7 +252,7 @@ final class DiscoverViewModel: ObservableObject {
         church.address = addressParts
         church.isLive = submission.isLive
         church.city = submission.city ?? ""
-        church.coverImage = photoUrl ?? ""
+        church.coverImage = submission.coverUrl ?? ""
         church.pastorName = submission.pastorName ?? ""
         church.followerCount = 0
         church.livestreamUrl = submission.livestreamUrl ?? ""
