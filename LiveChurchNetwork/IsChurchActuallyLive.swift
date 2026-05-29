@@ -9,9 +9,12 @@ import Foundation
 //   2. Scheduled service window — derived from `service_times_json`
 //      evaluated against the current time *in the church's timezone*.
 //      The full window counts: start-time-inclusive, end-time-exclusive.
+//   3. Livestream schedule window — derived from `livestream_schedule_json`,
+//      a separate weekly grid for when the church goes live online
+//      (independent of in-person service). Same timezone-aware "now".
 //
 // We deliberately do *not* check `livestreamUrl`. The badge means "they're
-// in service right now"; the watch button is gated separately by URL.
+// in service or on air right now"; the watch button is gated separately by URL.
 
 enum LiveChurchEvaluator {
 
@@ -25,14 +28,54 @@ enum LiveChurchEvaluator {
         // disambiguating "manual" vs "scheduled" live state).
         if !ignoreManualOverride && church.isLive { return true }
 
-        guard let services = church.serviceTimesJson, !services.isEmpty else {
-            return false
+        // In-person service window from the structured editor.
+        if let services = church.serviceTimesJson, !services.isEmpty,
+           isCurrentlyInWindow(
+               services: services,
+               timezone: church.scheduleTimezone,
+               now: now,
+           ) {
+            return true
         }
-        return isCurrentlyInWindow(
-            services: services,
-            timezone: church.scheduleTimezone,
-            now: now,
-        )
+
+        // Livestream window — separate weekly grid for online broadcasts.
+        if let livestreamWindows = livestreamWindows(from: church.livestreamScheduleJson),
+           !livestreamWindows.isEmpty,
+           isCurrentlyInWindow(
+               services: livestreamWindows,
+               timezone: church.scheduleTimezone,
+               now: now,
+           ) {
+            return true
+        }
+
+        return false
+    }
+
+    // MARK: Livestream schedule → ServiceTime windows
+
+    // Converts the per-day livestream grid into ServiceTime-shaped rows so
+    // the existing window math handles them uniformly. Only days flagged
+    // isLive with both start + end populated are emitted.
+    private static func livestreamWindows(from schedule: LivestreamSchedule?) -> [ServiceTime]? {
+        guard let schedule = schedule else { return nil }
+        var rows: [ServiceTime] = []
+        for day in DayOfWeek.allCases {
+            guard let entry = schedule.schedule[day.rawValue],
+                  entry.isLive,
+                  let start = entry.start,
+                  let end = entry.end else { continue }
+            rows.append(ServiceTime(
+                id: "livestream-\(day.rawValue)",
+                serviceType: "Livestream",
+                day: day,
+                startTime: start,
+                endTime: end,
+                language: "English",
+                livestream: true,
+            ))
+        }
+        return rows
     }
 
     // MARK: Time-zone-aware "now"

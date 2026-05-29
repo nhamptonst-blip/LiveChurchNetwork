@@ -377,6 +377,7 @@ let denominationOptions: [String] = [
       // Legacy serviceTimes/officeHours strings remain in sync as auto-derived summaries.
       var serviceTimesJson: [ServiceTime]?
       var officeHoursJson: OfficeHours?
+      var livestreamScheduleJson: LivestreamSchedule?
       var scheduleTimezone: String?
 
       enum CodingKeys: String, CodingKey {
@@ -411,6 +412,7 @@ let denominationOptions: [String] = [
           case worshipStyle    = "worship_style"
           case serviceTimesJson = "service_times_json"
           case officeHoursJson  = "office_hours_json"
+          case livestreamScheduleJson = "livestream_schedule_json"
           case scheduleTimezone = "schedule_timezone"
       }
   }
@@ -683,6 +685,20 @@ let denominationOptions: [String] = [
   struct OfficeHours: Codable, Hashable {
       var byAppointmentOnly: Bool
       var schedule: [String: OfficeHoursDay]  // keyed by DayOfWeek.rawValue
+  }
+
+  // Weekly livestream schedule. Mirrors the web stack's
+  // `livestream_schedule_json` shape — distinct from `service_times_json`
+  // (in-person services) so a church can declare "we go live online
+  // during these windows" independently of physical service times.
+  struct LivestreamScheduleDay: Codable, Hashable {
+      var isLive: Bool
+      var start: String?        // "HH:mm" or nil when off air
+      var end: String?
+  }
+
+  struct LivestreamSchedule: Codable, Hashable {
+      var schedule: [String: LivestreamScheduleDay]  // keyed by DayOfWeek.rawValue
   }
 
   // MARK: - Trust & Safety

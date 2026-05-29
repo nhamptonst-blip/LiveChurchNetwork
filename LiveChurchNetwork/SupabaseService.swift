@@ -60,6 +60,7 @@ import Foundation
      let service_times_json: [ServiceTime]?
      let office_hours: String?
      let office_hours_json: OfficeHours?
+     let livestream_schedule_json: LivestreamSchedule?
  }
   
  private struct SavedChurchInsert: Encodable {
@@ -574,12 +575,13 @@ private struct ProfileCoverUpdate: Encodable {
      /// Pass `services` and `officeHours` for the canonical JSONB values; the
      /// legacy text columns get rewritten as auto-derived summaries.
      /// Pass `nil` for either to leave that pair untouched.
-     func updateChurchSchedule(submissionId: UUID, services: [ServiceTime]?, officeHours: OfficeHours?) async throws {
+     func updateChurchSchedule(submissionId: UUID, services: [ServiceTime]?, officeHours: OfficeHours?, livestreamSchedule: LivestreamSchedule?) async throws {
          let payload = ChurchScheduleUpdate(
              service_times: services.map { ScheduleHelpers.summarizeServiceTimes($0) },
              service_times_json: services,
              office_hours: officeHours.map { ScheduleHelpers.summarizeOfficeHours($0) },
-             office_hours_json: officeHours
+             office_hours_json: officeHours,
+             livestream_schedule_json: livestreamSchedule
          )
          try await client
              .from("church_submissions")

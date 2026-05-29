@@ -278,4 +278,24 @@ enum ScheduleHelpers {
             ]
         )
     }
+
+    /// Starter livestream schedule: every day OFF. Unlike the web's
+    /// EMPTY_LIVESTREAM_SCHEDULE (which seeds Sunday on), we default to
+    /// all-off so an admin who opens Edit Profile and saves without
+    /// touching this section never silently broadcasts a phantom
+    /// auto-LIVE window. The admin opts in per day explicitly.
+    static var emptyLivestreamSchedule: LivestreamSchedule {
+        let off = LivestreamScheduleDay(isLive: false, start: nil, end: nil)
+        return LivestreamSchedule(
+            schedule: [
+                "sunday":    off,
+                "monday":    off,
+                "tuesday":   off,
+                "wednesday": off,
+                "thursday":  off,
+                "friday":    off,
+                "saturday":  off
+            ]
+        )
+    }
 }

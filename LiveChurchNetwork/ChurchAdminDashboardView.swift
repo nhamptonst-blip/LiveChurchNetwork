@@ -1509,6 +1509,7 @@ struct EditChurchProfileView: View {
     // Structured schedule — hydrated from JSONB or the legacy text parser.
     @State private var serviceTimesJson: [ServiceTime]
     @State private var officeHoursJson: OfficeHours
+    @State private var livestreamScheduleJson: LivestreamSchedule
 
     // Outreach + contact (each row in the Smart Recommendations card on the
     // dashboard routes here, so every recommended field has to be editable).
@@ -1565,6 +1566,7 @@ struct EditChurchProfileView: View {
         }
         _serviceTimesJson = State(initialValue: structured)
         _officeHoursJson = State(initialValue: submission.officeHoursJson ?? ScheduleHelpers.emptyOfficeHours)
+        _livestreamScheduleJson = State(initialValue: submission.livestreamScheduleJson ?? ScheduleHelpers.emptyLivestreamSchedule)
     }
 
     var body: some View {
@@ -1648,6 +1650,14 @@ struct EditChurchProfileView: View {
                 Section("Office Hours") {
                     OfficeHoursEditor(hours: $officeHoursJson)
                         .padding(.vertical, 4)
+                }
+                Section {
+                    LivestreamScheduleEditor(schedule: $livestreamScheduleJson)
+                        .padding(.vertical, 4)
+                } header: {
+                    Text("Livestream Schedule")
+                } footer: {
+                    Text("Days and times you broadcast live online. Your church shows a LIVE badge during these windows — independent of in-person service times.")
                 }
                 Section("About") {
                     TextEditor(text: $about)
@@ -1733,7 +1743,8 @@ struct EditChurchProfileView: View {
             try await SupabaseService.shared.updateChurchSchedule(
                 submissionId: submission.id,
                 services: serviceTimesJson,
-                officeHours: officeHoursJson
+                officeHours: officeHoursJson,
+                livestreamSchedule: livestreamScheduleJson
             )
 
             var updated = submission
@@ -1761,6 +1772,7 @@ struct EditChurchProfileView: View {
             updated.xUrl             = xUrl
             updated.serviceTimesJson = serviceTimesJson
             updated.officeHoursJson  = officeHoursJson
+            updated.livestreamScheduleJson = livestreamScheduleJson
             updated.officeHours      = ScheduleHelpers.summarizeOfficeHours(officeHoursJson)
             onSave(updated)
             dismiss()
