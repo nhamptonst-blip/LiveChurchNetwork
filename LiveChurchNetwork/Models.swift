@@ -379,6 +379,10 @@ let denominationOptions: [String] = [
       var officeHoursJson: OfficeHours?
       var livestreamScheduleJson: LivestreamSchedule?
       var scheduleTimezone: String?
+      // Notify followers when this church goes live (column added by the
+      // web settings migration). iOS persists the admin's preference;
+      // enforcement still lives in the notification trigger.
+      var notifyFollowers: Bool?
 
       enum CodingKeys: String, CodingKey {
           case id, status, denomination, phone, website, about
@@ -414,6 +418,7 @@ let denominationOptions: [String] = [
           case officeHoursJson  = "office_hours_json"
           case livestreamScheduleJson = "livestream_schedule_json"
           case scheduleTimezone = "schedule_timezone"
+          case notifyFollowers  = "notify_followers"
       }
   }
 

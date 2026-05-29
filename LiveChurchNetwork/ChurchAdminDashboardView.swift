@@ -1063,15 +1063,25 @@ struct ChurchAdminDashboardView: View {
                 Text("Notify followers when I go live")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.lcText)
-                Text("Coming soon")
+                Text("Push a notification to your followers when you start streaming.")
                     .font(.system(size: 11))
                     .foregroundColor(.lcText3)
             }
             Spacer()
-            Toggle("", isOn: .constant(true))
-                .labelsHidden()
-                .tint(.lcNavy)
-                .disabled(true)
+            Toggle("", isOn: Binding(
+                get: { submission?.notifyFollowers ?? true },
+                set: { newValue in
+                    submission?.notifyFollowers = newValue
+                    if let sid = submission?.id {
+                        Task {
+                            try? await SupabaseService.shared.updateChurchNotifyFollowers(
+                                submissionId: sid, notifyFollowers: newValue)
+                        }
+                    }
+                }
+            ))
+            .labelsHidden()
+            .tint(.lcNavy)
         }
         .padding(14)
         .background(Color.white)

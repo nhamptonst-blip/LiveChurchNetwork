@@ -65,6 +65,7 @@ import Foundation
 
  private struct ChurchAvatarUpdate: Encodable { let avatar_url: String }
  private struct ChurchCoverUpdate: Encodable { let cover_url: String }
+ private struct ChurchNotifyFollowersUpdate: Encodable { let notify_followers: Bool }
   
  private struct SavedChurchInsert: Encodable {
      let user_id: String
@@ -465,6 +466,17 @@ private struct ProfileCoverUpdate: Encodable {
          try await client
              .from("church_submissions")
              .update(ChurchCoverUpdate(cover_url: coverUrl))
+             .eq("id", value: submissionId.uuidString)
+             .execute()
+     }
+
+     /// Persist the admin's preference for notifying followers when the
+     /// church goes live. Enforcement (actually sending the notification)
+     /// lives in the DB notification trigger and is out of scope here.
+     func updateChurchNotifyFollowers(submissionId: UUID, notifyFollowers: Bool) async throws {
+         try await client
+             .from("church_submissions")
+             .update(ChurchNotifyFollowersUpdate(notify_followers: notifyFollowers))
              .eq("id", value: submissionId.uuidString)
              .execute()
      }
