@@ -211,7 +211,11 @@ struct ChurchAdminDashboardView: View {
                     }
                 }
                 .padding(16)
-                .padding(.bottom, 32)
+                // Bottom inset large enough to clear the floating Feedback FAB
+                // (positioned at .padding(.bottom, 90) in ContentView, ~30pt
+                // tall). Applies to every dashboard tab so any tab's last
+                // card stays tappable.
+                .padding(.bottom, 120)
             }
         }
     }
@@ -1087,10 +1091,6 @@ struct ChurchAdminDashboardView: View {
         .background(Color.white)
         .cornerRadius(14)
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.lcBorder, lineWidth: 1))
-
-        // Bottom inset so the last card clears the floating Feedback FAB
-        // (positioned at .padding(.bottom, 90) in ContentView).
-        Color.clear.frame(height: 80)
     }
 
     // MARK: - Settings Tab
