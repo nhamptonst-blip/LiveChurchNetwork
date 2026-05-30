@@ -146,9 +146,11 @@ struct WelcomeChurchPanel: View {
                 }
             }
 
-            // Footer link cluster
+            // Footer link cluster — FlowLayout so pills keep their natural
+            // width (HStack was squeezing them so narrow that labels wrapped
+            // character-by-character).
             if hasAnyExternalLink {
-                HStack(spacing: 8) {
+                FlowLayout(spacing: 8) {
                     if let url = church.website, !url.isEmpty {
                         FooterLink(href: url, icon: "🌐", label: "Website")
                     }
@@ -164,7 +166,6 @@ struct WelcomeChurchPanel: View {
                     if let url = church.youtubeUrl, !url.isEmpty {
                         FooterLink(href: url, icon: "▶️", label: "YouTube")
                     }
-                    Spacer(minLength: 0)
                 }
                 .padding(.top, 4)
             }
