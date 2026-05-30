@@ -171,6 +171,14 @@ struct MainTabView: View {
                 }
             }
             .tint(.lcNavy)
+            // Reserve bottom safe-area space for the floating Feedback FAB
+            // below, so every tab's content stops above the FAB instead of
+            // hiding controls behind it. The FAB lives at .padding(.bottom, 90)
+            // and is ~36pt tall; 110pt of inset gives the last card a
+            // comfortable gap above the FAB on every tab.
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                Color.clear.frame(height: 110)
+            }
             .task { await loadUnreadCount() }
             .onAppear {
                 if pendingTab > 0 {

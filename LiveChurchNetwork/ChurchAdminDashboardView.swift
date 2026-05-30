@@ -211,11 +211,7 @@ struct ChurchAdminDashboardView: View {
                     }
                 }
                 .padding(16)
-                // Bottom inset large enough to clear the floating Feedback FAB
-                // (positioned at .padding(.bottom, 90) in ContentView, ~30pt
-                // tall). Applies to every dashboard tab so any tab's last
-                // card stays tappable.
-                .padding(.bottom, 120)
+                .padding(.bottom, 32)
             }
         }
     }
