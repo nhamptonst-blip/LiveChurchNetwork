@@ -1087,6 +1087,10 @@ struct ChurchAdminDashboardView: View {
         .background(Color.white)
         .cornerRadius(14)
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.lcBorder, lineWidth: 1))
+
+        // Bottom inset so the last card clears the floating Feedback FAB
+        // (positioned at .padding(.bottom, 90) in ContentView).
+        Color.clear.frame(height: 80)
     }
 
     // MARK: - Settings Tab
