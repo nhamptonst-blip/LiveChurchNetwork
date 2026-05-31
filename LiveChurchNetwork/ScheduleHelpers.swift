@@ -74,6 +74,24 @@ enum ScheduleHelpers {
         return nil
     }
 
+    /// Returns true if the livestream schedule has the church live in the
+    /// current weekday + minute. Used so an admin who edits the schedule
+    /// doesn't also have to manually flip the `is_live` master switch — the
+    /// schedule is the source of truth when it's defined.
+    static func isLivestreamLiveNow(_ schedule: LivestreamSchedule?, now: Date = Date()) -> Bool {
+        guard let schedule else { return false }
+        let cal = Calendar.current
+        let weekday = cal.component(.weekday, from: now)
+        let day = DayOfWeek.allCases[(weekday - 1) % 7]
+        guard let entry = schedule.schedule[day.rawValue], entry.isLive,
+              let startStr = entry.start, let endStr = entry.end,
+              let start = toMinutes(startStr), let end = toMinutes(endStr)
+        else { return false }
+        let minutes = cal.component(.hour, from: now) * 60 + cal.component(.minute, from: now)
+        let endEffective = end > start ? end : start + 60
+        return minutes >= start && minutes < endEffective
+    }
+
     // MARK: - Office hours run-collapse
 
     struct OfficeHoursRow: Hashable, Identifiable {

@@ -50,19 +50,9 @@ struct WelcomeChurchPanel: View {
                 .lineLimit(2)
                 .minimumScaleFactor(0.9)
 
-            if let denom = church.denomination, !denom.isEmpty {
-                HStack(spacing: 6) {
-                    Text(denom)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.lcText2)
-                    if let location = locationString {
-                        Text("·").foregroundColor(.lcText3)
-                        Text(location)
-                            .font(.system(size: 14))
-                            .foregroundColor(.lcText3)
-                    }
-                }
-            }
+            // Denomination and location intentionally NOT shown here —
+            // they live in the TRADITION and LOCATION fact tiles below.
+            // Rendering them in both spots created visible duplication.
         }
         .padding(.horizontal, 24)
         .padding(.top, 24)
@@ -210,8 +200,12 @@ struct WelcomeChurchPanel: View {
     @ViewBuilder
     private var liveOrLinkTile: some View {
         if let live = church.livestreamUrl, !live.isEmpty {
-            let isLive = church.isLive
-            Link(destination: URL(string: live) ?? URL(string: "https://livechurchnetwork.com")!) {
+            // Prefer schedule-derived liveness when a schedule is defined,
+            // so the LIVE dot agrees with what the Schedule editor shows
+            // without an admin having to also toggle the master is_live bit.
+            let isLive = ScheduleHelpers.isLivestreamLiveNow(church.livestreamScheduleJson)
+                || church.isLive
+            Link(destination: normalizedURL(live)) {
                 HStack(alignment: .top, spacing: 10) {
                     Text("📡").font(.system(size: 20))
                     VStack(alignment: .leading, spacing: 2) {
@@ -240,12 +234,11 @@ struct WelcomeChurchPanel: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .buttonStyle(.plain)
-        } else if let site = church.website, !site.isEmpty {
-            Link(destination: URL(string: site) ?? URL(string: "https://livechurchnetwork.com")!) {
-                factTile(icon: "🌐", label: "WEBSITE", value: "Visit website")
-            }
-            .buttonStyle(.plain)
+            .accessibilityLabel(isLive ? "Watch livestream — live now" : "Open livestream")
         } else {
+            // Note: we intentionally don't fall back to a "🌐 WEBSITE" tile
+            // here when livestream is missing — the footer pill cluster
+            // already renders a Website pill, and having both was a dupe.
             factTile(icon: "👋", label: "STYLE", value: "Welcoming community")
         }
     }
@@ -258,8 +251,11 @@ struct WelcomeChurchPanel: View {
     }
 
     private var ministries: [String] {
+        // Imported church data uses inconsistent separators; accept commas,
+        // semicolons, pipes, bullets, and newlines so chips don't end up as
+        // one giant "Youth; Worship | Outreach" lump.
         (church.ministries ?? "")
-            .components(separatedBy: CharacterSet(charactersIn: ",\n"))
+            .components(separatedBy: CharacterSet(charactersIn: ",;|·•\n"))
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
     }
@@ -285,6 +281,23 @@ struct WelcomeChurchPanel: View {
     }
 }
 
+// MARK: - URL normalization
+
+/// Build a URL from a string that may be missing a scheme. Imported church
+/// data often stores `facebook.com/foo` or `www.foo.org` without `https://`,
+/// which `URL(string:)` happily parses as a relative URL — opening the
+/// in-app fallback instead of the actual site. Prepend `https://` when the
+/// scheme is missing so the link goes where the user expects.
+fileprivate func normalizedURL(_ raw: String) -> URL {
+    let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+    let candidate: String = {
+        if trimmed.contains("://") { return trimmed }
+        if trimmed.hasPrefix("mailto:") || trimmed.hasPrefix("tel:") { return trimmed }
+        return "https://" + trimmed
+    }()
+    return URL(string: candidate) ?? URL(string: "https://livechurchnetwork.com")!
+}
+
 // MARK: - Footer link
 
 private struct FooterLink: View {
@@ -293,7 +306,7 @@ private struct FooterLink: View {
     let label: String
 
     var body: some View {
-        Link(destination: URL(string: href) ?? URL(string: "https://livechurchnetwork.com")!) {
+        Link(destination: normalizedURL(href)) {
             HStack(spacing: 6) {
                 Text(icon).font(.system(size: 12))
                 Text(label)
@@ -309,6 +322,9 @@ private struct FooterLink: View {
             .clipShape(Capsule())
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Open \(label)")
+        .accessibilityHint("Opens \(label) in browser")
     }
 }
 
