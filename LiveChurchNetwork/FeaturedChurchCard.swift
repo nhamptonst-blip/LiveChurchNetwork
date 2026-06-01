@@ -50,27 +50,12 @@ struct FeaturedChurchCard: View {
                         endPoint: .bottom
                     )
 
-                    // Logo overlap
+                    // Logo overlap (white ring + centralized avatar)
                     ZStack {
                         Circle()
                             .fill(Color.white)
                             .frame(width: 48, height: 48)
-
-                        if !church.image.isEmpty, let url = URL(string: church.image) {
-                            AsyncImage(url: url) { phase in
-                                switch phase {
-                                case .success(let img):
-                                    img.resizable()
-                                        .scaledToFill()
-                                        .frame(width: 42, height: 42)
-                                        .clipShape(Circle())
-                                default:
-                                    churchInitial
-                                }
-                            }
-                        } else {
-                            churchInitial
-                        }
+                        ChurchAvatarView(church: church, size: 42)
                     }
                     .overlay(Circle().stroke(Color.white, lineWidth: 3))
                     .padding(12)
@@ -148,15 +133,6 @@ struct FeaturedChurchCard: View {
                 Spacer()
             }
             .padding(12)
-        }
-    }
-
-    private var churchInitial: some View {
-        ZStack {
-            Circle().fill(Color(red: 31/255, green: 60/255, blue: 136/255))
-            Text(church.name.prefix(1).uppercased())
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(Color(red: 240/255, green: 165/255, blue: 0/255))
         }
     }
 

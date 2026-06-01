@@ -99,27 +99,13 @@ struct ChurchCard: View {
                         .padding(10)
                     }
 
-                    // Overlapping circular logo
+                    // Overlapping circular logo (white ring + centralized avatar)
                     ZStack {
                         Circle()
                             .fill(Color.white)
                             .frame(width: 70, height: 70)
                             .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
-
-                        if !church.image.isEmpty, let url = URL(string: church.image) {
-                            AsyncImage(url: url) { phase in
-                                if case .success(let img) = phase {
-                                    img.resizable()
-                                        .scaledToFill()
-                                        .frame(width: 64, height: 64)
-                                        .clipShape(Circle())
-                                } else {
-                                    churchInitialCircle
-                                }
-                            }
-                        } else {
-                            churchInitialCircle
-                        }
+                        ChurchAvatarView(church: church, size: 64)
                     }
                     .offset(x: 12, y: 28)
                 }
@@ -168,13 +154,4 @@ struct ChurchCard: View {
         .shadow(color: Color(red: 17/255, green: 24/255, blue: 39/255).opacity(0.06), radius: 8, x: 0, y: 2)
     }
 
-    private var churchInitialCircle: some View {
-        ZStack {
-            Circle()
-                .fill(Color.white.opacity(0.3))
-            Text(churchInitial)
-                .font(.system(size: 24, weight: .black))
-                .foregroundColor(.white)
-        }
-    }
 }

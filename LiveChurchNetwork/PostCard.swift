@@ -143,22 +143,9 @@ struct PostCard: View {
                 .frame(width: 42, height: 42)
                 .clipShape(Circle())
             } else if let church = authorChurch {
-                // Church: rounded-square with church image
-                AsyncImage(url: URL(string: church.image)) { phase in
-                    switch phase {
-                    case .success(let img):
-                        img.resizable().scaledToFill()
-                    default:
-                        Color.lcNavy
-                            .overlay(
-                                Text(post.authorName.prefix(1).uppercased())
-                                    .font(.system(size: 16, weight: .black))
-                                    .foregroundColor(.lcGold)
-                            )
-                    }
-                }
-                .frame(width: 42, height: 42)
-                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                // Church: rounded-square — centralized avatar handles
+                // both real-image and gradient/initial fallback.
+                ChurchAvatarView(church: church, size: 42, cornerRadius: 9)
             } else {
                 authorInitialsCircle
             }

@@ -13,27 +13,9 @@ struct LiveStoryItem: View {
                 Circle()
                     .stroke(Color(red: 239/255, green: 68/255, blue: 68/255), lineWidth: 3)
 
-                // Image
-                ZStack {
-                    Circle()
-                        .fill(Color(red: 250/255, green: 249/255, blue: 246/255))
-
-                    if !church.image.isEmpty, let url = URL(string: church.image) {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let img):
-                                img.resizable()
-                                    .scaledToFill()
-                                    .clipShape(Circle())
-                            default:
-                                churchInitial
-                            }
-                        }
-                    } else {
-                        churchInitial
-                    }
-                }
-                .padding(5) // Creates space for rings
+                // Image (centralized avatar)
+                ChurchAvatarView(church: church, size: 66)
+                    .padding(5) // Creates space for rings
 
                 // Inner white ring (2px)
                 Circle()
@@ -71,14 +53,6 @@ struct LiveStoryItem: View {
         .contentShape(Rectangle())
     }
 
-    private var churchInitial: some View {
-        ZStack {
-            Circle().fill(Color(red: 31/255, green: 60/255, blue: 136/255))
-            Text(church.name.prefix(1).uppercased())
-                .font(.system(size: 24, weight: .bold))
-                .foregroundColor(Color(red: 240/255, green: 165/255, blue: 0/255))
-        }
-    }
 }
 
 struct CompactLiveBadge: View {

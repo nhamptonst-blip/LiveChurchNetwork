@@ -120,35 +120,9 @@ struct ChurchDiscoveryCard: View {
                 .fill(Color.white)
                 .frame(width: 50, height: 50)
                 .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-
-            if !church.image.isEmpty, let url = URL(string: church.image) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let img):
-                        img.resizable()
-                            .scaledToFill()
-                            .frame(width: 46, height: 46)
-                            .clipShape(Circle())
-                    case .empty, .failure:
-                        defaultChurchInitial
-                    @unknown default:
-                        defaultChurchInitial
-                    }
-                }
-            } else {
-                defaultChurchInitial
-            }
+            ChurchAvatarView(church: church, size: 46)
         }
         .frame(width: 50, height: 50)
     }
 
-    private var defaultChurchInitial: some View {
-        ZStack {
-            Circle().fill(Color.lcNavy)
-            Text(church.name.prefix(1).uppercased())
-                .font(.system(size: 18, weight: .bold))
-                .foregroundColor(.lcGold)
-        }
-        .frame(width: 46, height: 46)
-    }
 }

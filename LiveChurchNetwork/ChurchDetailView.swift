@@ -126,17 +126,16 @@ struct ChurchDetailView: View {
 
             VStack(spacing: 0) {
                 HStack(alignment: .bottom, spacing: 14) {
+                    // Centralized avatar — finally renders the church's
+                    // real logo when present; falls back to the same
+                    // denomination-hashed gradient + initial used across
+                    // the directory.
                     ZStack {
-                        Circle()
-                            .fill(Color.lcNavy)
-                            .frame(width: 80, height: 80)
+                        ChurchAvatarView(church: church, size: 80)
                             .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
                         Circle()
                             .stroke(Color.white, lineWidth: 3)
                             .frame(width: 80, height: 80)
-                        Text(String(church.name.prefix(2)).uppercased())
-                            .font(.system(size: 26, weight: .black))
-                            .foregroundColor(.lcGold)
                     }
                     .offset(y: -28)
 

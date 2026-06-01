@@ -45,22 +45,7 @@ struct DirectoryChurchCard: View {
                         Circle()
                             .fill(Color.white)
                             .frame(width: 42, height: 42)
-
-                        if !church.image.isEmpty, let url = URL(string: church.image) {
-                            AsyncImage(url: url) { phase in
-                                switch phase {
-                                case .success(let img):
-                                    img.resizable()
-                                        .scaledToFill()
-                                        .frame(width: 36, height: 36)
-                                        .clipShape(Circle())
-                                default:
-                                    churchInitial
-                                }
-                            }
-                        } else {
-                            churchInitial
-                        }
+                        ChurchAvatarView(church: church, size: 36)
                     }
                     .overlay(Circle().stroke(Color.white, lineWidth: 3))
                     .offset(y: 21)
@@ -132,16 +117,6 @@ struct DirectoryChurchCard: View {
                     .padding(8)
             }
         }
-    }
-
-    private var churchInitial: some View {
-        ZStack {
-            Circle().fill(Color.lcNavy)
-            Text(church.name.prefix(1).uppercased())
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.lcGold)
-        }
-        .frame(width: 38, height: 38)
     }
 
     private func formatCount(_ count: Int) -> String {

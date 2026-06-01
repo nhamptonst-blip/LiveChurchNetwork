@@ -7,42 +7,10 @@ struct NearbyChurchCard: View {
     @EnvironmentObject var appState: AppState
     @State private var isPressed = false
 
-    private var defaultGradient: LinearGradient {
-        let hash = church.denomination.hashValue % 5
-        let colors: (top: Color, bottom: Color) = {
-            switch hash {
-            case 0: return (Color(red: 0.2, green: 0.4, blue: 0.8), Color(red: 0.1, green: 0.3, blue: 0.7))
-            case 1: return (Color(red: 0.8, green: 0.3, blue: 0.3), Color(red: 0.7, green: 0.2, blue: 0.2))
-            case 2: return (Color(red: 0.3, green: 0.6, blue: 0.4), Color(red: 0.2, green: 0.5, blue: 0.3))
-            case 3: return (Color(red: 0.8, green: 0.5, blue: 0.2), Color(red: 0.7, green: 0.4, blue: 0.1))
-            default: return (Color(red: 0.6, green: 0.3, blue: 0.7), Color(red: 0.5, green: 0.2, blue: 0.6))
-            }
-        }()
-        return LinearGradient(gradient: Gradient(colors: [colors.top, colors.bottom]), startPoint: .topLeading, endPoint: .bottomTrailing)
-    }
-
     var body: some View {
         ZStack(alignment: .topTrailing) {
             HStack(spacing: 12) {
-                // Image — 84px with 18px radius
-                ZStack {
-                    if !church.image.isEmpty, let url = URL(string: church.image) {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let img):
-                                img.resizable()
-                                    .scaledToFill()
-                                    .clipped()
-                            default:
-                                defaultGradient
-                            }
-                        }
-                    } else {
-                        defaultGradient
-                    }
-                }
-                .frame(width: 84, height: 84)
-                .clipShape(RoundedRectangle(cornerRadius: 18))
+                ChurchAvatarView(church: church, size: 84, cornerRadius: 18)
 
                 // Content
                 VStack(alignment: .leading, spacing: 3) {

@@ -8,38 +8,11 @@ struct ChurchSearchResultCard: View {
     @EnvironmentObject var appState: AppState
     @State private var isPressed = false
 
-    private var defaultGradient: LinearGradient {
-        let hash = church.denomination.hashValue % 5
-        let colors: (top: Color, bottom: Color) = {
-            switch hash {
-            case 0: return (Color(red: 0.2, green: 0.4, blue: 0.8), Color(red: 0.1, green: 0.3, blue: 0.7))
-            case 1: return (Color(red: 0.8, green: 0.3, blue: 0.3), Color(red: 0.7, green: 0.2, blue: 0.2))
-            case 2: return (Color(red: 0.3, green: 0.6, blue: 0.4), Color(red: 0.2, green: 0.5, blue: 0.3))
-            case 3: return (Color(red: 0.8, green: 0.5, blue: 0.2), Color(red: 0.7, green: 0.4, blue: 0.1))
-            default: return (Color(red: 0.6, green: 0.3, blue: 0.7), Color(red: 0.5, green: 0.2, blue: 0.6))
-            }
-        }()
-        return LinearGradient(gradient: Gradient(colors: [colors.top, colors.bottom]), startPoint: .topLeading, endPoint: .bottomTrailing)
-    }
-
     var body: some View {
         HStack(spacing: 12) {
-            // Image/logo — 72pt with 16px radius
+            // Image/logo — 72pt with 16px radius (centralized avatar fallback)
             ZStack(alignment: .bottomTrailing) {
-                if !church.image.isEmpty, let url = URL(string: church.image) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let img):
-                            img.resizable()
-                                .scaledToFill()
-                                .clipped()
-                        default:
-                            defaultGradient
-                        }
-                    }
-                } else {
-                    defaultGradient
-                }
+                ChurchAvatarView(church: church, size: 72, cornerRadius: 16)
 
                 // Live badge (bottom-right)
                 if church.isLive {
@@ -47,8 +20,6 @@ struct ChurchSearchResultCard: View {
                         .padding(4)
                 }
             }
-            .frame(width: 72, height: 72)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
 
             // Content
             VStack(alignment: .leading, spacing: 4) {

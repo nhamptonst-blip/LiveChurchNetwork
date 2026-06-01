@@ -271,33 +271,8 @@ private struct ChurchSuggestionCard: View {
         .cornerRadius(12)
     }
 
-    @ViewBuilder
     private var avatar: some View {
-        if let urlStr = church.avatarUrl, !urlStr.isEmpty, let url = URL(string: urlStr) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let img):
-                    img.resizable().scaledToFill()
-                default:
-                    placeholder
-                }
-            }
-            .frame(width: 56, height: 56)
-            .clipShape(Circle())
-        } else {
-            placeholder
-        }
-    }
-
-    private var placeholder: some View {
-        ZStack {
-            Color.lcNavy.opacity(0.10)
-                .frame(width: 56, height: 56)
-                .clipShape(Circle())
-            Text((church.churchName ?? "✝").prefix(1).uppercased())
-                .font(.system(size: 18, weight: .black))
-                .foregroundColor(.lcNavy)
-        }
+        ChurchAvatarView(submission: church, size: 56)
     }
 
     private func follow() async {
