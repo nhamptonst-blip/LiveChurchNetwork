@@ -50,7 +50,8 @@ struct DirectoryView: View {
     private let peopleFilterOptions = ["Suggested", "Near Me", "From My Churches", "New Members", "Leaders"]
 
     private var locationEnabled: Bool {
-        locationManager.authorizationStatus == .authorizedWhenInUse
+        let s = locationManager.authorizationStatus
+        return s == .authorizedWhenInUse || s == .authorizedAlways
     }
 
     // MARK: - Computed Filter Properties
