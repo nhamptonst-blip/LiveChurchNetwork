@@ -709,6 +709,26 @@ private struct ProfileCoverUpdate: Encodable {
              .value
      }
 
+     /// Fetch all approved churches that have non-null latitude/longitude.
+     /// Used by the Discover "Near You" section so the radius filter has
+     /// the full set of geocoded churches to draw from, not just the first
+     /// 20 alphabetical names from the paginated browse query.
+     ///
+     /// Right now this returns the full set (a few hundred rows). If/when
+     /// the dataset grows past low thousands, switch to a server-side
+     /// bounding-box or PostGIS-backed query.
+     func getApprovedChurchesWithCoords() async throws -> [ChurchSubmission] {
+         return try await client
+             .from("church_submissions")
+             .select()
+             .eq("status", value: "approved")
+             .not("latitude", operator: .is, value: "null")
+             .not("longitude", operator: .is, value: "null")
+             .order("church_name", ascending: true)
+             .execute()
+             .value
+     }
+
      func searchChurches(
          query: String?,
          denomination: String?,

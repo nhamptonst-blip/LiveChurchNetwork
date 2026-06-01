@@ -12,6 +12,13 @@ final class DiscoverViewModel: ObservableObject {
     @Published var browseChurches: [Church] = []
     @Published var browsePeople: [DiscoverableUser] = []
 
+    /// Full set of approved churches that have geocoded coordinates.
+    /// Loaded lazily the first time the user grants location permission
+    /// so the Discover "Near You" radius filter can search across every
+    /// geocoded church, not just the first 20 alphabetical browse rows.
+    @Published var nearbyChurches: [Church] = []
+    @Published var isLoadingNearby = false
+
     @Published var hasMoreChurches = true
     @Published var hasMorePeople = true
     @Published var isLoadingMore = false
@@ -140,9 +147,23 @@ final class DiscoverViewModel: ObservableObject {
         suggestedPeople = []
         liveNowChurches = []
         recentlyAdded = []
+        nearbyChurches = []
         hasMoreChurches = true
         hasMorePeople = true
         await loadInitialData(appState: appState)
+    }
+
+    /// Load every approved church that has lat/lng. Called once the user
+    /// has granted location permission so the "Near You" radius filter
+    /// has the full geocoded set to filter from — not just the first 20
+    /// alphabetical browse rows. Subsequent calls are no-ops while a load
+    /// is in flight or after results are already populated.
+    func loadNearbyChurchesIfNeeded() async {
+        if isLoadingNearby || !nearbyChurches.isEmpty { return }
+        isLoadingNearby = true
+        defer { isLoadingNearby = false }
+        let rows = (try? await SupabaseService.shared.getApprovedChurchesWithCoords()) ?? []
+        nearbyChurches = rows.map { toChurch($0) }
     }
 
     func loadMoreChurches() async {

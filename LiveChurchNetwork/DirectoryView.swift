@@ -396,6 +396,18 @@ struct DirectoryView: View {
         .task {
             await vm.loadInitialData(appState: appState)
             loadRecentSearches()
+            // If location permission was already granted on a prior launch,
+            // load the full geocoded set right away so Near You is ready.
+            if locationEnabled {
+                await vm.loadNearbyChurchesIfNeeded()
+            }
+        }
+        .onChange(of: locationManager.authorizationStatus) { newValue in
+            // Newly granted: load the nearby data set so the radius filter
+            // has something to filter from.
+            if newValue == .authorizedWhenInUse || newValue == .authorizedAlways {
+                Task { await vm.loadNearbyChurchesIfNeeded() }
+            }
         }
     }
 
@@ -867,7 +879,11 @@ struct DirectoryView: View {
 
                         NearbyViewToggle(showMap: $showNearbyMap)
 
-                        let filteredNearby = filterNearbyByRadius(vm.browseChurches, radius: nearbyRadius)
+                        // Source of truth for "Near You" is the dedicated
+                        // geocoded set — `vm.browseChurches` is only the
+                        // first 20 alphabetical rows and won't include the
+                        // user's local churches in the general case.
+                        let filteredNearby = filterNearbyByRadius(vm.nearbyChurches, radius: nearbyRadius)
                         let sortedNearby = sortNearbyChurches(filteredNearby, by: nearbySort)
 
                         if !sortedNearby.isEmpty {
@@ -896,12 +912,18 @@ struct DirectoryView: View {
                                     }
                                 }
                                 .padding(.horizontal, 20)
+                            } else if let userLoc = locationManager.userLocation {
+                                NearbyMapView(
+                                    userLocation: userLoc,
+                                    radiusMiles: nearbyRadius,
+                                    churches: sortedNearby
+                                )
                             } else {
-                                Text("Map view coming soon")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(Color(red: 107/255, green: 114/255, blue: 128/255))
+                                // userLocation hasn't resolved yet — show
+                                // a tiny placeholder rather than crash.
+                                ProgressView()
                                     .frame(maxWidth: .infinity)
-                                    .frame(height: 300)
+                                    .frame(height: 200)
                                     .background(Color(red: 243/255, green: 244/255, blue: 246/255))
                                     .clipShape(RoundedRectangle(cornerRadius: 22))
                                     .padding(.horizontal, 20)
