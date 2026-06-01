@@ -1742,6 +1742,13 @@ struct EditChurchProfileView: View {
             )
             // Step 2 — outreach + contact + location + social. Empty
             // strings are still sent so the user can clear a field.
+            // Geocode the address fields BEFORE the update so the row
+            // lands in church_submissions with lat/lng populated — that's
+            // what the Discover "Near You" radius filter requires.
+            let coords = await Geocoder.geocode(
+                addressLine: addressLine, city: city, state: state,
+                postalCode: postalCode, country: country
+            )
             try await SupabaseService.shared.updateChurchDetails(
                 submissionId: submission.id,
                 contactEmail: contactEmail,
@@ -1752,6 +1759,8 @@ struct EditChurchProfileView: View {
                 state: state,
                 postalCode: postalCode,
                 country: country,
+                latitude: coords?.latitude,
+                longitude: coords?.longitude,
                 pastorName: pastorName,
                 whatToExpect: whatToExpect,
                 ministries: ministries,

@@ -41,6 +41,8 @@ import Foundation
      var state: String?
      var postal_code: String?
      var country: String?
+     var latitude: Double?
+     var longitude: Double?
      var pastor_name: String?
      var what_to_expect: String?
      var ministries: String?
@@ -571,6 +573,8 @@ private struct ProfileCoverUpdate: Encodable {
          state: String? = nil,
          postalCode: String? = nil,
          country: String? = nil,
+         latitude: Double? = nil,
+         longitude: Double? = nil,
          pastorName: String? = nil,
          whatToExpect: String? = nil,
          ministries: String? = nil,
@@ -589,6 +593,8 @@ private struct ProfileCoverUpdate: Encodable {
              state: state,
              postal_code: postalCode,
              country: country,
+             latitude: latitude,
+             longitude: longitude,
              pastor_name: pastorName,
              what_to_expect: whatToExpect,
              ministries: ministries,

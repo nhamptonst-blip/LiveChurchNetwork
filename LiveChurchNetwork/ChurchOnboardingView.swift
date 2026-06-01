@@ -903,6 +903,25 @@ struct ChurchOnboardingView: View {
                 serviceTimes: "",
                 about:        ""
             )
+            // Persist the address + city the admin typed and geocode them
+            // so the church shows up in "Churches Near You" right away.
+            // The onboarding offers one free-form address field plus a
+            // separate city field — feed both into the geocoder.
+            let trimmedAddress = address.trimmingCharacters(in: .whitespaces)
+            let trimmedCity    = city.trimmingCharacters(in: .whitespaces)
+            if !trimmedAddress.isEmpty || !trimmedCity.isEmpty {
+                let coords = await Geocoder.geocode(
+                    addressLine: trimmedAddress.isEmpty ? nil : trimmedAddress,
+                    city: trimmedCity.isEmpty ? nil : trimmedCity
+                )
+                try? await SupabaseService.shared.updateChurchDetails(
+                    submissionId: sub.id,
+                    addressLine: trimmedAddress.isEmpty ? nil : trimmedAddress,
+                    city: trimmedCity.isEmpty ? nil : trimmedCity,
+                    latitude: coords?.latitude,
+                    longitude: coords?.longitude
+                )
+            }
         }
         // Store location in profile
         try? await SupabaseService.shared.updateProfile(
