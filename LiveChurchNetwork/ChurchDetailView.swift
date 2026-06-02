@@ -38,9 +38,47 @@ struct ChurchDetailView: View {
     }
 
     private var backgroundImageName: String {
-        let backgroundImages = ["lcn1", "lcn2", "lcn3", "lcn4"]
-        let hash = abs(church.name.hashValue % 4)
+        // Only the two unambiguously-cross images. lcn4 (stone chapel) is
+        // excluded — its cross + steeple sit at the top of the source image
+        // and get cut off by the 200pt header crop, leaving only an
+        // ambiguous stone building. lcn2 (purple worship-concert) reads more
+        // "Christian concert" than "church" so it's out too. The remaining
+        // fallback rotation is always clearly faith-themed.
+        let backgroundImages = ["lcn1", "lcn3"]
+        let hash = abs(church.name.hashValue) % backgroundImages.count
         return backgroundImages[hash]
+    }
+
+    /// Real uploaded cover photo wins over the stock fallback. The stock
+    /// images are portrait — center-cropping a 200pt header slices the
+    /// cross out of view. GeometryReader + a y-offset biases the crop
+    /// toward the upper portion of the source where the cross lives.
+    @ViewBuilder
+    private var headerBackgroundImage: some View {
+        if !church.coverImage.isEmpty, let url = URL(string: church.coverImage) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let img):
+                    img.resizable().scaledToFill()
+                default:
+                    stockBackground
+                }
+            }
+        } else {
+            stockBackground
+        }
+    }
+
+    private var stockBackground: some View {
+        GeometryReader { geo in
+            let imageAspect: CGFloat = 0.67 // portrait stock photos
+            let drawWidth = geo.size.width
+            let drawHeight = drawWidth / imageAspect
+            Image(backgroundImageName)
+                .resizable()
+                .frame(width: drawWidth, height: drawHeight, alignment: .top)
+                .offset(y: -(drawHeight - geo.size.height) * 0.15)
+        }
     }
 
     var body: some View {
@@ -100,10 +138,12 @@ struct ChurchDetailView: View {
     private var headerSection: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .topLeading) {
-                // Use LCN background image (same as discover card)
-                Image(backgroundImageName)
-                    .resizable()
-                    .scaledToFill()
+                // Real uploaded cover always wins. Falls back to one of the
+                // stock cross images (lcn1, lcn3) for churches that haven't
+                // uploaded anything. lcn2 (worship-concert) and lcn4 (stone
+                // chapel, cross cropped off) excluded so the fallback is
+                // always unambiguously faith-themed.
+                headerBackgroundImage
 
                 // Overlay with dark gradient for text readability
                 LinearGradient(colors: [.clear, .black.opacity(0.45)],
