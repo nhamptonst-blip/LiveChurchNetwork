@@ -771,7 +771,7 @@ struct DirectoryView: View {
 
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 12) {
-                                ForEach(vm.liveNowChurches.prefix(8), id: \.slug) { church in
+                                ForEach(vm.liveNowChurches.prefix(8), id: \.id) { church in
                                     LiveStoryItem(
                                         church: church,
                                         onTap: {
@@ -839,7 +839,7 @@ struct DirectoryView: View {
 
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 14) {
-                                ForEach(vm.trendingChurches.prefix(8), id: \.slug) { church in
+                                ForEach(vm.trendingChurches.prefix(8), id: \.id) { church in
                                     NavigationLink(destination: ChurchDetailView(church: church)) {
                                         FeaturedChurchCard(
                                             church: church,
@@ -892,7 +892,7 @@ struct DirectoryView: View {
                                     let groupedResults = groupNearbyResults(sortedNearby)
                                     ForEach(0..<groupedResults.count, id: \.self) { groupIndex in
                                         VStack(spacing: 12) {
-                                            ForEach(groupedResults[groupIndex], id: \.slug) { church in
+                                            ForEach(groupedResults[groupIndex], id: \.id) { church in
                                                 NavigationLink(destination: ChurchDetailView(church: church)) {
                                                     NearbyChurchCard(
                                                         church: church,
@@ -1071,7 +1071,7 @@ struct DirectoryView: View {
                                 : [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
                             LazyVGrid(columns: gridColumns, spacing: viewDensity == "Comfortable" ? 18 : 14) {
-                                ForEach(sortedChurches, id: \.slug) { church in
+                                ForEach(sortedChurches, id: \.id) { church in
                                     NavigationLink(destination: ChurchDetailView(church: church)) {
                                         DirectoryChurchCard(
                                             church: church,
@@ -1753,7 +1753,7 @@ struct DirectoryView: View {
                                 }
 
                                 VStack(spacing: 12) {
-                                    ForEach(searchResultsChurches.prefix(selectedSearchTab == "All" ? 3 : 10), id: \.slug) { church in
+                                    ForEach(searchResultsChurches.prefix(selectedSearchTab == "All" ? 3 : 10), id: \.id) { church in
                                         NavigationLink(destination: ChurchDetailView(church: church)) {
                                             ChurchSearchResultCard(
                                                 church: church,

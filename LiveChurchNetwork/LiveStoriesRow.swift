@@ -48,7 +48,7 @@ struct LiveStoriesRow: View {
                 // MARK: - Stories Row
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
-                        ForEach(liveChurches, id: \.slug) { church in
+                        ForEach(liveChurches, id: \.id) { church in
                             NavigationLink(destination: ChurchDetailView(church: church)) {
                                 LiveStoryItem(church: church, onTap: {})
                             }

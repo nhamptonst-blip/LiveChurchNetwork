@@ -232,7 +232,7 @@ struct ProfileOnboardingView: View {
                 .padding(.horizontal, 16)
 
                 VStack(spacing: 12) {
-                    ForEach(churchesToShow.prefix(10), id: \.slug) { church in
+                    ForEach(churchesToShow.prefix(10), id: \.id) { church in
                         Button(action: {
                             if selectedChurches.contains(church.slug) {
                                 selectedChurches.remove(church.slug)

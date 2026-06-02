@@ -99,7 +99,7 @@ struct SearchResultsView: View {
                         columns: [GridItem(.flexible()), GridItem(.flexible())],
                         spacing: 18
                     ) {
-                        ForEach(vm.browseChurches.prefix(4), id: \.slug) { church in
+                        ForEach(vm.browseChurches.prefix(4), id: \.id) { church in
                             NavigationLink(destination: ChurchDetailView(church: church)) {
                                 PremiumChurchCard(
                                     church: church,
@@ -164,7 +164,7 @@ struct SearchResultsView: View {
                     columns: [GridItem(.flexible()), GridItem(.flexible())],
                     spacing: 18
                 ) {
-                    ForEach(vm.browseChurches, id: \.slug) { church in
+                    ForEach(vm.browseChurches, id: \.id) { church in
                         NavigationLink(destination: ChurchDetailView(church: church)) {
                             PremiumChurchCard(
                                 church: church,
