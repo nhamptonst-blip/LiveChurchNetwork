@@ -1227,26 +1227,33 @@ private struct ProfileCoverUpdate: Encodable {
              .eq("id", value: inquiry.id.uuidString)
              .execute()
 
-         // Notify the member.
+         // Notify the member. `actor_user_id` must be the replying admin:
+         // the notifications INSERT policy only accepts rows where the
+         // inserter is the recipient or the actor. (This insert used to
+         // write a nonexistent `church_slug` column, so it failed silently
+         // on every reply and members never got the alert.)
          struct InquiryReplyNotification: Encodable {
              let user_id: String
              let type: String
              let title: String
              let body: String
              let related_id: String
-             let church_slug: String
+             let actor_user_id: String
+             let is_read: Bool
          }
          let preview: String = {
              let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
              return trimmed.count > 120 ? String(trimmed.prefix(120)) + "…" : trimmed
          }()
+         guard let adminId = try? await client.auth.session.user.id else { return }
          let notif = InquiryReplyNotification(
-             user_id:     inquiry.memberId.uuidString,
-             type:        "church_inquiry_reply",
-             title:       "\(inquiry.churchName) replied to your message",
-             body:        preview,
-             related_id:  inquiry.id.uuidString,
-             church_slug: inquiry.churchSlug
+             user_id:       inquiry.memberId.uuidString,
+             type:          "church_inquiry_reply",
+             title:         "\(inquiry.churchName) replied to your message",
+             body:          preview,
+             related_id:    inquiry.id.uuidString,
+             actor_user_id: adminId.uuidString,
+             is_read:       false
          )
          _ = try? await client
              .from("notifications")
